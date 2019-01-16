@@ -45,6 +45,9 @@
         <property name="ortolang.auth.url" value="${env.ORTOLANG_AUTH_URL}"/>
         <property name="smtp.host" value="${env.ORTOLANG_SMTP_HOST}"/>
         <property name="smtp.port" value="${env.ORTOLANG_SMTP_PORT}"/>
+        <property name="smtp.username" value="${env.ORTOLANG_SMTP_USERNAME}"/>
+        <property name="smtp.password" value="${env.ORTOLANG_SMTP_PASSWORD}"/>
+        <property name="smtp.ssl" value="${env.ORTOLANG_SMTP_SSL}"/>
     </system-properties>
 
     <management>
@@ -456,7 +459,7 @@
         <subsystem xmlns="urn:jboss:domain:jsf:1.0"/>
         <subsystem xmlns="urn:jboss:domain:mail:3.0">
             <mail-session name="default" jndi-name="java:jboss/mail/Default">
-                <smtp-server outbound-socket-binding-ref="mail-smtp"/>
+                <smtp-server outbound-socket-binding-ref="mail-smtp" ssl="${smtp.ssl:true}" username="${smtp.username:username}" password="${smtp.password:mySmtpPassword}"/>
             </mail-session>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:messaging-activemq:1.0">
