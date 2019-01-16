@@ -42,7 +42,7 @@ COPY src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration
 
 RUN mkdir /opt/jboss/.ortolang
 RUN mkdir /opt/jboss/.ortolang/binary-store
-COPY src/main/docker/config.properties /opt/jboss/.ortolang
+COPY --chown=jboss:jboss src/main/docker/config.properties /opt/jboss/.ortolang
 
 RUN curl -O -L 'https://github.com/vishnubob/wait-for-it/raw/master/wait-for-it.sh' && chmod +x wait-for-it.sh
 

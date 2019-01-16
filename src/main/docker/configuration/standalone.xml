@@ -43,6 +43,8 @@
         <property name='ortolang.keystore.pass' value="${env.ORTOLANG_KEYSTORE_PASS}"/>
         <property name="ortolang.key.pass" value="${env.ORTOLANG_KEY_PASS}"/>
         <property name="ortolang.auth.url" value="${env.ORTOLANG_AUTH_URL}"/>
+        <property name="smtp.host" value="${env.ORTOLANG_SMTP_HOST}"/>
+        <property name="smtp.port" value="${env.ORTOLANG_SMTP_PORT}"/>
     </system-properties>
 
     <management>
