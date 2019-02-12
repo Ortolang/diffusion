@@ -48,6 +48,8 @@
         <property name="smtp.username" value="${env.ORTOLANG_SMTP_USERNAME}"/>
         <property name="smtp.password" value="${env.ORTOLANG_SMTP_PASSWORD}"/>
         <property name="smtp.ssl" value="${env.ORTOLANG_SMTP_SSL}"/>
+        <property name="hibvernate.eviction.maxentries" value="${env.ORTOLANG_HIBERNATE_EVICTION_MAXENTRIES}"/>
+        <property name="hibvernate.expiration.maxidle" value="${env.ORTOLANG_HIBERNATE_EXPIRATION_MAXIDLE}"/>
     </system-properties>
 
     <management>
@@ -417,8 +419,8 @@
             <cache-container name="hibernate" module="org.hibernate.infinispan">
                 <local-cache name="entity">
                     <transaction mode="NON_XA"/>
-                    <eviction strategy="LRU" max-entries="10000"/>
-                    <expiration max-idle="100000"/>
+                    <eviction strategy="LRU" max-entries="${hibvernate.eviction.maxentries}"/>
+                    <expiration max-idle="${hibvernate.expiration.maxidle}"/>
                 </local-cache>
                 <local-cache name="local-query">
                     <eviction strategy="LRU" max-entries="10000"/>
