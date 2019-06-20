@@ -145,6 +145,27 @@ public class CmdiHandler implements MetadataHandler {
 				}
 			}
 
+			JsonArray lexiconInputLanguages = jsonDoc.getJsonArray("lexiconInputLanguages");
+			if (lexiconInputLanguages != null) {
+				for (JsonObject lexiconInputLanguage : lexiconInputLanguages.getValuesAs(JsonObject.class)) {
+					JsonArray multilingualLabels = lexiconInputLanguage.getJsonArray("labels");
+
+					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+						// Can't write subject here !! writeCmdiOlacElement("subject", label, builder);
+						
+						XmlDumpAttributes attrs = new XmlDumpAttributes();
+						//TODO downgrade language (ex. mar-1 to mar)
+						if (label.containsKey("id") && label.getString("id").matches(Constant.iso639_3pattern)) {
+					    	attrs.put("olac-language", label.getString("id"));
+						}
+				    	if (label.containsKey("lang") && label.getString("lang").matches(Constant.iso639_2pattern)) {
+				    		attrs.put("xml:lang", label.getString("lang"));
+				    	}
+				    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "language", attrs, label.containsKey("value") ? XMLDocument.removeHTMLTag(label.getString("value")) : null);
+					}
+				}
+			}
+
 			JsonObject license = jsonDoc.getJsonObject("license");
 			if (license != null && license.containsKey("label")) {
 				XmlDumpAttributes attrs = new XmlDumpAttributes();
