@@ -11,9 +11,10 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
 
+import static fr.ortolang.diffusion.oai.format.Constant.*;
+
 import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
 import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
-import fr.ortolang.diffusion.oai.format.Constant;
 import fr.ortolang.diffusion.oai.format.XMLDocument;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
 import fr.ortolang.diffusion.util.DateUtils;
@@ -51,8 +52,8 @@ public class OlacHandler implements MetadataHandler {
 						if (corporaLanguage.containsKey("id")) {
 						//TODO downgrade language (ex. mar-1 to mar)
 							writeOlacElement("language", "olac:language", 
-								corporaLanguage.getString("id").matches(Constant.iso639_3pattern) ? corporaLanguage.getString("id") : null, 
-										label.getString("lang").matches(Constant.iso639_2pattern) ? label.getString("lang") : null, 
+								corporaLanguage.getString("id").matches(iso639_3pattern) ? corporaLanguage.getString("id") : null, 
+										label.getString("lang").matches(iso639_2pattern) ? label.getString("lang") : null, 
 												label.getString("value"), builder);
 						} else {
 							LOGGER.log(Level.SEVERE, "corporaLanguage missing id for " + corporaLanguage.toString());
@@ -71,8 +72,8 @@ public class OlacHandler implements MetadataHandler {
 						if (lexiconInputLanguage.containsKey("id")) {
 						//TODO downgrade language (ex. mar-1 to mar)
 							writeOlacElement("language", "olac:language", 
-									lexiconInputLanguage.getString("id").matches(Constant.iso639_3pattern) ? lexiconInputLanguage.getString("id") : null, 
-										label.getString("lang").matches(Constant.iso639_2pattern) ? label.getString("lang") : null, 
+									lexiconInputLanguage.getString("id").matches(iso639_3pattern) ? lexiconInputLanguage.getString("id") : null, 
+										label.getString("lang").matches(iso639_2pattern) ? label.getString("lang") : null, 
 												label.getString("value"), builder);
 						} else {
 							LOGGER.log(Level.SEVERE, "lexiconInputLanguage missing id for " + lexiconInputLanguage.toString());
@@ -90,8 +91,8 @@ public class OlacHandler implements MetadataHandler {
 						DublinCoreHandler.writeDcMultilingualElement("subject", label, builder);
 //						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
 						writeOlacElement("subject", "olac:language", 
-							studyLanguage.getString("id").matches(Constant.iso639_3pattern) ? studyLanguage.getString("id") : null, 
-									label.getString("lang").matches(Constant.iso639_2pattern) ? label.getString("lang") : null, 
+							studyLanguage.getString("id").matches(iso639_3pattern) ? studyLanguage.getString("id") : null, 
+									label.getString("lang").matches(iso639_2pattern) ? label.getString("lang") : null, 
 											label.getString("value"), builder);
 					}
 				}
@@ -101,7 +102,7 @@ public class OlacHandler implements MetadataHandler {
 			if (producers != null) {
 				for (JsonObject producer : producers.getValuesAs(JsonObject.class)) {
 					if (producer.containsKey("fullname")) {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "publisher", producer.getString("fullname"));
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "publisher", producer.getString("fullname"));
 					}
 				}
 			}
@@ -113,13 +114,13 @@ public class OlacHandler implements MetadataHandler {
 					for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
 						String roleId = role.getString("id");
 
-						if (Constant.OLAC_ROLES.contains(roleId)) {
-							writeOlacElement("contributor", "olac:role", roleId, null, Constant.person(contributor), builder);
+						if (OLAC_ROLES.contains(roleId)) {
+							writeOlacElement("contributor", "olac:role", roleId, null, person(contributor), builder);
 						} else {
-							builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "contributor", Constant.person(contributor) + " (" + roleId + ")");
+							builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "contributor", person(contributor) + " (" + roleId + ")");
 						}
 	                    if("author".equals(roleId)) {
-	                    	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "creator", Constant.person(contributor));
+	                    	builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "creator", person(contributor));
 	                    }
 					}
 				}
@@ -137,7 +138,7 @@ public class OlacHandler implements MetadataHandler {
 	        JsonObject statusOfUse = jsonDoc.getJsonObject("statusOfUse");
 			if (statusOfUse != null) {
 				String idStatusOfUse = statusOfUse.getString("id");
-				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "rights", idStatusOfUse);
+				builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "rights", idStatusOfUse);
 
 				JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
 				for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
@@ -154,36 +155,51 @@ public class OlacHandler implements MetadataHandler {
 			if (license != null && license.containsKey("label")) {
 				XmlDumpAttributes attrs = new XmlDumpAttributes();
 		        attrs.put("xml:lang", "fr");
-				builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "license", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
+				builder.writeStartEndElement(DCTERMS_NAMESPACE_PREFIX, "license", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
 			}
 			JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
 			if (linguisticSubjects != null) {
 				for (JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
-					if (Constant.OLAC_LINGUISTIC_FIELDS.contains(linguisticSubject.getString())) {
+					if (OLAC_LINGUISTIC_FIELDS.contains(linguisticSubject.getString())) {
 						writeOlacElement("subject", "olac:linguistic-field", linguisticSubject.getString(), null, null, builder);
 					} else {
 						LOGGER.log(Level.WARNING, "Olac linguistic field is invalid : " + linguisticSubject.getString());
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "subject", linguisticSubject.getString());
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "subject", linguisticSubject.getString());
 					}
+				}
+			}
+			JsonString resourceType = jsonDoc.getJsonString("type");
+			if (resourceType != null) {
+				switch(resourceType.getString()) {
+					case ORTOLANG_RESOURCE_TYPE_CORPORA:
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), CMDI_RESOURCE_CLASS_CORPUS); break;
+					case ORTOLANG_RESOURCE_TYPE_LEXICON:
+						writeOlacElement("type", "olac:linguistic-type", OLAC_LINGUISTIC_TYPES.get(1), null, null, builder); break;
+					case ORTOLANG_RESOURCE_TYPE_TERMINOLOGY:
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), CMDI_RESOURCE_CLASS_TERMINOLOGY); break;
+					case ORTOLANG_RESOURCE_TYPE_TOOL:
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), CMDI_RESOURCE_CLASS_TOOL_SERVICE); break;
+					case CMDI_RESOURCE_CLASS_WEBSITE:
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), CMDI_RESOURCE_CLASS_WEBSITE); break;
 				}
 			}
 			JsonString linguisticDataType = jsonDoc.getJsonString("linguisticDataType");
 			if (linguisticDataType != null) {
-				if (Constant.OLAC_LINGUISTIC_TYPES.contains(linguisticDataType.getString())) {
+				if (OLAC_LINGUISTIC_TYPES.contains(linguisticDataType.getString())) {
 					writeOlacElement("type", "olac:linguistic-type", linguisticDataType.getString(), null, null, builder);
 				} else {
 					LOGGER.log(Level.WARNING, "Olac linguistic type is invalid : " + linguisticDataType.getString());
-					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "type", linguisticDataType.getString());
+					builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "type", linguisticDataType.getString());
 				}
 			}
 			JsonArray discourseTypes = jsonDoc.getJsonArray("discourseTypes");
 			if (discourseTypes != null) {
 				for (JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
-					if (Constant.OLAC_DISCOURSE_TYPES.contains(discourseType.getString())) {
+					if (OLAC_DISCOURSE_TYPES.contains(discourseType.getString())) {
 						writeOlacElement("type", "olac:discourse-type", discourseType.getString(), null, null, builder);
 					} else {
 						LOGGER.log(Level.WARNING, "Olac discourse type is invalid : " + discourseType.getString());
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "type", discourseType.getString());
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "type", discourseType.getString());
 					}
 				}
 			}
@@ -191,20 +207,20 @@ public class OlacHandler implements MetadataHandler {
 	        if(bibligraphicCitations!=null) {
 	            for(JsonObject multilingualBibliographicCitation : bibligraphicCitations.getValuesAs(JsonObject.class)) {
 	            	XmlDumpAttributes attrs = new XmlDumpAttributes();
-	            	if (multilingualBibliographicCitation.getString("lang").matches(Constant.iso639_2pattern)) {
+	            	if (multilingualBibliographicCitation.getString("lang").matches(iso639_2pattern)) {
 	            		attrs.put("xml:lang", multilingualBibliographicCitation.getString("lang"));
 	            	}
-					builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "bibliographicCitation", attrs, XMLDocument.removeHTMLTag(multilingualBibliographicCitation.getString("value")));
+					builder.writeStartEndElement(DCTERMS_NAMESPACE_PREFIX, "bibliographicCitation", attrs, XMLDocument.removeHTMLTag(multilingualBibliographicCitation.getString("value")));
 	            }
 	        }
 	        JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
 	        JsonString creationDate = jsonDoc.getJsonString("originDate");
 	        if(creationDate!=null) {
 		        	if (DateUtils.isThisDateValid(creationDate.getString())) {
-		        		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
+		        		builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "date", creationDate.getString());
 			            XmlDumpAttributes attrs = new XmlDumpAttributes();
 				        attrs.put("xsi:type", "dcterms:W3CDTF");
-			        	builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
+			        	builder.writeStartEndElement(DCTERMS_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
 			        } else {
 			        	LOGGER.log(Level.WARNING, "invalid creation date : " + creationDate.getString());
 			        }
@@ -213,10 +229,10 @@ public class OlacHandler implements MetadataHandler {
 		            	if (DateUtils.isThisDateValid(publicationDate.getString())) {
 		            		XmlDumpAttributes attrs = new XmlDumpAttributes();
 		            		attrs.put("xsi:type", "dcterms:W3CDTF");
-		            		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", attrs, publicationDate.getString());
+		            		builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "date", attrs, publicationDate.getString());
 		            	} else {
 		            		LOGGER.log(Level.WARNING, "invalid publication date : " + publicationDate.getString());
-		            		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+		            		builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
 		            	}
 	            	}
 	        }
@@ -224,7 +240,7 @@ public class OlacHandler implements MetadataHandler {
 			if (listHandles != null) {
 				listHandles.forEach(handleUrl -> {
 					try {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "identifier", handleUrl);
 					} catch (MetadataBuilderException e) {
 						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
 						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
@@ -252,20 +268,20 @@ public class OlacHandler implements MetadataHandler {
         	JsonObject jsonDoc = jsonReader.readObject();
 
         	// DCTerms elements
-//        	Constant.DCTERMS_ELEMENTS.stream().forEach(elm -> writeDctermsElement(elm, jsonDoc, builder));
-        	for(String dcterms : Constant.DCTERMS_ELEMENTS) {
+//        	DCTERMS_ELEMENTS.stream().forEach(elm -> writeDctermsElement(elm, jsonDoc, builder));
+        	for(String dcterms : DCTERMS_ELEMENTS) {
         		writeDctermsElement(dcterms, jsonDoc, builder);
         	}
         	// Dublin Core elements with OLAC attributes
-//        	Constant.DC_ELEMENTS.stream().forEach(elm -> writeOlacElement(elm, jsonDoc, builder));
-        	for(String dc : Constant.DC_ELEMENTS) {
+//        	DC_ELEMENTS.stream().forEach(elm -> writeOlacElement(elm, jsonDoc, builder));
+        	for(String dc : DC_ELEMENTS) {
         		writeOlacElement(dc, jsonDoc, builder);
         	}
 
 		if (listHandles != null) {
 			listHandles.forEach(handleUrl -> {
 				try {
-					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+					builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "identifier", handleUrl);
 				} catch (MetadataBuilderException e) {
 					LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
 					LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
@@ -284,12 +300,12 @@ public class OlacHandler implements MetadataHandler {
 
 	public static void writeOlacDocument(MetadataBuilder builder) throws MetadataBuilderException {
 		XmlDumpNamespaces namespaces = new XmlDumpNamespaces();
-		namespaces.put(Constant.OLAC_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.OLAC_NAMESPACE_URI, Constant.OLAC_NAMESPACE_SCHEMA_LOCATION));
-		namespaces.put(Constant.DC_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.DC_NAMESPACE_URI, Constant.DC_NAMESPACE_SCHEMA_LOCATION));
-		namespaces.put(Constant.DCTERMS_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.DCTERMS_NAMESPACE_URI, Constant.DCTERMS_NAMESPACE_SCHEMA_LOCATION));
-		namespaces.put(Constant.XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.XSI_NAMESPACE_URI));
+		namespaces.put(OLAC_NAMESPACE_PREFIX, new XmlDumpNamespace(OLAC_NAMESPACE_URI, OLAC_NAMESPACE_SCHEMA_LOCATION));
+		namespaces.put(DC_NAMESPACE_PREFIX, new XmlDumpNamespace(DC_NAMESPACE_URI, DC_NAMESPACE_SCHEMA_LOCATION));
+		namespaces.put(DCTERMS_NAMESPACE_PREFIX, new XmlDumpNamespace(DCTERMS_NAMESPACE_URI, DCTERMS_NAMESPACE_SCHEMA_LOCATION));
+		namespaces.put(XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(XSI_NAMESPACE_URI));
 		builder.setNamespaces(namespaces);
-		builder.writeStartDocument(Constant.OLAC_NAMESPACE_PREFIX, Constant.OLAC_ELEMENT, null);
+		builder.writeStartDocument(OLAC_NAMESPACE_PREFIX, OLAC_ELEMENT, null);
 	}
 
     public void writeDctermsElement(String elementName, JsonObject meta, MetadataBuilder builder) throws MetadataBuilderException {
@@ -307,7 +323,7 @@ public class OlacHandler implements MetadataHandler {
     				attrs.put("xsi:type", elementObject.getString("type"));
     			}
 //    			fields.add(elementXml);
-    			builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, elementName, attrs, XMLDocument.removeHTMLTag(elementObject.getString("value")));
+    			builder.writeStartEndElement(DCTERMS_NAMESPACE_PREFIX, elementName, attrs, XMLDocument.removeHTMLTag(elementObject.getString("value")));
     		}
     	}
 //    	return this;
@@ -336,7 +352,7 @@ public class OlacHandler implements MetadataHandler {
             		attrs.put("olac:code", elementObject.getString("code"));
             	}
 //            	fields.add(elementXml);
-            	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, elementName, attrs, elementObject.containsKey("value") ? XMLDocument.removeHTMLTag(elementObject.getString("value")) : null);
+            	builder.writeStartEndElement(DC_NAMESPACE_PREFIX, elementName, attrs, elementObject.containsKey("value") ? XMLDocument.removeHTMLTag(elementObject.getString("value")) : null);
             }
     	}
 //    	return this;
@@ -353,7 +369,7 @@ public class OlacHandler implements MetadataHandler {
     	if (lang!=null) {
     		attrs.put("xml:lang", lang);
     	}
-    	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, elementName, attrs, value!=null ? XMLDocument.removeHTMLTag(value) : null);
+    	builder.writeStartEndElement(DC_NAMESPACE_PREFIX, elementName, attrs, value!=null ? XMLDocument.removeHTMLTag(value) : null);
 //    	fields.add(XMLElement.createElement(OLAC_NAMESPACE, name, value).withAttribute("xsi:type", xsitype).withAttribute("olac:code", olaccode).withAttribute("xml:lang", lang));
     }
 

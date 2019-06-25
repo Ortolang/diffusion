@@ -115,6 +115,18 @@ public class Constant {
 	public static final String CMDI_MDCREATOR_VALUE = "ORTOLANG Repository";
 	public static final String CMDI_OLAC_PROFILE_VALUE = "clarin.eu:cr1:p_1288172614026";
 	
+	public static final String CMDI_RESOURCE_CLASS_CORPUS = "corpus";
+	public static final String CMDI_RESOURCE_CLASS_LEXICON_RESOURCE = "lexicalResource";
+	public static final String CMDI_RESOURCE_CLASS_TERMINOLOGY = "terminology";
+	public static final String CMDI_RESOURCE_CLASS_TOOL_SERVICE = "toolService";
+	public static final String CMDI_RESOURCE_CLASS_WEBSITE = "website";
+	
+	public static final String ORTOLANG_RESOURCE_TYPE_CORPORA = "Corpus";	
+	public static final String ORTOLANG_RESOURCE_TYPE_LEXICON = "Lexique";	
+	public static final String ORTOLANG_RESOURCE_TYPE_TOOL = "Outil";	
+	public static final String ORTOLANG_RESOURCE_TYPE_TERMINOLOGY = "Terminologie";	
+	public static final String ORTOLANG_RESOURCE_TYPE_APPLICATION = "Application";	
+	
 	// Utils
 	public static final String w3cdtfFormat = "yyyy-MM-dd";
     public static final SimpleDateFormat w3cdtf = new SimpleDateFormat(w3cdtfFormat);
