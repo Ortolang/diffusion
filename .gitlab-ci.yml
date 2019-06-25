@@ -20,5 +20,4 @@ maven_docker_build:
     - docker push $ORTOLANG_DIFFUSION_IMAGE
   only:
     - master
-    - branches
     - tags
