@@ -13,10 +13,9 @@ import javax.json.JsonString;
 
 import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
 import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
-import fr.ortolang.diffusion.oai.format.Constant;
+import static fr.ortolang.diffusion.oai.format.Constant.*;
 import fr.ortolang.diffusion.oai.format.XMLDocument;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
-import fr.ortolang.diffusion.util.DateUtils;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpNamespace;
 import fr.ortolang.diffusion.xml.XmlDumpNamespaces;
@@ -61,7 +60,7 @@ public class DublinCoreHandler implements MetadataHandler {
 						writeDcMultilingualElement("language", label, builder);
 					}
 					if (corporaLanguage.containsKey("id")) {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "language", corporaLanguage.getString("id"));
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "language", corporaLanguage.getString("id"));
 					} else {
 						LOGGER.log(Level.SEVERE, "corporaLanguage missing id for " + corporaLanguage.toString());
 					}
@@ -78,7 +77,7 @@ public class DublinCoreHandler implements MetadataHandler {
 						writeDcMultilingualElement("language", label, builder);
 					}
 					if (lexiconInputLanguage.containsKey("id")) {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "language", lexiconInputLanguage.getString("id"));
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "language", lexiconInputLanguage.getString("id"));
 					} else {
 						LOGGER.log(Level.SEVERE, "lexiconInputLanguage missing id for " + lexiconInputLanguage.toString());
 					}
@@ -89,7 +88,7 @@ public class DublinCoreHandler implements MetadataHandler {
 			if (producers != null) {
 				for (JsonObject producer : producers.getValuesAs(JsonObject.class)) {
 					if (producer.containsKey("fullname")) {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "publisher", producer.getString("fullname"));
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "publisher", producer.getString("fullname"));
 					}
 				}
 			}
@@ -100,10 +99,10 @@ public class DublinCoreHandler implements MetadataHandler {
 					JsonArray roles = contributor.getJsonArray("roles");
 					for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
 						String roleId = role.getString("id");
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "contributor", Constant.person(contributor) + " (" + roleId + ")");
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "contributor", person(contributor) + " (" + roleId + ")");
 
 						if ("author".equals(roleId)) {
-							builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "creator", Constant.person(contributor));
+							builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "creator", person(contributor));
 						}
 					}
 				}
@@ -112,7 +111,7 @@ public class DublinCoreHandler implements MetadataHandler {
 			JsonObject statusOfUse = jsonDoc.getJsonObject("statusOfUse");
 			if (statusOfUse != null) {
 				String idStatusOfUse = statusOfUse.getString("id");
-				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "rights", idStatusOfUse);
+				builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "rights", idStatusOfUse);
 
 				JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
 				for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
@@ -129,38 +128,53 @@ public class DublinCoreHandler implements MetadataHandler {
 			if (license != null && license.containsKey("label")) {
 				XmlDumpAttributes attrs = new XmlDumpAttributes();
 		        attrs.put("xml:lang", "fr");
-				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "rights", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
+				builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "rights", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
 			}
 			JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
 			if (linguisticSubjects != null) {
 				for (JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
-					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "subject", "linguistic field: " + linguisticSubject.getString());
+					builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "subject", "linguistic field: " + linguisticSubject.getString());
+				}
+			}
+			JsonString resourceType = jsonDoc.getJsonString("type");
+			if (resourceType != null) {
+				switch(resourceType.getString()) {
+					case ORTOLANG_RESOURCE_TYPE_CORPORA:
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), CMDI_RESOURCE_CLASS_CORPUS); break;
+					case ORTOLANG_RESOURCE_TYPE_LEXICON:
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), OLAC_LINGUISTIC_TYPES.get(1)); break;
+					case ORTOLANG_RESOURCE_TYPE_TERMINOLOGY:
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), CMDI_RESOURCE_CLASS_TERMINOLOGY); break;
+					case ORTOLANG_RESOURCE_TYPE_TOOL:
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), CMDI_RESOURCE_CLASS_TOOL_SERVICE); break;
+					case CMDI_RESOURCE_CLASS_WEBSITE:
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), CMDI_RESOURCE_CLASS_WEBSITE); break;
 				}
 			}
 			JsonString linguisticDataType = jsonDoc.getJsonString("linguisticDataType");
 			if (linguisticDataType != null) {
-				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "type", "linguistic-type: " + linguisticDataType.getString());
+				builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "type", "linguistic-type: " + linguisticDataType.getString());
 			}
 			JsonArray discourseTypes = jsonDoc.getJsonArray("discourseTypes");
 			if (discourseTypes != null) {
 				for (JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
-					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "type", "discourse-type: " + discourseType.getString());
+					builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "type", "discourse-type: " + discourseType.getString());
 				}
 			}
 			JsonString creationDate = jsonDoc.getJsonString("originDate");
 			if (creationDate != null) {
-				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
+				builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "date", creationDate.getString());
 			} else {
 				JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
 				if (publicationDate != null) {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
 				}
 			}
 
 			if (listHandles != null) {
 				listHandles.forEach(handleUrl -> {
 					try {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "identifier", handleUrl);
 					} catch (MetadataBuilderException e) {
 						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
 						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
@@ -185,14 +199,14 @@ public class DublinCoreHandler implements MetadataHandler {
 			writeDcDocument(builder);
 			JsonObject jsonDoc = jsonReader.readObject();
 
-			for (String elm : Constant.DC_ELEMENTS) {
+			for (String elm : DC_ELEMENTS) {
 				writeDcElement(elm, jsonDoc, builder);
 			}
 
 			if (listHandles != null) {
 				listHandles.forEach(handleUrl -> {
 					try {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "identifier", handleUrl);
 					} catch (MetadataBuilderException e) {
 						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
 						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
@@ -211,11 +225,11 @@ public class DublinCoreHandler implements MetadataHandler {
 	
 	public static void writeDcDocument(MetadataBuilder builder) throws MetadataBuilderException {
 		XmlDumpNamespaces namespaces = new XmlDumpNamespaces();
-		namespaces.put(Constant.OAI_DC_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.OAI_DC_NAMESPACE_URI, Constant.OAI_DC_NAMESPACE_SCHEMA_LOCATION));
-		namespaces.put(Constant.DC_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.DC_NAMESPACE_URI, Constant.DC_NAMESPACE_SCHEMA_LOCATION));
-		namespaces.put(Constant.XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.XSI_NAMESPACE_URI));
+		namespaces.put(OAI_DC_NAMESPACE_PREFIX, new XmlDumpNamespace(OAI_DC_NAMESPACE_URI, OAI_DC_NAMESPACE_SCHEMA_LOCATION));
+		namespaces.put(DC_NAMESPACE_PREFIX, new XmlDumpNamespace(DC_NAMESPACE_URI, DC_NAMESPACE_SCHEMA_LOCATION));
+		namespaces.put(XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(XSI_NAMESPACE_URI));
 		builder.setNamespaces(namespaces);
-		builder.writeStartDocument(Constant.OAI_DC_NAMESPACE_PREFIX, Constant.OAI_DC_ELEMENT, null);
+		builder.writeStartDocument(OAI_DC_NAMESPACE_PREFIX, OAI_DC_ELEMENT, null);
 	}
 
 	public static void writeDcElement(String elementName, JsonObject meta, MetadataBuilder builder) throws MetadataBuilderException {
@@ -230,7 +244,7 @@ public class DublinCoreHandler implements MetadataHandler {
 					writeDcMultilingualElement(tagName, elm, builder);
 				} else {
 					if (elm.containsKey("value")) {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, tagName, XMLDocument.removeHTMLTag(elm.getString("value")));
+						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, tagName, XMLDocument.removeHTMLTag(elm.getString("value")));
 					}
 				}
 			}
@@ -239,10 +253,10 @@ public class DublinCoreHandler implements MetadataHandler {
 	
 	public static void writeDcMultilingualElement(String tag, JsonObject multilingualObject, MetadataBuilder builder) throws MetadataBuilderException {
 		XmlDumpAttributes attrs = new XmlDumpAttributes();
-		if (multilingualObject.getString("lang").matches(Constant.iso639_2pattern)) {
+		if (multilingualObject.getString("lang").matches(iso639_2pattern)) {
 			attrs.put("xml:lang", multilingualObject.getString("lang"));
 		}
-		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString("value")));
+		builder.writeStartEndElement(DC_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString("value")));
 	}
 
 	public List<String> getListHandlesRoot() {
