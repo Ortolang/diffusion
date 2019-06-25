@@ -48,7 +48,6 @@ public class OlacHandler implements MetadataHandler {
 
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 						DublinCoreHandler.writeDcMultilingualElement("subject", label, builder);
-//						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
 						if (corporaLanguage.containsKey("id")) {
 						//TODO downgrade language (ex. mar-1 to mar)
 							writeOlacElement("language", "olac:language", 
@@ -57,6 +56,26 @@ public class OlacHandler implements MetadataHandler {
 												label.getString("value"), builder);
 						} else {
 							LOGGER.log(Level.SEVERE, "corporaLanguage missing id for " + corporaLanguage.toString());
+						}
+					}
+				}
+			}
+			
+			JsonArray lexiconInputLanguages = jsonDoc.getJsonArray("lexiconInputLanguages");
+			if (lexiconInputLanguages != null) {
+				for (JsonObject lexiconInputLanguage : lexiconInputLanguages.getValuesAs(JsonObject.class)) {
+					JsonArray multilingualLabels = lexiconInputLanguage.getJsonArray("labels");
+
+					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+						DublinCoreHandler.writeDcMultilingualElement("subject", label, builder);
+						if (lexiconInputLanguage.containsKey("id")) {
+						//TODO downgrade language (ex. mar-1 to mar)
+							writeOlacElement("language", "olac:language", 
+									lexiconInputLanguage.getString("id").matches(Constant.iso639_3pattern) ? lexiconInputLanguage.getString("id") : null, 
+										label.getString("lang").matches(Constant.iso639_2pattern) ? label.getString("lang") : null, 
+												label.getString("value"), builder);
+						} else {
+							LOGGER.log(Level.SEVERE, "lexiconInputLanguage missing id for " + lexiconInputLanguage.toString());
 						}
 					}
 				}

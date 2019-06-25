@@ -67,6 +67,23 @@ public class DublinCoreHandler implements MetadataHandler {
 					}
 				}
 			}
+			
+			JsonArray lexiconInputLanguages = jsonDoc.getJsonArray("lexiconInputLanguages");
+			if (lexiconInputLanguages != null) {
+				for (JsonObject lexiconInputLanguage : lexiconInputLanguages.getValuesAs(JsonObject.class)) {
+					JsonArray multilingualLabels = lexiconInputLanguage.getJsonArray("labels");
+					
+					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+						writeDcMultilingualElement("subject", label, builder);
+						writeDcMultilingualElement("language", label, builder);
+					}
+					if (lexiconInputLanguage.containsKey("id")) {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "language", lexiconInputLanguage.getString("id"));
+					} else {
+						LOGGER.log(Level.SEVERE, "lexiconInputLanguage missing id for " + lexiconInputLanguage.toString());
+					}
+				}
+			}
 
 			JsonArray producers = jsonDoc.getJsonArray("producers");
 			if (producers != null) {
