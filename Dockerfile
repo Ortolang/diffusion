@@ -2,20 +2,11 @@ FROM maven:3.5-jdk-8-slim as builder
 
 ENV JBOSS_HOME=/jboss/wildfly-11.0.0.Final
 
-WORKDIR /jboss
-
-RUN curl -O "http://download.jboss.org/wildfly/11.0.0.Final/wildfly-11.0.0.Final.zip" && \
-    unzip -q wildfly-11.0.0.Final.zip
-
-COPY comp/src/test/resources/ortolang-roles.properties /jboss/wildfly-11.0.0.Final/standalone/configuration/
-COPY comp/src/test/resources/ortolang-users.properties /jboss/wildfly-11.0.0.Final/standalone/configuration/
-COPY comp/src/test/resources/ortolang-test-11.xml /jboss/wildfly-11.0.0.Final/standalone/configuration/
-
 WORKDIR /app
 
 COPY . .
 
-RUN mvn -q clean package -DjbossHome=/jboss/wildfly-11.0.0.Final -Djboss.home=/jboss/wildfly-11.0.0.Final
+RUN mvn -q clean package -DskipTests -DjbossHome=/jboss/wildfly-11.0.0.Final -Djboss.home=/jboss/wildfly-11.0.0.Final
 
 FROM jboss/wildfly:11.0.0.Final
 
