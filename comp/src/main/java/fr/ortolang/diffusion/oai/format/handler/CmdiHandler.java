@@ -110,6 +110,30 @@ public class CmdiHandler implements MetadataHandler {
 	        
 			writeCmdiOlacElement("description", jsonDoc, builder);
 			
+			JsonArray corporaFormats = jsonDoc.getJsonArray("corporaFormats");
+			if (corporaFormats != null) {
+				for (JsonObject corporaFormat : corporaFormats.getValuesAs(JsonObject.class)) {
+					JsonArray mimetypes = corporaFormat.getJsonArray("mimetypes");
+					if (mimetypes != null) {
+						for (JsonString mimetype : mimetypes.getValuesAs(JsonString.class)) {
+							builder.writeStartEndElement(CMDI_OLAC_NAMESPACE_PREFIX, "format", mimetype.getString());
+						}
+					}
+				}
+			}
+
+			JsonArray lexiconFormats = jsonDoc.getJsonArray("lexiconFormats");
+			if (lexiconFormats != null) {
+				for (JsonObject lexiconFormat : lexiconFormats.getValuesAs(JsonObject.class)) {
+					JsonArray mimetypes = lexiconFormat.getJsonArray("mimetypes");
+					if (mimetypes != null) {
+						for (JsonString mimetype : mimetypes.getValuesAs(JsonString.class)) {
+							builder.writeStartEndElement(CMDI_OLAC_NAMESPACE_PREFIX, "format", mimetype.getString());
+						}
+					}
+				}
+			}
+			
 			if (listHandlesRoot != null) {
 				listHandlesRoot.forEach(handleUrl -> {
 					try {
@@ -131,10 +155,12 @@ public class CmdiHandler implements MetadataHandler {
 //						writeCmdiOlacElement("subject", label, builder);
 						
 						XmlDumpAttributes attrs = new XmlDumpAttributes();
-						//TODO downgrade language (ex. mar-1 to mar)
-						if (label.containsKey("id") && label.getString("id").matches(iso639_3pattern)) {
-					    	attrs.put("olac-language", label.getString("id"));
+						if (corporaLanguage.containsKey("parentCode") && corporaLanguage.getString("parentCode").matches(iso639_3pattern)) {
+					    	attrs.put("olac-language", corporaLanguage.getString("parentCode"));
+						} else {
+							attrs.put("olac-language", corporaLanguage.getString("id"));
 						}
+						
 				    	if (label.containsKey("lang") && label.getString("lang").matches(iso639_2pattern)) {
 				    		attrs.put("xml:lang", label.getString("lang"));
 				    	}
@@ -152,9 +178,10 @@ public class CmdiHandler implements MetadataHandler {
 						// Can't write subject here !! writeCmdiOlacElement("subject", label, builder);
 						
 						XmlDumpAttributes attrs = new XmlDumpAttributes();
-						//TODO downgrade language (ex. mar-1 to mar)
-						if (label.containsKey("id") && label.getString("id").matches(iso639_3pattern)) {
-					    	attrs.put("olac-language", label.getString("id"));
+						if (lexiconInputLanguage.containsKey("parentCode") && lexiconInputLanguage.getString("parentCode").matches(iso639_3pattern)) {
+					    	attrs.put("olac-language", lexiconInputLanguage.getString("parentCode"));
+						} else {
+							attrs.put("olac-language", lexiconInputLanguage.getString("id"));
 						}
 				    	if (label.containsKey("lang") && label.getString("lang").matches(iso639_2pattern)) {
 				    		attrs.put("xml:lang", label.getString("lang"));
@@ -220,9 +247,10 @@ public class CmdiHandler implements MetadataHandler {
 
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 						XmlDumpAttributes attrs = new XmlDumpAttributes();
-						//TODO downgrade language (ex. mar-1 to mar)
-						if (label.containsKey("id") && label.getString("id").matches(iso639_3pattern)) {
-							attrs.put("olac-language", label.getString("id"));
+						if (studyLanguage.containsKey("parentCode") && studyLanguage.getString("parentCode").matches(iso639_3pattern)) {
+					    	attrs.put("olac-language", studyLanguage.getString("parentCode"));
+						} else {
+							attrs.put("olac-language", studyLanguage.getString("id"));
 						}
 				    	if (label.containsKey("lang") && label.getString("lang").matches(iso639_2pattern)) {
 				    		attrs.put("xml:lang", label.getString("lang"));
@@ -263,7 +291,22 @@ public class CmdiHandler implements MetadataHandler {
 						builder.writeStartEndElement(CMDI_OLAC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), CMDI_RESOURCE_CLASS_WEBSITE); break;
 				}
 			}
-			
+
+			JsonArray corporaDataTypes = jsonDoc.getJsonArray("corporaDataTypes");
+			if (corporaDataTypes != null) {
+				for (JsonObject corporaDataType : corporaDataTypes.getValuesAs(JsonObject.class)) {
+					JsonArray multilingualLabels = corporaDataType.getJsonArray("labels");
+
+					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+
+						XmlDumpAttributes attrs = new XmlDumpAttributes();
+				    	if (label.containsKey("lang") && label.getString("lang").matches(iso639_2pattern)) {
+				    		attrs.put("xml:lang", label.getString("lang"));
+				    	}
+				    	builder.writeStartEndElement(CMDI_OLAC_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), attrs, label.containsKey("value") ? XMLDocument.removeHTMLTag(label.getString("value")) : null);
+					}
+				}
+			}
 			JsonString linguisticDataType = jsonDoc.getJsonString("linguisticDataType");
 			if (linguisticDataType != null) {
 				if (OLAC_LINGUISTIC_TYPES.contains(linguisticDataType.getString())) {
