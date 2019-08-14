@@ -29,9 +29,7 @@ public class SearchResourceHelper {
         	query.setType(type);
         }
     	for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
-            if ("type".equals(parameter.getKey())) {
-            	query.setType(parameter.getValue()[0]);
-            } else if ("index".equals(parameter.getKey())) {
+            if ("index".equals(parameter.getKey())) {
             	query.setIndex(parameter.getValue()[0]);
             } else if ("size".equals(parameter.getKey())) {
             	try {
