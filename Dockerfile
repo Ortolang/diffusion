@@ -31,14 +31,14 @@ RUN curl -q -O "http://maven.ortolang.fr/service/local/repositories/releases/con
     tar zxvf keycloak-wildfly-adapter-dist-${VERSION_KEYCLOAK}.tar.gz && \
     $JBOSS_HOME/bin/jboss-cli.sh --file=bin/adapter-elytron-install-offline.cli
 
-COPY --chown=${CUSTOM_UID}:${CUSTOM_GID} src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration/    
+COPY --chown=jboss:jboss src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration/    
 
 RUN mkdir -p /opt/jboss/.ortolang/binary-store
-COPY --chown=${CUSTOM_UID}:${CUSTOM_GID} src/main/docker/config.properties /opt/jboss/.ortolang
+COPY --chown=jboss:jboss src/main/docker/config.properties /opt/jboss/.ortolang
 
 RUN curl -O -L 'https://github.com/vishnubob/wait-for-it/raw/master/wait-for-it.sh' && chmod +x wait-for-it.sh
 
-COPY --chown=${CUSTOM_UID}:${CUSTOM_GID} --from=builder /app/appli/target/ortolang-diffusion.ear /opt/jboss/wildfly/standalone/deployments/
+COPY --chown=jboss:jboss --from=builder /app/appli/target/ortolang-diffusion.ear /opt/jboss/wildfly/standalone/deployments/
 
 CMD cp /opt/jboss/.ortolang/config.properties /tmp/ && \
     envsubst < /tmp/config.properties > /opt/jboss/.ortolang/config.properties && \
