@@ -21,3 +21,5 @@ maven_docker_build:
   only:
     - master
     - tags
+    - 10-recherche-globale
+

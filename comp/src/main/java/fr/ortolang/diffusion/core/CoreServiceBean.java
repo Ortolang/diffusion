@@ -1,5 +1,41 @@
 package fr.ortolang.diffusion.core;
 
+/*
+ * #%L
+ * ORTOLANG
+ * A online network structure for hosting language resources and tools.
+ * 
+ * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
+ * Etienne Petitjean / ATILF UMR 7118 - CNRS
+ * Jérôme Blanchard / ATILF UMR 7118 - CNRS
+ * Bertrand Gaiffe / ATILF UMR 7118 - CNRS
+ * Cyril Pestel / ATILF UMR 7118 - CNRS
+ * Marie Tonnelier / ATILF UMR 7118 - CNRS
+ * Ulrike Fleury / ATILF UMR 7118 - CNRS
+ * Frédéric Pierre / ATILF UMR 7118 - CNRS
+ * Céline Moro / ATILF UMR 7118 - CNRS
+ *  
+ * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
+ * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
+ * %%
+ * Copyright (C) 2013 - 2015 Ortolang Team
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Lesser Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Lesser Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/lgpl-3.0.html>.
+ * #L%
+ */
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,42 +82,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-/*
- * #%L
- * ORTOLANG
- * A online network structure for hosting language resources and tools.
- * 
- * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
- * Etienne Petitjean / ATILF UMR 7118 - CNRS
- * Jérôme Blanchard / ATILF UMR 7118 - CNRS
- * Bertrand Gaiffe / ATILF UMR 7118 - CNRS
- * Cyril Pestel / ATILF UMR 7118 - CNRS
- * Marie Tonnelier / ATILF UMR 7118 - CNRS
- * Ulrike Fleury / ATILF UMR 7118 - CNRS
- * Frédéric Pierre / ATILF UMR 7118 - CNRS
- * Céline Moro / ATILF UMR 7118 - CNRS
- *  
- * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
- * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
- * %%
- * Copyright (C) 2013 - 2015 Ortolang Team
- * %%
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Lesser Public License for more details.
- * 
- * You should have received a copy of the GNU General Lesser Public
- * License along with this program.  If not, see
- * <http://www.gnu.org/licenses/lgpl-3.0.html>.
- * #L%
- */
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jackson.JsonLoader;
@@ -116,6 +116,7 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.core.indexing.OrtolangItemIndexableContent;
+import fr.ortolang.diffusion.core.indexing.SuggestItemIndexableContent;
 import fr.ortolang.diffusion.core.indexing.UserMetadataIndexableContent;
 import fr.ortolang.diffusion.core.indexing.WorkspaceIndexableContent;
 import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
@@ -131,11 +132,15 @@ import fr.ortolang.diffusion.extraction.ExtractionServiceException;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContentParser;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
+import fr.ortolang.diffusion.referential.ReferentialService;
+import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
+import fr.ortolang.diffusion.referential.indexing.SuggestReferentialEntityIndexableContent;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
 import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -3820,7 +3825,6 @@ public class CoreServiceBean implements CoreService {
             Collection collection = em.find(Collection.class, identifier.getId());
             object = collection;
             collection.setKey(key);
-//            indexableContents.add(new CollectionIndexableContent(collection));
             if (collection.isRoot() && Status.PUBLISHED.value().equals(registry.getPublicationStatus(key))) {
                 try {
                     TypedQuery<Workspace> query = em.createNamedQuery("findWorkspaceByRootCollection", Workspace.class).setParameter("root", "%" + collection.getKey() + "%");
@@ -3834,7 +3838,6 @@ public class CoreServiceBean implements CoreService {
                         break;
                     }
                     String tag = tagElement.getName();
-//                    CollectionContent collectionContent = listCollectionContent(collection.getKey());
 
                     // Rating metadata for root collections
                     int rate = 0;
@@ -3866,17 +3869,30 @@ public class CoreServiceBean implements CoreService {
                         	// Indexes in item index : /item/{ortolang-type}
                             indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, rate, workspace.isArchive(), true));
                         }
+                        
+                        // Indexes suggestions
+                        indexableContents.add(new SuggestItemIndexableContent(metadataObject, collection, workspace.getAlias()));
+                        // Extrating Organization for suggestion index
+                        ObjectMapper mapper = new ObjectMapper();
+                        try {
+							Map<String, Object> content = mapper.readValue(binarystore.getFile(metadataObject.getStream()), new TypeReference<Map<String, Object>>(){});
+							Object producers = content.get("producers");
+							if (producers != null && producers instanceof List) {
+								List<String> producersList = (List<String>) producers;
+								for(String producerId : producersList) {
+									OrtolangObjectIdentifier identifierProducer = registry.lookup(OrtolangIndexableContentParser.extractKey(producerId));
+							        if (!identifierProducer.getService().equals(ReferentialService.SERVICE_NAME)) {
+							            throw new OrtolangException("object identifier " + identifierProducer + " does not refer to service " + ReferentialService.SERVICE_NAME);
+							        }
+							        if (identifierProducer.getType().equals(ReferentialEntity.OBJECT_TYPE)) {
+										ReferentialEntity referentialEntity = em.find(ReferentialEntity.class, identifierProducer.getId());
+										indexableContents.add(new SuggestReferentialEntityIndexableContent(referentialEntity));
+							        }
+								}
+							}
+						} catch (IOException | BinaryStoreServiceException | DataNotFoundException e) {
+						}
                     }
-
-//                    for (CollectionContentEntry entry : collectionContent.getContent()) {
-//                        Map<String, Object> params = new HashMap<>();
-//                        params.put("alias", workspace.getAlias());
-//                        params.put("key", workspace.getKey());
-//                        params.put("root", collection.getKey());
-//                        params.put("path", entry.getPath());
-//                        params.put("snapshot", snapshot);
-//                        indexableContents.add(new OrtolangObjectScriptedUpdate(CoreService.SERVICE_NAME, entry.getType(), entry.getKey(),"updateRootCollectionChild", params));
-//                    }
                 } catch (IdentifierNotRegisteredException| CoreServiceException | NoResultException e) {
                     throw new OrtolangException(e.getMessage(), e);
                 }

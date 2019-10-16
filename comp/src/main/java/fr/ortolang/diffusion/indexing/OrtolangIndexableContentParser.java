@@ -48,7 +48,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class OrtolangIndexableContentParser {
+public class OrtolangIndexableContentParser {
 
     private static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\"\\$\\{([\\w:.\\-]+)}\"");
 
@@ -71,5 +71,9 @@ class OrtolangIndexableContentParser {
         } catch (IndexingServiceException | OrtolangException | RegistryServiceException | KeyNotFoundException e) {
             throw new IndexableContentParsingException("Unexpected error while parsing indexable content", e);
         }
+    }
+    
+    public static String extractKey(String expression) {
+    	return expression.substring(2, expression.length()-1);
     }
 }
