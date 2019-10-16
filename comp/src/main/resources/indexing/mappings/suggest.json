@@ -1,0 +1,28 @@
+{
+	"suggest": {
+		"properties": {
+			"label_fr": {
+				"type": "text",
+				"analyzer": "std_french_analyzer",
+				"fields": {
+					"autocomplete": {
+						"type": "text",
+						"analyzer": "suggest_label_fr_analyzer"
+					}
+				}
+			},
+			"path": {
+				"type": "keyword"
+			},
+			"type": {
+				"type": "keyword"
+			},
+			"id": {
+				"type": "keyword"
+			},
+			"key": {
+				"type": "keyword"
+			}
+		}
+	}
+}

@@ -44,6 +44,7 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
+import fr.ortolang.diffusion.referential.indexing.SuggestReferentialEntityIndexableContent;
 import fr.ortolang.diffusion.search.SearchQuery;
 import fr.ortolang.diffusion.search.SearchService;
 
@@ -64,6 +65,14 @@ public class SearchResource {
 	private SearchService search;
 
 	public SearchResource() {
+	}
+
+	@GET
+	@Path("/suggest")
+	public Response searchAll(@Context HttpServletRequest request) {
+		SearchQuery query = SearchResourceHelper.executeQuery(request);
+		query.setIndex(SuggestReferentialEntityIndexableContent.INDEX);
+		return Response.ok(SearchResultRepresentation.fromSearchResult(search.search(query))).build();
 	}
 
 	@GET

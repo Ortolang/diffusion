@@ -50,6 +50,7 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,6 +64,7 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
     public static final String INDEX = "item";
 
     public static final String INDEX_ALL = "item-all";
+    public static final int DEFAULT_ABSTRACT_LENGHT = 200;
 
     private OrtolangItemType ortolangItemType;
 
@@ -271,11 +273,25 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
             content.put("rank", rating);
             content.put("archive", archive);
 
+            List<Map<String,String>> descriptionArray = (List<Map<String,String>>) content.get("description");
+            for(Map<String,String> descriptionObj : descriptionArray) {
+            	descriptionObj.put("abstract", sumUp(descriptionObj.get("value")));
+            }
+            
             setContent(content);
-            
-            
         } catch (IOException | BinaryStoreServiceException | DataNotFoundException e) {
             LOGGER.log(Level.SEVERE, e.getMessage());
         }
+    }
+    
+    /**
+     * Sum up the description of the item.
+     * @param description the full description
+     * @return a sum up
+     */
+    private String sumUp(String description) {
+    	return new StringBuffer()
+    			.append(description.substring(0, (description.length()>DEFAULT_ABSTRACT_LENGHT) ? DEFAULT_ABSTRACT_LENGHT : description.length()))
+    			.append((description.length()>DEFAULT_ABSTRACT_LENGHT) ? "..." : "").toString();
     }
 }
