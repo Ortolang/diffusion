@@ -282,7 +282,30 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
         return result;
     }
 
-    protected static SearchRequestBuilder searchRequest(SearchQuery query, TransportClient client) {
+    @Override
+    @RolesAllowed({"admin", "system"})
+    public boolean systemRemoveIndex(String index) {
+    	LOGGER.log(Level.FINE, "Removes index " + index);
+    	
+    	if (indexExists(index)) {
+    		IndicesAdminClient adminClient = client.admin().indices();
+    		adminClient.prepareDelete(index).get(); //TODO checks if really deleted
+    	}
+    	return true;
+    }
+    
+    protected boolean indexExists(String index) {
+    	boolean indexExists = true;
+    	if (!indices.containsKey(index)) {
+    		IndicesAdminClient adminClient = client.admin().indices();
+    		if (!adminClient.prepareExists(index).get().isExists()) {
+    			indexExists = false;
+    		}
+    	}
+    	return indexExists;
+    }
+    
+     protected static SearchRequestBuilder searchRequest(SearchQuery query, TransportClient client) {
     	SearchRequestBuilder searchRequest = client.prepareSearch();
         if (!query.getQuery().isEmpty()) {
         	QueryBuilder queryBuilder = ElasticSearchQueryParser.parse(query.getQuery());

@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.indexing.elastic;
 
+import java.util.List;
+
 /*
  * #%L
  * ORTOLANG
@@ -54,6 +56,8 @@ public interface ElasticSearchService extends OrtolangService {
 
     SearchResult search(SearchQuery query);
     SearchResult systemSearch(SearchQuery query);
+    
+    boolean systemRemoveIndex(String index);
     
     String get(String index, String type, String id);
 }

@@ -62,6 +62,7 @@ import fr.ortolang.diffusion.ftp.FtpService;
 import fr.ortolang.diffusion.ftp.FtpServiceException;
 import fr.ortolang.diffusion.ftp.FtpSession;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
+import fr.ortolang.diffusion.indexing.elastic.ElasticSearchService;
 import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -158,6 +159,8 @@ public class AdminResource {
     private StatisticsService statistics;
     @EJB
     private ImportExportService export;
+    @EJB
+    private ElasticSearchService elastic;
 
     @GET
     @Path("/infos/{service}")
@@ -724,5 +727,15 @@ public class AdminResource {
         OrtolangConfig.getInstance().refresh();
         ConfigResource.clear();
         return Response.ok().build();
+    }
+    
+    @DELETE
+    @Path("/index/{id}")
+    public Response deleteIndex(@PathParam("id") String id) {
+    	if (elastic.systemRemoveIndex(id)) {
+    		return Response.noContent().build();
+    	} else {
+    		return Response.serverError().build();
+    	}
     }
 }
