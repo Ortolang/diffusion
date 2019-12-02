@@ -16,10 +16,10 @@ maven_docker_build:
     - ortolang-docker-bind
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $ORTOLANG_DIFFUSION_IMAGE --build-arg CUSTOM_UID=$OLREPO_UID --build-arg CUSTOM_GID=$OLREPO_GID --add-host=maven.ortolang.fr:192.168.32.163 .
+    - docker build -t $ORTOLANG_DIFFUSION_IMAGE --build-arg CUSTOM_UID=$OLREPO_UID --build-arg CUSTOM_GID=$OLREPO_GID --add-host=maven.ortolang.fr:192.168.37.63 .
     - docker push $ORTOLANG_DIFFUSION_IMAGE
   only:
     - master
     - tags
-    - 10-recherche-globale
+    - branches
 
