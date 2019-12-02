@@ -3890,7 +3890,8 @@ public class CoreServiceBean implements CoreService {
 							        }
 								}
 							}
-						} catch (IOException | BinaryStoreServiceException | DataNotFoundException e) {
+						} catch (IOException | ClassCastException | BinaryStoreServiceException | DataNotFoundException e) {
+							LOGGER.log(Level.WARNING, "unexpected error occurred while extracting organization for collection key " + collection.getKey(), e);
 						}
                     }
                 } catch (IdentifierNotRegisteredException| CoreServiceException | NoResultException e) {
