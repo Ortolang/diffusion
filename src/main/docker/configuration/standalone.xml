@@ -50,6 +50,7 @@
         <property name="smtp.ssl" value="${env.ORTOLANG_SMTP_SSL}"/>
         <property name="hibvernate.eviction.maxentries" value="${env.ORTOLANG_HIBERNATE_EVICTION_MAXENTRIES}"/>
         <property name="hibvernate.expiration.maxidle" value="${env.ORTOLANG_HIBERNATE_EXPIRATION_MAXIDLE}"/>
+        <property name="https.max-upload" value="${env.ORTOLANG_HTTPS_MAX_UPLOAD}"/>
     </system-properties>
 
     <management>
@@ -562,7 +563,7 @@
             <buffer-cache name="default"/>
             <server name="default-server">
                 <http-listener name="default" socket-binding="http" redirect-socket="https" enable-http2="true"/>
-                <https-listener name="https" socket-binding="https" security-realm="OrtolangRealm" enable-http2="true"/>
+                <https-listener name="https" socket-binding="https" security-realm="OrtolangRealm" max-post-size="${https.max-upload:31457280}" enable-http2="true"/>
                 <host name="default-host" alias="localhost">
                     <location name="/" handler="welcome-content"/>
                     <filter-ref name="server-header"/>
