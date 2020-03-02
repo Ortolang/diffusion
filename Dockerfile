@@ -25,7 +25,7 @@ RUN yum install -y gettext && \
 USER jboss
 WORKDIR /opt/jboss/wildfly/
 # Downloading custom PostgreSQL module for wildlfy and Keycloak Adapter
-RUN curl -q -O "http://maven.ortolang.fr/service/local/repositories/releases/content/fr/ortolang/ortolang-pgsql-wf-module/${VERSION_PGSQL}/ortolang-pgsql-wf-module-${VERSION_PGSQL}.zip" && \
+RUN curl -q -O "https://maven.ortolang.fr/service/local/repositories/releases/content/fr/ortolang/ortolang-pgsql-wf-module/${VERSION_PGSQL}/ortolang-pgsql-wf-module-${VERSION_PGSQL}.zip" && \
     unzip -q ortolang-pgsql-wf-module-${VERSION_PGSQL}.zip -d /opt/jboss/wildfly/ && \
     curl -L -q -O "https://downloads.jboss.org/keycloak/${VERSION_KEYCLOAK}/adapters/keycloak-oidc/keycloak-wildfly-adapter-dist-${VERSION_KEYCLOAK}.tar.gz" && \
     tar zxvf keycloak-wildfly-adapter-dist-${VERSION_KEYCLOAK}.tar.gz && \
