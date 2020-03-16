@@ -11,6 +11,10 @@ services:
     image: ortolang-diffusion
     user: '1158:1146'
     container_name: ortolang-diffusion
+    command: > 
+      bash -c "cp /opt/jboss/.ortolang/config.properties /tmp/ && 
+              envsubst < /tmp/config.properties > /opt/jboss/.ortolang/config.properties && 
+              /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement=0.0.0.0 --debug"
     environment:
       - ORTOLANG_DB_URL=jdbc:postgresql://docker.for.mac.localhost:5432/ortolang
       - ORTOLANG_DB_USER=ortolang
@@ -49,3 +53,4 @@ services:
       - 8443:8443
       - 9990:9990
       - 2221:2221
+      - 8787:8787
