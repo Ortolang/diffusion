@@ -45,6 +45,7 @@ services:
       - ORTOLANG_SMTP_SSL=true
       - ORTOLANG_HIBERNATE_EVICTION_MAXENTRIES=5000000
       - ORTOLANG_HIBERNATE_EXPIRATION_MAXIDLE=1200000
+      - ORTOLANG_HTTPS_MAX_UPLOAD=3221225472
     volumes:
       - ./ortolang-data/binary-store:/opt/jboss/.ortolang/binary-store
       - /Users/cpestel/Projets/ortolang/referentiels/00_init:/referentials
