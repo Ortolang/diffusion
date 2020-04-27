@@ -72,90 +72,109 @@
                     "id": "http://www.clarin.eu/cmd/1/Resources",
                     "properties": {
                         "JournalFileProxyList": {
+                            "type": "object",
                             "id": "http://www.clarin.eu/cmd/1/JournalFileProxyList",
-                            "items": {
-                                "id": "http://www.clarin.eu/cmd/1/JournalFileProxyList/JournalFileProxy",
-                                "properties": {
-                                    "JournalFileRef": {
-                                        "id": "http://www.clarin.eu/cmd/1/JournalFileProxyList/JournalFileProxy/JournalFileRef",
-                                        "type": "string"
-                                    }
-                                },
-                                "type": "object"
+                            "properties": {
+                            	"JournalFileProxy": {
+                            		"type": "array",
+                            		"id": "http://www.clarin.eu/cmd/1/JournalFileProxyList/JournalFileProxy",
+                            		"items": {
+                            			"type": "object",
+                            			"id": "http://www.clarin.eu/cmd/1/JournalFileProxyList/JournalFileProxy/Elem",
+                            			"properties": {
+                            				"JournalFileRef": {
+                            					"type": "object",
+                            					"id": "http://www.clarin.eu/cmd/1/JournalFileProxyList/JournalFileProxy/JournalFileRef",
+                            					"properties": {
+                            						"value": {
+                            							"type": "string",
+                            							"id": "http://www.clarin.eu/cmd/1/JournalFileProxyList/JournalFileProxy/JournalFileRef/value"
+                            						}
+                            					}
+                            				}
+                            			}
+                            		}
+                            	}
                             },
-                            "type": "array"
+                            "type": "object"
                         },
                         "ResourceRelationList": {
                             "id": "http://www.clarin.eu/cmd/1/ResourceRelationList",
-                            "items": {
-                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation",
-                                "properties": {
-                                    "Relation1": {
-                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation1",
-                                        "properties": {
-                                            "Role": {
-                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation1/Role",
-                                                "properties": {
-                                                    "ConceptLink": {
-                                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation1/Role/ConceptLink",
-                                                        "type": "string"
-                                                    },
-                                                    "value": {
-                                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation1/Role/value",
-                                                        "type": "string"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            },
-                                            "ref": {
-                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation1/ref",
-                                                "type": "string"
-                                            }
-                                        },
-                                        "type": "object"
-                                    },
-                                    "Relation2": {
-                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation2",
-                                        "properties": {
-                                            "Role": {
-                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation2/Role",
-                                                "properties": {
-                                                    "ConceptLink": {
-                                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation2/Role/ConceptLink",
-                                                        "type": "string"
-                                                    },
-                                                    "value": {
-                                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation2/Role/value",
-                                                        "type": "string"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            },
-                                            "ref": {
-                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation2/ref",
-                                                "type": "string"
-                                            }
-                                        },
-                                        "type": "object"
-                                    },
-                                    "RelationType": {
-                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/RelationType",
-                                        "properties": {
-                                            "ConceptLink": {
-                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/RelationType/ConceptLink",
-                                                "type": "string"
-                                            },
-                                            "value": {
-                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/RelationType/value",
-                                                "type": "string"
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                },
-                                "type": "object"
+                            "properties": {
+                            	"ResourceRelation": {
+	                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation",
+    								"items": {
+    									"id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Elem",
+    									"properties": {
+		                                    "Relation1": {
+		                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation1",
+		                                        "properties": {
+		                                            "Role": {
+		                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation1/Role",
+		                                                "properties": {
+		                                                    "ConceptLink": {
+		                                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation1/Role/ConceptLink",
+		                                                        "type": "string"
+		                                                    },
+		                                                    "value": {
+		                                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation1/Role/value",
+		                                                        "type": "string"
+		                                                    }
+		                                                },
+		                                                "type": "object"
+		                                            },
+		                                            "ref": {
+		                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation1/ref",
+		                                                "type": "string"
+		                                            }
+		                                        },
+		                                        "type": "object"
+		                                    },
+		                                    "Relation2": {
+		                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation2",
+		                                        "properties": {
+		                                            "Role": {
+		                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation2/Role",
+		                                                "properties": {
+		                                                    "ConceptLink": {
+		                                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation2/Role/ConceptLink",
+		                                                        "type": "string"
+		                                                    },
+		                                                    "value": {
+		                                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation2/Role/value",
+		                                                        "type": "string"
+		                                                    }
+		                                                },
+		                                                "type": "object"
+		                                            },
+		                                            "ref": {
+		                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/Relation2/ref",
+		                                                "type": "string"
+		                                            }
+		                                        },
+		                                        "type": "object"
+		                                    },
+		                                    "RelationType": {
+		                                        "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/RelationType",
+		                                        "properties": {
+		                                            "ConceptLink": {
+		                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/RelationType/ConceptLink",
+		                                                "type": "string"
+		                                            },
+		                                            "value": {
+		                                                "id": "http://www.clarin.eu/cmd/1/ResourceRelationList/ResourceRelation/RelationType/value",
+		                                                "type": "string"
+		                                            }
+		                                        },
+		                                        "type": "object"
+		                                    }
+	                                	},
+	                                	"type": "object"
+    								},
+                                	"type": "array"
+                                }
                             },
-                            "type": "array"
+                            "type": "object"
                         },
                         "ResourceProxyList": {
                             "id": "http://www.clarin.eu/cmd/1/ResourceProxyList",
