@@ -86,6 +86,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
@@ -3578,11 +3579,14 @@ public class CoreServiceBean implements CoreService {
                 JsonSchema schema = factory.getJsonSchema(jsonSchema);
 
                 ProcessingReport report = schema.validate(jsonFile);
+                
                 LOGGER.log(Level.FINE, report.toString());
 
                 if (!report.isSuccess()) {
                     LOGGER.log(Level.WARNING, "error during validating metadata format " + format.getName() + ": " + report.toString());
-                    throw new MetadataFormatException(report.toString());
+                    throw new MetadataFormatException(report.toString(), 
+                    		(report instanceof ListProcessingReport) ? ((ListProcessingReport) report).asJson() : null
+                    				);
                 }
             } else {
                 LOGGER.log(Level.SEVERE, "unexpected error occurred during validating metadata with metadata format [" + format.getName() + "] : schema not found");

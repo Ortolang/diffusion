@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 /*
  * #%L
  * ORTOLANG
@@ -39,6 +41,8 @@ package fr.ortolang.diffusion.core;
 @SuppressWarnings("serial")
 public class MetadataFormatException extends Exception {
 
+	private JsonNode node;
+	
 	public MetadataFormatException() {
 		super();
 	}
@@ -47,12 +51,21 @@ public class MetadataFormatException extends Exception {
 		super(message);
 	}
 
+	public MetadataFormatException(String message, JsonNode node) {
+		super(message);
+		this.node = node;
+	}
+
 	public MetadataFormatException(Throwable cause) {
 		super(cause);
 	}
 
 	public MetadataFormatException(String message, Throwable cause) {
 		super(message, cause);
+	}
+	
+	public JsonNode getJsonNode() {
+		return node;
 	}
 
 }
