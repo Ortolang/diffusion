@@ -55,6 +55,7 @@ public class MetadataFormatExceptionMapper implements ExceptionMapper<MetadataFo
         Map<String, String> map = new HashMap<>();
         map.put("code", OrtolangErrorCodes.METADATA_FORMAT_EXCEPTION);
         map.put("message", ex.getMessage());
+        map.put("node", ex.getJsonNode().toString());
         return Response.status(Status.BAD_REQUEST).entity(map).build();
     }
 }
