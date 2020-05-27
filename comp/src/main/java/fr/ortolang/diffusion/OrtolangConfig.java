@@ -169,7 +169,10 @@ public class OrtolangConfig {
         SMTP_SENDER_EMAIL("smtp.sender.email"),
 
         ELASTIC_SEARCH_HOST("elastic.search.host"),
-        ELASTIC_SEARCH_PORT("elastic.search.port");
+        ELASTIC_SEARCH_PORT("elastic.search.port"),
+        
+        FACILE_HOST("facile.host"),
+        FACILE_PATH("facile.path");
 
         private final String key;
 

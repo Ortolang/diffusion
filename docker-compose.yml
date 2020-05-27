@@ -46,6 +46,8 @@ services:
       - ORTOLANG_HIBERNATE_EVICTION_MAXENTRIES=5000000
       - ORTOLANG_HIBERNATE_EXPIRATION_MAXIDLE=1200000
       - ORTOLANG_HTTPS_MAX_UPLOAD=3221225472
+      - ORTOLANG_FACILE_HOST=http://docker.for.mac.localhost:38080
+      - ORTOLANG_FACILE_PATH=ws/xml
     volumes:
       - ./ortolang-data/binary-store:/opt/jboss/.ortolang/binary-store
       - /Users/cpestel/Projets/ortolang/referentiels/00_init:/referentials

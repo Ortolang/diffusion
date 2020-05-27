@@ -72,6 +72,9 @@ public class MetadataFormat {
     public static final String PDF = "system-x-pdf-json";
     public static final String TEXT = "system-x-text-json";
     public static final String OFFICE = "system-x-office-json";
+    // Facile validator metadata
+    public static final String FACILE_VALIDATOR = "system-facile-validator";
+
 
 
     @Id
