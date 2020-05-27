@@ -47,14 +47,16 @@ import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessTypeRepresentation;
 import fr.ortolang.diffusion.api.workspace.WorkspaceRepresentation;
+import fr.ortolang.diffusion.archive.exception.ArchiveServiceException;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.api.search.SearchResourceHelper;
-import fr.ortolang.diffusion.api.search.SearchResultRepresentation;
 import fr.ortolang.diffusion.api.search.SearchResultsRepresentation;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
+import fr.ortolang.diffusion.core.PathNotFoundException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
@@ -124,7 +126,7 @@ import java.util.stream.Collectors;
 public class AdminResource {
 
     private static final Logger LOGGER = Logger.getLogger(AdminResource.class.getName());
-;
+
     @EJB
     private HandleStoreService handle;
     @EJB
@@ -738,4 +740,14 @@ public class AdminResource {
     		return Response.serverError().build();
     	}
     }
+
+    @GET
+    @Path("/archive/check")
+    public Response checkArchivable(@QueryParam("wskey") String wskey, @QueryParam("path") @DefaultValue("") String path)
+            throws AccessDeniedException, ArchiveServiceException, CoreServiceException, KeyNotFoundException,
+            InvalidPathException, PathNotFoundException, OrtolangException {
+        core.checkArchivable(wskey, path);
+        return Response.ok().build();
+    }
+
 }

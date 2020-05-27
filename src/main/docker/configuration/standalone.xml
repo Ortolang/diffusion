@@ -487,6 +487,7 @@
                 <jms-topic name="notificationTopic" entries="jms/topic/notification java:jboss/exported/jms/topic/notification"/>
                 <jms-topic name="indexingTopic" entries="jms/topic/indexing java:jboss/exported/jms/topic/indexing"/>
                 <jms-topic name="extractionTopic" entries="jms/topic/extraction java:jboss/exported/jms/topic/extraction"/>
+                <jms-topic name="archiveTopic" entries="jms/topic/archive java:jboss/exported/jms/topic/archive"/>
                 <connection-factory name="InVmConnectionFactory" entries="java:/ConnectionFactory" connectors="in-vm"/>
                 <connection-factory name="RemoteConnectionFactory" connectors="http-connector" entries="java:jboss/exported/jms/RemoteConnectionFactory"/>
                 <pooled-connection-factory name="activemq-ra" entries="java:/JmsXA java:jboss/DefaultJMSConnectionFactory" connectors="in-vm" transaction="xa"/>

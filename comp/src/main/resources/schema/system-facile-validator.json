@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://www.ortolang.fr/schemas/1/facile/validator#",
+    "description": "Schema for metadata facile validator",
+    "type": "object",
+    "additionalProperties": true,
+    "properties": {
+        "fileName": {
+            "type": "string"
+        },
+        "valid": {
+            "type": "boolean"
+        },
+        "wellFormed": {
+            "type": "boolean"
+        },
+        "archivable": {
+            "type": "boolean"
+        },
+        "md5sum": {
+            "type": "string"
+        },
+        "sha256sum": {
+            "type": "string"
+        },
+        "size": {
+            "type": "integer"
+        },
+        "message": {
+            "type": "string"
+        }
+    }
+}

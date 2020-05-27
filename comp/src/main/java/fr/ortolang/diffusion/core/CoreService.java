@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.Set;
 
 import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.archive.exception.ArchiveServiceException;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
@@ -114,7 +115,7 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     Set<OrtolangObjectPid> buildWorkspacePidList(String wskey, String tag) throws CoreServiceException;
 
-    Map<String, String> listWorkspaceContent(String wskey, String snapshot) throws CoreServiceException;
+    Map<String, String> listWorkspaceContent(String wskey, String snapshot, boolean archivable) throws CoreServiceException;
 
     List<Change> diffWorkspaceContent(String wskey, String lsnapshot, String rsnapshot) throws CoreServiceException;
 
@@ -252,8 +253,10 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     String put(InputStream data) throws CoreServiceException, DataCollisionException;
 
-    void extractMetadata(String wskey, String path, String mimeType) throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, ExtractionServiceException,
-            KeyNotFoundException;
+    void extractMetadata(String wskey, String path, String mimeType) throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, ExtractionServiceException,KeyNotFoundException;
+
+    void checkArchivable(String wskey, String path) throws ArchiveServiceException, AccessDeniedException,
+            CoreServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, OrtolangException;
 
     /* System */
 

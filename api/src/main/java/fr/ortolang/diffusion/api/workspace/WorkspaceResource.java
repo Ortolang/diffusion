@@ -564,10 +564,11 @@ public class WorkspaceResource {
     
     @GET
     @Path("/{wskey}/snapshots/{sid}/content")
-    public Response listSnapshotContent(@PathParam(value = "wskey") String wskey, @PathParam(value = "sid") String sid)
+    public Response listSnapshotContent(@PathParam(value = "wskey") String wskey, @PathParam(value = "sid") String sid, 
+        @QueryParam("archive") @DefaultValue("false") boolean archive)
             throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException, WorkspaceUnchangedException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/snapshots/" + sid + "/content");
-        Map<String, String> content = core.listWorkspaceContent(wskey, sid);
+        Map<String, String> content = core.listWorkspaceContent(wskey, sid, archive);
         return Response.ok(content).build();
     }
 
