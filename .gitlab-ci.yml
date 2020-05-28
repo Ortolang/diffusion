@@ -17,7 +17,7 @@ test:
   tags:
     - ortolang-docker-bind
   before_script:
-    - curl -O "http://download.jboss.org/wildfly/11.0.0.Final/wildfly-11.0.0.Final.zip"
+    - curl -O "https://download.jboss.org/wildfly/11.0.0.Final/wildfly-11.0.0.Final.zip"
     - unzip wildfly-11.0.0.Final.zip
     - export JBOSS_HOME=$PWD/wildfly-11.0.0.Final
     - cp comp/src/test/resources/ortolang-users.properties wildfly-11.0.0.Final/standalone/configuration/
