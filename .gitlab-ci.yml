@@ -15,7 +15,7 @@ test:
   image: maven:3-jdk-8
   stage: test
   tags:
-    - atilf-docker
+    - ortolang-docker-bind
   before_script:
     - curl -O "http://download.jboss.org/wildfly/11.0.0.Final/wildfly-11.0.0.Final.zip"
     - unzip wildfly-11.0.0.Final.zip
@@ -25,6 +25,9 @@ test:
     - cp comp/src/test/resources/ortolang-test-11.xml wildfly-11.0.0.Final/standalone/configuration/
   script: 
     - mvn clean test -DjbossHome=wildfly-11.0.0.Final -Djboss.home=wildfly-11.0.0.Final
+  only:
+    - master
+    - branches
      
 maven_docker_build:
   stage: build
