@@ -24,7 +24,7 @@ test:
     - cp comp/src/test/resources/ortolang-roles.properties wildfly-11.0.0.Final/standalone/configuration/
     - cp comp/src/test/resources/ortolang-test-11.xml wildfly-11.0.0.Final/standalone/configuration/
   script: 
-    - mvn clean test -DjbossHome=wildfly-11.0.0.Final -Djboss.home=wildfly-11.0.0.Final
+    - mvn -q clean test -DjbossHome=$PWD/wildfly-11.0.0.Final -Djboss.home=$PWD/wildfly-11.0.0.Final
   only:
     - master
     - branches
