@@ -8,8 +8,24 @@ variables:
   ORTOLANG_DIFFUSION_IMAGE: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME
 
 stages:
+  - test
   - build
 
+test:
+  image: maven:3-jdk-8
+  stage: test
+  tags:
+    - atilf-docker
+  before_script:
+    - curl -O "http://download.jboss.org/wildfly/11.0.0.Final/wildfly-11.0.0.Final.zip"
+    - unzip wildfly-11.0.0.Final.zip
+    - export JBOSS_HOME=$PWD/wildfly-11.0.0.Final
+    - cp comp/src/test/resources/ortolang-users.properties wildfly-11.0.0.Final/standalone/configuration/
+    - cp comp/src/test/resources/ortolang-roles.properties wildfly-11.0.0.Final/standalone/configuration/
+    - cp comp/src/test/resources/ortolang-test-11.xml wildfly-11.0.0.Final/standalone/configuration/
+  script: 
+    - mvn clean test -DjbossHome=wildfly-11.0.0.Final -Djboss.home=wildfly-11.0.0.Final
+     
 maven_docker_build:
   stage: build
   tags:
