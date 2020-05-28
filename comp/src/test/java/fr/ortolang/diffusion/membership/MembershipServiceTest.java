@@ -120,6 +120,11 @@ public class MembershipServiceTest {
         jar.addClass("fr.ortolang.diffusion.indexing.IndexingServiceException");
         jar.addClass("fr.ortolang.diffusion.indexing.OrtolangIndexableContent");
         jar.addPackage("fr.ortolang.diffusion.template");
+        jar.addPackage("fr.ortolang.diffusion.archive");
+        jar.addPackage("fr.ortolang.diffusion.archive.facile");
+        jar.addPackage("fr.ortolang.diffusion.archive.exception");
+        jar.addPackage("fr.ortolang.diffusion.jobs");
+        jar.addPackage("fr/ortolang/diffusion/jobs/entity");
         jar.addAsResource("config.properties");
         jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
         LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
