@@ -53,6 +53,7 @@ public interface FormService extends OrtolangObjectProviderService {
 	String PUBLISH_SNAPSHOT_FORM = "publish-snapshot-form";
 	String MODERATE_SNAPSHOT_FORM = "moderate-snapshot-form";
 	String ITEM_FORM = "ortolang-item-form";
+	String TOOL_DERIF_FORM = "tool-derif-form";
 	
 	List<Form> listForms() throws FormServiceException;
 	

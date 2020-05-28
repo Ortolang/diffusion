@@ -307,6 +307,17 @@ public class BootstrapServiceBean implements BootstrapService {
             }
             is.close();
 
+            is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.TOOL_DERIF_FORM + ".json");
+            json = IOUtils.toString(is, "UTF-8");
+            if (!registry.exists(FormService.TOOL_DERIF_FORM)) {
+                LOGGER.log(Level.FINE, "create form : " + FormService.TOOL_DERIF_FORM);
+                form.createForm(FormService.TOOL_DERIF_FORM, "Schema Form for TOOL DeriF", json);
+            }else {
+                LOGGER.log(Level.FINE, "update form : " + FormService.TOOL_DERIF_FORM);                
+                form.updateForm(FormService.TOOL_DERIF_FORM, "Schema Form for TOOL Derif", json);
+            }
+            is.close();
+
             LOGGER.log(Level.FINE, "import metadataformat schemas");
             InputStream schemaItemInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.16-with-parts.json");
             String schemaItemHash = core.put(schemaItemInputStream);
