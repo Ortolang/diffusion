@@ -25,6 +25,10 @@ public class Constant {
 	public static final String XSI_NAMESPACE_URI = "http://www.w3.org/2001/XMLSchema-instance";
 	public static final String XSI_SCHEMA_LOCATION = "xsi:schemaLocation";
 	
+	public static final String SIP_NAMESPACE_PREFIX = "sip";
+	public static final String SIP_NAMESPACE_URI = "http://www.cines.fr/pac/sip";
+	public static final String SIP_NAMESPACE_SCHEMA_LOCATION = "http://www.cines.fr/pac/sip.xsd";
+	
 	public static final String OAI_DC_ELEMENT = "dc";
 	
 	public static final List<String> DC_ELEMENTS = Arrays.asList("contributor", "coverage", "creator", "date", "description",

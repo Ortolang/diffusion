@@ -8,4 +8,5 @@ public interface ArchiveService extends OrtolangService {
     String SERVICE_NAME = "archive";
 
     void checkArchivable(String key) throws ArchiveServiceException;
+    void createSIP(String key) throws ArchiveServiceException;
 }

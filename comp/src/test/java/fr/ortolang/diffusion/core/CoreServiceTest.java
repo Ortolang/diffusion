@@ -135,7 +135,10 @@ public class CoreServiceTest {
         jar.addPackage("fr.ortolang.diffusion.template");
         jar.addPackage("fr.ortolang.diffusion.archive");
         jar.addPackage("fr.ortolang.diffusion.archive.facile");
+        jar.addPackage("fr.ortolang.diffusion.archive.facile.entity");
         jar.addPackage("fr.ortolang.diffusion.archive.exception");
+        jar.addPackage("fr.ortolang.diffusion.oai.exception");
+        jar.addPackage("fr.ortolang.diffusion.oai.format.builder");
         jar.addPackage("fr.ortolang.diffusion.jobs");
         jar.addPackage("fr/ortolang/diffusion/jobs/entity");
         jar.addAsResource("config.properties");
