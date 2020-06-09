@@ -47,6 +47,7 @@ import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessTypeRepresentation;
 import fr.ortolang.diffusion.api.workspace.WorkspaceRepresentation;
+import fr.ortolang.diffusion.archive.ArchiveService;
 import fr.ortolang.diffusion.archive.exception.ArchiveServiceException;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
@@ -163,6 +164,8 @@ public class AdminResource {
     private ImportExportService export;
     @EJB
     private ElasticSearchService elastic;
+    @EJB
+    private ArchiveService archive;
 
     @GET
     @Path("/infos/{service}")
@@ -747,6 +750,13 @@ public class AdminResource {
             throws AccessDeniedException, ArchiveServiceException, CoreServiceException, KeyNotFoundException,
             InvalidPathException, PathNotFoundException, OrtolangException {
         core.checkArchivable(wskey, path);
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/archive/sip")
+    public Response createSIP(@QueryParam("wskey") String wskey) throws ArchiveServiceException {
+        archive.createSIP(wskey);
         return Response.ok().build();
     }
 

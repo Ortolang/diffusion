@@ -3,6 +3,7 @@ package fr.ortolang.diffusion.archive.facile;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
@@ -22,12 +23,16 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.jboss.security.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.archive.exception.CheckArchivableException;
+import fr.ortolang.diffusion.archive.facile.entity.Validator;
 
 @Startup
 @Local(FacileService.class)
@@ -79,9 +84,10 @@ public class FacileServiceBean implements FacileService {
     }
 
     @Override
-    public String checkArchivableFile(File content, String filename) throws CheckArchivableException {
+    public Validator checkArchivableFile(File content, String filename) throws CheckArchivableException {
         LOGGER.log(Level.FINE, "Checking archivable file with filename {}", filename);
 
+        Validator validator = null;
         String xml = null;
         client = ClientBuilder.newClient();
         target = client.target(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FACILE_HOST))
@@ -108,7 +114,20 @@ public class FacileServiceBean implements FacileService {
                 response.close();
             }
         }
-        return xml;
+        if (xml != null) {
+        	try {
+        		validator = parseXML(xml);
+        	} catch (JAXBException e) {
+        		throw new CheckArchivableException("Unable to load parse the xml file from Facile service", e);
+        	}
+        }
+        return validator;
+    }
+
+    private Validator parseXML(String xml) throws JAXBException {
+        JAXBContext ctx = JAXBContext.newInstance(Validator.class);
+        Unmarshaller um = ctx.createUnmarshaller();
+        return (Validator) um.unmarshal(new StringReader(xml));
     }
 
 }

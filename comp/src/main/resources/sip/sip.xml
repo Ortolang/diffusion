@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pac xmlns="http://www.cines.fr/pac/sip"
+    xsi:schemaLocation="http://www.cines.fr/pac/sip http://www.cines.fr/pac/sip.xsd"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <DocDC>
+        <title language="fra">Corpus journalistique issu de l'Est Républicain</title>
+        <creator>Non renseigné</creator>
+        <subject language="fra">Non renseigné</subject>
+        <description language="fra">Non renseigné</description>
+        <publisher>ATILF</publisher>
+        <date>2020-05-29</date>
+        <type language="fra">Non renseigné</type>
+        <format language="fra">Non renseigné</format>
+        <language>fra</language>
+        <rights language="fra">Non renseigné</rights>
+    </DocDC>
+    <DocMeta>
+        <identifiantDocProducteur>est_republicainXXX</identifiantDocProducteur>
+        <evaluation>
+            <DUA>P15Y</DUA>
+            <traitement language="fra">conservation définitive</traitement>
+            <dateDebut>2020-05-29</dateDebut>
+        </evaluation>
+        <communicabilite>
+            <code type="SEDA">AR038</code>
+            <dateDebut>2020-05-29</dateDebut>
+        </communicabilite>
+        <serviceVersant>ORTOLANG</serviceVersant>
+        <planClassement language="fra">huma_num</planClassement>
+    </DocMeta>
+    <FichMeta>
+        <encodage>UTF-8</encodage>
+        <formatFichier>TEI</formatFichier>
+        <nomFichier>1999-05-17.xml</nomFichier>
+        <empreinteOri type="MD5">f53725e1591d5fb1f42586e0369ca790</empreinteOri>
+        <structureFichier>DESC/erOdd.xml</structureFichier>
+    </FichMeta>
+    <FichMeta>
+        <formatFichier>XML</formatFichier>
+        <nomFichier>DESC/erOdd.xml</nomFichier>
+        <empreinteOri type="MD5">fea79f2ea04c6775e48ffe78ff6eae66</empreinteOri>
+    </FichMeta>
+</pac>

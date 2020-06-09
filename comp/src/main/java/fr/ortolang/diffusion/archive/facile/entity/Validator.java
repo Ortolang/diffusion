@@ -13,6 +13,9 @@ public class Validator {
     private String md5sum;
     private String sha256sum;
     private Integer size;
+    private String format;
+    private String version;
+    private String encoding;
     private String message;
 
     @XmlElement(name="fileName")
@@ -78,7 +81,34 @@ public class Validator {
         this.size = size;
     }
 
-    @XmlElement(name = "message")
+    @XmlElement(name = "format")
+    public String getFormat() {
+		return format;
+	}
+
+	public void setFormat(String format) {
+		this.format = format;
+	}
+
+	@XmlElement(name = "version")
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
+	@XmlElement(name = "encoding")
+	public String getEncoding() {
+		return encoding;
+	}
+
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
+	}
+
+	@XmlElement(name = "message")
     public String getMessage() {
         return message;
     }
