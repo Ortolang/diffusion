@@ -20,9 +20,16 @@ USER root
 RUN yum install -y gettext && \
     sed -i -E "s/^jboss:x:[[:digit:]]+:[[:digit:]]+:(.*)$/jboss:x:${CUSTOM_UID}:${CUSTOM_GID}:\1/" /etc/passwd && \
     sed -i -E "s/^jboss:x:[[:digit:]]+:(.*)$/jboss:x:${CUSTOM_GID}:\1/" /etc/group && \
-    chown -R ${CUSTOM_UID}:${CUSTOM_GID} /opt/jboss
+    chown -R ${CUSTOM_UID}:${CUSTOM_GID} /opt/jboss && \
+    localedef -i fr_FR -f UTF-8 fr_FR.UTF-8 && \
+    echo "LANG=\"fr_FR.UTF-8\"" > /etc/locale.conf
 
 USER jboss
+
+ENV LANG fr_FR.UTF-8
+ENV LANGUAGE fr_FR.UTF-8
+ENV LC_ALL fr_FR.UTF-8
+
 WORKDIR /opt/jboss/wildfly/
 # Downloading custom PostgreSQL module for wildlfy and Keycloak Adapter
 RUN curl -q -O "https://maven.ortolang.fr/service/local/repositories/releases/content/fr/ortolang/ortolang-pgsql-wf-module/${VERSION_PGSQL}/ortolang-pgsql-wf-module-${VERSION_PGSQL}.zip" && \
