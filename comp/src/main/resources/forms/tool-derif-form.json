@@ -84,5 +84,9 @@
         }
       }
     ]
+  },
+  {
+    "className": "section-label",
+    "template": "<div class='alert alert-info' role='alert'><p>Les informations relatives à la validation et l'affichage du fichier XML se trouvent dans la description.</p></div>"
   }
 ]
