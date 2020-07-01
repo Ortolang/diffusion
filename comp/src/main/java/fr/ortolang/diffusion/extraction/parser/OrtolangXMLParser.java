@@ -65,7 +65,7 @@ public class OrtolangXMLParser extends CompositeParser {
 
     public static final String XML_TYPE_KEY = "XML-Type";
 
-    enum XMLType {
+    public enum XMLType {
         TEI,
         TRANS
     }

@@ -754,9 +754,9 @@ public class AdminResource {
     }
 
     @POST
-    @Path("/archive/sip")
-    public Response createSIP(@QueryParam("wskey") String wskey) throws ArchiveServiceException {
-        archive.createSIP(wskey);
+    @Path("/archive/sip/{wskey}")
+    public Response createSIP(@PathParam("wskey") String wskey, @QueryParam("schema") String schema) throws ArchiveServiceException {
+        archive.createSIP(wskey, schema);
         return Response.ok().build();
     }
 

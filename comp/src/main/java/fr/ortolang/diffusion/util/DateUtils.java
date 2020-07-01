@@ -25,4 +25,9 @@ public class DateUtils {
 		}
 		return true;
 	}
+	
+	public static String getCurrentDate() {
+		Date current = new Date();
+		return Constant.w3cdtf.format(current);
+	}
 }
