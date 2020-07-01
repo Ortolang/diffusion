@@ -12,7 +12,7 @@ public class Validator {
     private Boolean archivable;
     private String md5sum;
     private String sha256sum;
-    private Integer size;
+    private Long size;
     private String format;
     private String version;
     private String encoding;
@@ -73,11 +73,11 @@ public class Validator {
     }
 
     @XmlElement(name = "size")
-    public Integer getSize() {
+    public Long getSize() {
         return size;
     }
 
-    public void setSize(Integer size) {
+    public void setSize(Long size) {
         this.size = size;
     }
 

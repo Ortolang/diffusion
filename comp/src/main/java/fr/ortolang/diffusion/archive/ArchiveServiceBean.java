@@ -4,7 +4,6 @@ import static fr.ortolang.diffusion.oai.format.Constant.CMDI_RESOURCE_CLASS_CORP
 import static fr.ortolang.diffusion.oai.format.Constant.CMDI_RESOURCE_CLASS_TERMINOLOGY;
 import static fr.ortolang.diffusion.oai.format.Constant.CMDI_RESOURCE_CLASS_TOOL_SERVICE;
 import static fr.ortolang.diffusion.oai.format.Constant.CMDI_RESOURCE_CLASS_WEBSITE;
-import static fr.ortolang.diffusion.oai.format.Constant.DC_ELEMENTS;
 import static fr.ortolang.diffusion.oai.format.Constant.SIP_NAMESPACE_PREFIX;
 import static fr.ortolang.diffusion.oai.format.Constant.SIP_NAMESPACE_SCHEMA_LOCATION;
 import static fr.ortolang.diffusion.oai.format.Constant.SIP_NAMESPACE_URI;
@@ -66,9 +65,11 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.archive.exception.ArchiveServiceException;
 import fr.ortolang.diffusion.archive.facile.entity.Validator;
+import fr.ortolang.diffusion.archive.format.Sip;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import fr.ortolang.diffusion.util.DateUtils;
 import fr.ortolang.diffusion.util.XmlUtils;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpNamespace;
@@ -84,6 +85,7 @@ import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.extraction.parser.OrtolangXMLParser;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
@@ -144,7 +146,7 @@ public class ArchiveServiceBean implements ArchiveService {
     @PostConstruct
     public void init() {
         this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_SIP_HOME);
-        LOGGER.log(Level.INFO, "Initializing archive service with base directory : {0}", base);
+        LOGGER.log(Level.INFO, "Initializing archive service with base directory : {}" , base.toString());
         try {
 			Files.createDirectories(base);
 		} catch (Exception e) {
@@ -187,10 +189,10 @@ public class ArchiveServiceBean implements ArchiveService {
     }
 
 	@Override
-	public void createSIP(String key) throws ArchiveServiceException {
+	public void createSIP(String key, String schema) throws ArchiveServiceException {
 		Map<String, Validator> imported = createSIPDirectories(key);
 		try {
-			createSIPXML(key, imported);
+			createSIPXML(key, imported, schema);
 		} catch (RegistryServiceException | KeyNotFoundException | CoreServiceException | BinaryStoreServiceException
 				| DataNotFoundException e) {
 			LOGGER.log(Level.SEVERE, "unable create sip.xml", e);
@@ -224,7 +226,7 @@ public class ArchiveServiceBean implements ArchiveService {
      * @throws DataNotFoundException 
      * @throws BinaryStoreServiceException 
      */
-    private void createSIPXML(String key, Map<String, Validator> imported) throws ArchiveServiceException, RegistryServiceException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException, DataNotFoundException {
+    private void createSIPXML(String key, Map<String, Validator> imported, String schema) throws ArchiveServiceException, RegistryServiceException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException, DataNotFoundException {
     	Workspace workspace = core.systemReadWorkspace(key);
     	String snapshot = core.findWorkspaceLatestPublishedSnapshot(key);
     	if (snapshot == null) {
@@ -258,13 +260,13 @@ public class ArchiveServiceBean implements ArchiveService {
     		namespaces.put(SIP_NAMESPACE_PREFIX, new XmlDumpNamespace(SIP_NAMESPACE_URI, SIP_NAMESPACE_SCHEMA_LOCATION));
     		namespaces.put(XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(XSI_NAMESPACE_URI));
     		builder.setNamespaces(namespaces);
-    		builder.writeStartDocument(SIP_NAMESPACE_PREFIX, "pac", null);
+    		builder.writeStartDocument(SIP_NAMESPACE_PREFIX, Sip.Pac, null);
 
     		createDocDC(key, item, writer, builder);
     		createDocMeta(workspace.getAlias(), writer, builder);
-    		createFichMeta(imported, writer, builder);
+    		createFichMeta(imported, writer, builder, schema);
 
-    		writer.writeEndElement();
+    		writer.writeEndElement(); // end of Pac
     		writer.writeEndDocument();
     		writer.flush();
     		writer.close();
@@ -297,61 +299,65 @@ public class ArchiveServiceBean implements ArchiveService {
 		JsonReader jsonReader = Json.createReader(reader);
     	JsonObject json = jsonReader.readObject();
 
- 	   	builder.writeStartElement(SIP_NAMESPACE_PREFIX, "DocDC"); //// DocDC
+ 	   	builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.DocDc); //// DocDC
 
-        writeElement("title", json, builder);
+        writeElement(Sip.DocDcTitle, json, builder);
 
 		JsonArray contributors = json.getJsonArray("contributors");
+		String creator = null;
 		if (contributors != null) {
 			for (JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
 				JsonArray roles = contributor.getJsonArray("roles");
 				for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
 					String roleId = role.getString("id");
 					if ("author".equals(roleId)) {
-						builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "creator", person(contributor));
-					} else {
-						builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "creator", "Non renseigné");
+						creator = person(contributor);
 					}
 				}
 			}
-		} else {
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "creator", "Non renseigné");
+		}
+		
+		if (creator != null) {
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcCreator, creator);
+		}
+		else {
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcCreator, Sip.NRValue);
 		}
 		if (json.containsKey("keywords")) {
-			writeElement("keywords", json, "subject", builder);
+			writeElement("keywords", json, Sip.DocDcSubject, builder);
 		} else {
 			XmlDumpAttributes attrs = new XmlDumpAttributes();
 	        attrs.put("language", "fra");
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "subject", attrs, "Non renseigné");
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcSubject, attrs, Sip.NRValue);
 		}
-        writeElement("description", json, builder);
+        writeElement(Sip.DocDcDescription, json, builder);
 
 		JsonArray producers = json.getJsonArray("producers");
 		if (producers != null) {
 			for (JsonObject producer : producers.getValuesAs(JsonObject.class)) {
 				if (producer.containsKey("fullname")) {
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "publisher", producer.getString("fullname"));
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcPublisher, producer.getString("fullname"));
 				}
 			}
 		} else {
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "publisher", "Non renseigné");
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcPublisher, Sip.NRValue);
 		}
 		if (contributors != null) {
 			for (JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
 				JsonArray roles = contributor.getJsonArray("roles");
 				for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
 					String roleId = role.getString("id");
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "contributor", person(contributor) + " (" + roleId + ")");
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcContributor, person(contributor) + " (" + roleId + ")");
 				}
 			}
 		}
 		JsonString creationDate = json.getJsonString("originDate");
 		if (creationDate != null) {
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "date", creationDate.getString());
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcDate, creationDate.getString());
 		} else {
 			JsonString publicationDate = json.getJsonString("publicationDate");
 			if (publicationDate != null) {
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "date", publicationDate.getString());
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcDate, publicationDate.getString());
 			}
 		}
 
@@ -363,42 +369,42 @@ public class ArchiveServiceBean implements ArchiveService {
 		if (resourceType != null) {
 			switch(resourceType.getString()) {
 				case ORTOLANG_RESOURCE_TYPE_CORPORA:
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), attrEng, CMDI_RESOURCE_CLASS_CORPUS); break;
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcType, attrEng, CMDI_RESOURCE_CLASS_CORPUS); break;
 				case ORTOLANG_RESOURCE_TYPE_LEXICON:
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), attrEng, OLAC_LINGUISTIC_TYPES.get(1)); break;
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcType, attrEng, OLAC_LINGUISTIC_TYPES.get(1)); break;
 				case ORTOLANG_RESOURCE_TYPE_TERMINOLOGY:
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), attrEng, CMDI_RESOURCE_CLASS_TERMINOLOGY); break;
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcType, attrEng, CMDI_RESOURCE_CLASS_TERMINOLOGY); break;
 				case ORTOLANG_RESOURCE_TYPE_TOOL:
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), attrEng, CMDI_RESOURCE_CLASS_TOOL_SERVICE); break;
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcType, attrEng, CMDI_RESOURCE_CLASS_TOOL_SERVICE); break;
 				case CMDI_RESOURCE_CLASS_WEBSITE:
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, DC_ELEMENTS.get(14), attrEng, CMDI_RESOURCE_CLASS_WEBSITE); break;
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcType, attrEng, CMDI_RESOURCE_CLASS_WEBSITE); break;
 			}
 		}
-		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "format", attrFra, "Non renseigné");
+		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcFormat, attrFra, Sip.NRValue);
 		// TODO find the iso639_3 for the language
-		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "language", "fra");
+		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcLanguage, "fra");
 
 		JsonObject statusOfUse = json.getJsonObject("statusOfUse");
 		if (statusOfUse != null) {
 			String idStatusOfUse = statusOfUse.getString("id");
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "rights", attrEng, idStatusOfUse);
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcRights, attrEng, idStatusOfUse);
 
 			JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
 			for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-				writeMultilingualElement("rights", label, builder);
+				writeMultilingualElement(Sip.DocDcRights, label, builder);
 			}
 		}
 		JsonArray conditionsOfUse = json.getJsonArray("conditionsOfUse");
 		if (conditionsOfUse != null) {
 			for (JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
-				writeMultilingualElement("rights", label, builder);
+				writeMultilingualElement(Sip.DocDcRights, label, builder);
 			}
 		}
 		JsonObject license = json.getJsonObject("license");
 		if (license != null && license.containsKey("label")) {
 			XmlDumpAttributes attrs = new XmlDumpAttributes();
 	        attrs.put("language", "fra");
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "rights", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcRights, attrs, XMLDocument.removeHTMLTag(license.getString("label")));
 		}
 		
         writer.writeEndElement(); //// DocDC
@@ -407,30 +413,58 @@ public class ArchiveServiceBean implements ArchiveService {
 
     private void createDocMeta(String alias, XMLStreamWriter writer, XMLMetadataBuilder builder) throws XMLStreamException, MetadataBuilderException {
 
- 	   builder.writeStartElement(SIP_NAMESPACE_PREFIX, "DocMeta"); //// DocMeta
+ 	   builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.DocMeta); //// DocMeta
 
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "identifiantDocProducteur", alias);
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "serviceVersant", "ORTOLANG");
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaIdentifiantDocProducteur, alias);
+       builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaEvaluation);
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaDUA, "P15Y");
+       
+       XmlDumpAttributes attrs = new XmlDumpAttributes();
+       attrs.put("language", "fra");
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaTraitement, attrs, "conservation définitive");
+       String currentDate = DateUtils.getCurrentDate();
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaDateDebut, currentDate);
+       builder.writeEndElement(); // evaluation
+       
+       builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaCommunicabilite);
+       
+       XmlDumpAttributes attrsCode = new XmlDumpAttributes();
+       attrsCode.put("type", "SEDA");
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaCode, attrsCode, "AR038");
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaDateDebut, currentDate);
+       builder.writeEndElement(); // communicabilite
+       
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaServiceVersant, "ORTOLANG");
+       XmlDumpAttributes attrsPlanClassement = new XmlDumpAttributes();
+       attrsPlanClassement.put("language", "fra");
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaPlanClassement, attrsPlanClassement, "huma_num");
  	   
  	   writer.writeEndElement(); //// DocMeta
 
     }
 
-    private void createFichMeta(Map<String, Validator> imported, XMLStreamWriter writer, XMLMetadataBuilder builder) throws XMLStreamException, MetadataBuilderException {
+    private void createFichMeta(Map<String, Validator> imported, XMLStreamWriter writer, XMLMetadataBuilder builder, String schema) throws XMLStreamException, MetadataBuilderException {
  	   for(Map.Entry<String, Validator> entry : imported.entrySet()) {
- 		  builder.writeStartElement(SIP_NAMESPACE_PREFIX, "FichMeta"); //// FichMeta
+ 		  builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.FichMeta); //// FichMeta
  		  
  		  // Removes the first '/' from the absolute path in the workspace ortolang
- 		  if (!entry.getValue().getEncoding().equals("NA")) {
- 			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "encodage", entry.getValue().getEncoding());
+ 		  if (entry.getValue().getEncoding() != null && !entry.getValue().getEncoding().equals(Sip.NAValue)) {
+ 			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaEncodage, entry.getValue().getEncoding().toUpperCase());
  		  }
- 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "formatFichier", entry.getValue().getFormat());
- 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "nomFichier", entry.getKey().substring(1));
+ 		  if (entry.getValue().getFormat().equals(OrtolangXMLParser.XMLType.TEI.name()) && entry.getKey().startsWith("/DESC")) {
+			 builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaFormatFichier, "XML");
+		  } else {
+			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaFormatFichier, entry.getValue().getFormat());
+		  }
+ 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaNomFichier, entry.getKey().substring(1));
  		  XmlDumpAttributes attrs = new XmlDumpAttributes();
-	      attrs.put("type", "MD5");
- 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, "empreinteOri", attrs, entry.getValue().getMd5sum());
- 		 
- 		  writer.writeEndElement(); //// DocMeta
+	      attrs.put("type", Sip.FichMetaMD5);
+ 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaEmpreinteOri, attrs, entry.getValue().getMd5sum());
+ 		  if (entry.getValue().getFormat().equals(OrtolangXMLParser.XMLType.TEI.name()) && !entry.getKey().startsWith("/DESC") && schema != null) {
+ 			 builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaStructureFichier, schema);
+ 		  }
+ 		  
+ 		  writer.writeEndElement(); //// FichMeta
  	   }
     }
     
