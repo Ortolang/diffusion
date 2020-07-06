@@ -74,6 +74,7 @@ public class FormRepresentation {
     public static FormRepresentation fromForm(Form form) {
         FormRepresentation representation = new FormRepresentation();
         representation.setKey(form.getKey());
+        representation.setName(form.getName());
         representation.setDefinition(form.getDefinition());
         return  representation;
     }
