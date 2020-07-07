@@ -226,6 +226,9 @@ public class FormServiceBean implements FormService {
 			if (form == null) {
 				throw new FormServiceException("unable to find a form for id " + identifier.getId());
 			}
+			if (name == null || definition == null) {
+				throw new FormServiceException("unable to update the form for " + key + " with name or definition null");
+			}
 			if ( form.getName().equals(name) && form.getDefinition().equals(definition) ) {
 			    LOGGER.log(Level.FINE, "form name and definition are the same than before for key [" + key + "], nothing to do");
 			    return;

@@ -94,6 +94,7 @@ public class FormResource {
 
     @PUT
     @Path("/{key}")
+    @Consumes(MediaType.APPLICATION_JSON)
     public Response updateForm(@PathParam(value = "key") String key, FormRepresentation formRepresentation) throws FormServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "PUT /forms/" + key);
         service.updateForm(key, formRepresentation.getName(), formRepresentation.getDefinition());
