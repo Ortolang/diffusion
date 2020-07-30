@@ -120,7 +120,7 @@ public class ArchiveServiceWorkerBean implements ArchiveServiceWorker {
             LOGGER.log(Level.WARNING, "Checking {0} worker already started", JOB_TYPE);
             return;
         }
-        LOGGER.log(Level.INFO, "Checking {Ø} worker thread", JOB_TYPE);
+        LOGGER.log(Level.INFO, "Checking {0} worker thread", JOB_TYPE);
         this.factory = new MD5FilterInputStreamFactory();
         worker = new ArchiveWorkerThread();
         queue = new DelayQueue<>();

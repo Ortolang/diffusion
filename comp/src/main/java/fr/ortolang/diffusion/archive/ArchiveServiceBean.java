@@ -146,7 +146,7 @@ public class ArchiveServiceBean implements ArchiveService {
     @PostConstruct
     public void init() {
         this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_SIP_HOME);
-        LOGGER.log(Level.INFO, "Initializing archive service with base directory : {}" , base.toString());
+        LOGGER.log(Level.INFO, "Initializing archive service with base directory : {0}" , base.toString());
         try {
 			Files.createDirectories(base);
 		} catch (Exception e) {
