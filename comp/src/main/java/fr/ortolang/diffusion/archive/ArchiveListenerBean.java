@@ -23,7 +23,7 @@ public class ArchiveListenerBean implements MessageListener {
     private static final Logger LOGGER = Logger.getLogger(ArchiveListenerBean.class.getName());
 
     @EJB
-    private ArchiveWorkerService worker;
+    private ArchiveServiceWorker worker;
 
     @Override
     @PermitAll

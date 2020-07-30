@@ -65,13 +65,13 @@ import fr.ortolang.diffusion.extraction.parser.OrtolangXMLParser;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 
 @Startup
-@Singleton(name = ArchiveWorkerService.WORKER_NAME)
+@Singleton(name = ArchiveServiceWorker.WORKER_NAME)
 @RunAs("system")
 @SecurityDomain("ortolang")
 @PermitAll
-public class ArchiveWorkerServiceBean implements ArchiveWorkerService {
+public class ArchiveServiceWorkerBean implements ArchiveServiceWorker {
 
-    private static final Logger LOGGER = Logger.getLogger(ArchiveWorkerServiceBean.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ArchiveServiceWorkerBean.class.getName());
 
     private static final int DELAY = 3000;
 
@@ -109,7 +109,7 @@ public class ArchiveWorkerServiceBean implements ArchiveWorkerService {
 
     private DelayQueue<Job> queue;
 
-    public ArchiveWorkerServiceBean() {
+    public ArchiveServiceWorkerBean() {
         // no need to initialize
     }
 
