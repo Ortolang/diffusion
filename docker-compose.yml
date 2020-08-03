@@ -4,7 +4,7 @@ services:
   olrepo:
     build: 
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
       args:
         CUSTOM_UID: '1158'
         CUSTOM_GID: '1146'
@@ -14,8 +14,10 @@ services:
     command: > 
       bash -c "cp /opt/jboss/.ortolang/config.properties /tmp/ && 
               envsubst < /tmp/config.properties > /opt/jboss/.ortolang/config.properties && 
-              /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement=0.0.0.0 --debug"
+              /opt/jboss/docker-entrypoint.sh -b 0.0.0.0 -bmanagement=0.0.0.0 --debug -Dkeycloak.migration.action=import -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.file=/opt/jboss/wildfly/standalone/configuration/ortolang-realm.json -Dkeycloak.migration.strategy=IGNORE_EXISTING"
     environment:
+      - 'KEYCLOAK_USER=admin'
+      - 'KEYCLOAK_PASSWORD=tagada54'
       - ORTOLANG_DB_URL=jdbc:postgresql://docker.for.mac.localhost:5432/ortolang
       - ORTOLANG_DB_USER=ortolang
       - ORTOLANG_DB_PASS=tagada54
@@ -33,8 +35,8 @@ services:
       - ORTOLANG_STATIC_SITE_VERSION=latest
       - ORTOLANG_API_URL_SSL=http://docker.for.mac.localhost:8080/api
       - ORTOLANG_API_URL_NOSSL=http://docker.for.mac.localhost:8080/api
-      - ORTOLANG_AUTH_URL=http://docker.for.mac.localhost:18080/auth
-      - ORTOLANG_AUTH_LOGOUT=http://docker.for.mac.localhost:18080/
+      - ORTOLANG_AUTH_URL=http://docker.for.mac.localhost:8080/auth
+      - ORTOLANG_AUTH_LOGOUT=http://docker.for.mac.localhost:8080/
       - ORTOLANG_MARKET_URL=http://docker.for.mac.localhost:8888/
       - ORTOLANG_PRERENDERING_ACTIVATED=false
       - ORTOLANG_CACHE_VERSION=1
