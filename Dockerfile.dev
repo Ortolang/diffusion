@@ -43,7 +43,8 @@ RUN curl -q -O "https://maven.ortolang.fr/service/local/repositories/releases/co
 #    cp "diffusion-application-${VERSION_DIFFUSION}.ear" /opt/jboss/wildfly/standalone/deployments/ && \
     $JBOSS_HOME/bin/jboss-cli.sh --file=bin/adapter-elytron-install-offline.cli
 
-COPY --chown=jboss:jboss src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration/    
+COPY --chown=jboss:jboss src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration/   
+RUN cp  /opt/jboss/wildfly/standalone/configuration/standalone-dev.xml /opt/jboss/wildfly/standalone/configuration/standalone.xml
 
 RUN mkdir -p /opt/jboss/.ortolang/binary-store
 COPY --chown=jboss:jboss src/main/docker/config.properties /opt/jboss/.ortolang
