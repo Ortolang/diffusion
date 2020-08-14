@@ -268,7 +268,8 @@ public class ArchiveServiceWorkerBean implements ArchiveServiceWorker {
 					byte[] buffer = new byte[10240];
 		            while (hashInputStream.read(buffer) >= 0) {
 		            }
-					validator.setMd5sum(hashInputStream.getHash());
+		            String hashCode = hashInputStream.getHash();
+					validator.setMd5sum(hashCode);
 				} catch (NoSuchAlgorithmException | IOException e) {
 					validator.setMessage(e.getMessage());
 					LOGGER.log(Level.WARNING, "Cant generate md5 for the data object", e);

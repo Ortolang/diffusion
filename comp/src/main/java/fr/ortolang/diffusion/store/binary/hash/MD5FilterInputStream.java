@@ -8,6 +8,8 @@ import java.security.NoSuchAlgorithmException;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.codec.binary.Hex;
+
 public class MD5FilterInputStream extends HashedFilterInputStream {
 
     private MessageDigest digest;
@@ -39,7 +41,9 @@ public class MD5FilterInputStream extends HashedFilterInputStream {
 
     @Override
     public String getHash(){
-        BigInteger bi = new BigInteger(1, digest.digest());
-        return bi.toString(16);
+//    	byte[] digestByte = digest.digest();
+//        BigInteger bi = new BigInteger(1,digestByte);
+//        return bi.toString(16);
+    	return new String(Hex.encodeHex(digest.digest()));
     }
 }
