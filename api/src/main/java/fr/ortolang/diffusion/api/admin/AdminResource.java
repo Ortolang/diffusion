@@ -51,6 +51,10 @@ import fr.ortolang.diffusion.archive.ArchiveService;
 import fr.ortolang.diffusion.archive.exception.ArchiveServiceException;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.content.ContentSearchNotFoundException;
+import fr.ortolang.diffusion.content.ContentSearchService;
+import fr.ortolang.diffusion.content.ContentSearchServiceException;
+import fr.ortolang.diffusion.content.entity.ContentSearchResource;
 import fr.ortolang.diffusion.api.search.SearchResourceHelper;
 import fr.ortolang.diffusion.api.search.SearchResultsRepresentation;
 import fr.ortolang.diffusion.core.CoreService;
@@ -166,6 +170,8 @@ public class AdminResource {
     private ElasticSearchService elastic;
     @EJB
     private ArchiveService archive;
+    @EJB
+    private ContentSearchService content;
 
     @GET
     @Path("/infos/{service}")
@@ -757,6 +763,30 @@ public class AdminResource {
     @Path("/archive/sip/{wskey}")
     public Response createSIP(@PathParam("wskey") String wskey, @QueryParam("schema") String schema) throws ArchiveServiceException {
         archive.createSIP(wskey, schema);
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/content/resource/{wskey}")
+    public Response createContentResource(@PathParam("wskey") String wskey) throws ContentSearchServiceException {
+        ContentSearchResource res = content.createResource(wskey.trim());
+        return Response.ok(ContentSearchResourceRepresentation.fromResource(res)).build();
+    }
+
+    @DELETE
+    @Path("/content/resource/{wskey}")
+    public Response deleteContentResource(@PathParam("wskey") String wskey) throws ContentSearchServiceException, ContentSearchNotFoundException {
+    	ContentSearchResource res = content.findResource(wskey.trim());
+    	content.purgeResource(res.getId());
+    	content.deleteResource(res.getId());
+        return Response.noContent().build();
+    }
+
+    @POST
+    @Path("/content/resource/{wskey}/index")
+    public Response indexContentResource(@PathParam("wskey") String wskey) throws ContentSearchServiceException, ContentSearchNotFoundException {
+    	// Indexes the latest published snapshot
+        content.indexResourceFromWorkspace(wskey, null);
         return Response.ok().build();
     }
 

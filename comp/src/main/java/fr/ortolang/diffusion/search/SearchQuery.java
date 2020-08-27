@@ -15,6 +15,7 @@ public class SearchQuery {
 	private String[] includes;
 	private String[] excludes;
 	private String[] aggregations;
+	private Highlight highlight;
 	
 	public SearchQuery() {
 		query = new HashMap<String, String[]>();
@@ -98,6 +99,18 @@ public class SearchQuery {
 
 	public void setOrderDir(String orderDir) {
 		this.orderDir = orderDir;
+	}
+
+	public Highlight getHighlight() {
+		return highlight;
+	}
+
+	public void setHighlight(Highlight highlight) {
+		this.highlight = highlight;
+	}
+	
+	public boolean hasHighlight() {
+		return highlight != null;
 	}
 
 }

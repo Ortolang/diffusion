@@ -39,8 +39,11 @@ package fr.ortolang.diffusion.indexing.elastic;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 
 @SuppressWarnings("serial")
-class ElasticSearchServiceException extends IndexingServiceException {
+public class ElasticSearchServiceException extends IndexingServiceException {
 
+	ElasticSearchServiceException(String message) {
+		super(message);
+	}
 	ElasticSearchServiceException(String message, Throwable cause) {
 		super(message, cause);
 	}

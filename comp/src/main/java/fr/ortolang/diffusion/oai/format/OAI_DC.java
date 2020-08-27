@@ -40,6 +40,7 @@ import javax.json.JsonObject;
 import javax.json.JsonString;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.store.handle.HandleStoreService;
 
 public class OAI_DC extends DCXMLDocument {
 
@@ -53,7 +54,7 @@ public class OAI_DC extends DCXMLDocument {
 	}
 
 	public static String identifier(String wsalias, String snapshotName) {
-		return "http://hdl.handle.net/"
+		return HandleStoreService.HDL_PROXY_URL
 				+ OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias
 				+ ((snapshotName != null) ? "/" + snapshotName : "");
 	}

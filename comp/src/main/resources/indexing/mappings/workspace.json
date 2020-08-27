@@ -8,7 +8,7 @@
 				"type": "keyword"
 			},
 			"name": {
-				"type": "string"
+				"type": "text"
 			},
 			"creation": {
 				"type": "date",

@@ -48,6 +48,8 @@ public interface HandleStoreService extends OrtolangService {
 	
 	String INFO_TOTAL_SIZE = "size.total";
 	
+	public static final String HDL_PROXY_URL = "https://hdl.handle.net/";
+	
 	Handle readHandle(String handle) throws HandleStoreServiceException, HandleNotFoundException;
 	
 	void recordHandle(String handle, String key, String url) throws HandleStoreServiceException;

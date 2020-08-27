@@ -37,43 +37,19 @@ package fr.ortolang.diffusion.search;
  */
 
 import java.util.List;
-import java.util.Map;
 
-import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.content.entity.ContentSearchResource;
 
 public interface SearchService extends OrtolangService {
 	
 	String SERVICE_NAME = "search";
-	
-//	List<OrtolangSearchResult> indexSearch(String query) throws SearchServiceException;
-	
-//	List<String> jsonSearch(String query) throws SearchServiceException;
-
-//    List<String> findCollections(Map<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException;
-
-//    int countCollections(Map<String, Object> fieldsMap) throws SearchServiceException;
-
-//	String getCollection(String key) throws SearchServiceException;
-	
-//	List<String> findProfiles(String content, Map<String, String> fieldsProjection) throws SearchServiceException;
-	
-//	String getProfile(String key) throws SearchServiceException;
-	
-//	List<String> findWorkspaces(String content, Map<String, String> fieldsProjection, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException;
-	
-//	String getWorkspace(String wsalias) throws SearchServiceException;
-	
-//	int countWorkspaces(Map<String, Object> fieldsMap) throws SearchServiceException;
-
-//	List<String> findEntities(String content, Map<String, String> fieldsProjection) throws SearchServiceException;
-	
-//	String getEntity(String id) throws SearchServiceException;
 	
 	SearchResult search(SearchQuery query);
 	SearchResult systemSearch(SearchQuery query);
 	
 	String get(String index, String type, String id);
 
+	List<ContentSearchResource> listResources();
 //	List<OrtolangSearchResult> searchText(String text) throws SearchServiceException;
 }

@@ -1,12 +1,12 @@
-FROM maven:3.5-jdk-8-slim as builder
+#FROM maven:3.5-jdk-8-slim as builder
 
-ENV JBOSS_HOME=/jboss/wildfly-11.0.0.Final
+#ENV JBOSS_HOME=/jboss/wildfly-11.0.0.Final
 
-WORKDIR /app
+#WORKDIR /app
 
-COPY . .
+#COPY . .
 
-RUN mvn -q clean package -DskipTests -DjbossHome=/jboss/wildfly-11.0.0.Final -Djboss.home=/jboss/wildfly-11.0.0.Final
+#RUN mvn -q clean package -DskipTests -DjbossHome=/jboss/wildfly-11.0.0.Final -Djboss.home=/jboss/wildfly-11.0.0.Final
 
 FROM jboss/wildfly:11.0.0.Final
 
@@ -41,17 +41,20 @@ RUN curl -q -O "https://maven.ortolang.fr/service/local/repositories/releases/co
     tar zxvf keycloak-overlay-${VERSION_KEYCLOAK}.tar.gz && \
 #    curl -q -O "https://maven.ortolang.fr/content/repositories/releases/fr/ortolang/diffusion/diffusion-application/${VERSION_DIFFUSION}/diffusion-application-${VERSION_DIFFUSION}.ear" && \
 #    cp "diffusion-application-${VERSION_DIFFUSION}.ear" /opt/jboss/wildfly/standalone/deployments/ && \
+	/opt/jboss/wildfly/bin/add-user.sh admin tagada54 --silent && \
     $JBOSS_HOME/bin/jboss-cli.sh --file=bin/adapter-elytron-install-offline.cli
 
 COPY --chown=jboss:jboss src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration/   
 RUN cp  /opt/jboss/wildfly/standalone/configuration/standalone-dev.xml /opt/jboss/wildfly/standalone/configuration/standalone.xml
 
 RUN mkdir -p /opt/jboss/.ortolang/binary-store
-COPY --chown=jboss:jboss src/main/docker/config.properties /opt/jboss/.ortolang
 
-COPY --chown=jboss:jboss --from=builder /app/appli/target/ortolang-diffusion.ear /opt/jboss/wildfly/standalone/deployments/
+COPY --chown=jboss:jboss appli/target/ortolang-diffusion.ear /opt/jboss/wildfly/standalone/deployments/
 COPY --chown=jboss:jboss src/main/docker/docker-entrypoint.sh /opt/jboss
 COPY --chown=jboss:jboss src/main/docker/add-user-keycloak.sh /opt/jboss/keycloak/bin/
+
+COPY --chown=jboss:jboss src/main/docker/config.properties /opt/jboss/.ortolang
+#COPY --chown=jboss:jboss --from=builder /app/appli/target/ortolang-diffusion.ear /opt/jboss/wildfly/standalone/deployments/
 
 CMD cp /opt/jboss/.ortolang/config.properties /tmp/ && \
     envsubst < /tmp/config.properties > /opt/jboss/.ortolang/config.properties && \

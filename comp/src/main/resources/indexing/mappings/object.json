@@ -8,7 +8,7 @@
 				"type": "keyword"
 			},
 			"name": {
-				"type": "string"
+				"type": "text"
 			},
 			"creation": {
 				"type": "date",
@@ -36,9 +36,12 @@
 				"type": "long"
 			},
 			"mimeType": {
-				"type": "string"
+				"type": "text"
 			},
 			"content": {
+				"type": "text"
+			},
+			"pid": {
 				"type": "text"
 			}
 		}

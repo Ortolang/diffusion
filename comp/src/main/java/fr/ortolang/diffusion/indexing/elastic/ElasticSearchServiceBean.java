@@ -42,12 +42,15 @@ import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.search.Highlight;
 import fr.ortolang.diffusion.search.SearchQuery;
 import fr.ortolang.diffusion.search.SearchResult;
 import fr.ortolang.diffusion.util.StreamUtils;
 
 import org.apache.commons.io.IOUtils;
+import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -64,6 +67,7 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.aggregations.bucket.nested.InternalNested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -157,94 +161,125 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
             OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
             List<OrtolangIndexableContent> indexableContents = service.getIndexableContent(key);
             for (OrtolangIndexableContent indexableContent : indexableContents) {
-                LOGGER.log(Level.FINEST, "Start to index key [" + indexableContent.getId() + "] of type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]");
-                if (!indexableContent.isEmpty()) {
-                    try {
-                        IndicesAdminClient adminClient = client.admin().indices();
-                        if (!indices.containsKey(indexableContent.getIndex())) {
-                            // Check if index exists and create it if not
-                            if (adminClient.prepareExists(indexableContent.getIndex()).get().isExists()) {
-                                indices.put(indexableContent.getIndex(), new HashSet<>());
-                                checkType(indexableContent, adminClient);
-                            } else {
-                                LOGGER.log(Level.FINE, "Creating index [" + indexableContent.getIndex() + "] and add mapping for type [" + indexableContent.getType() + "]");
-                                CreateIndexRequestBuilder requestBuilder = adminClient.prepareCreate(indexableContent.getIndex());
-                                InputStream settings = this.getClass().getResourceAsStream(PATH_TO_SETTINGS + indexableContent.getIndex() + EXTENSION_MAPPING);
-                                if (settings != null) {
-                                	String settingsAsString = StreamUtils.getContent(settings);
-                                	if (settingsAsString != null) {                                		
-                                		requestBuilder.setSettings(settingsAsString);
-                                	} else {
-                                		LOGGER.log(Level.SEVERE, "Unable to set configuration : cannot read file : "+PATH_TO_SETTINGS + indexableContent.getIndex() + EXTENSION_MAPPING);
-                                	}
-                                } else {
-                                	LOGGER.log(Level.WARNING, "Unable to set configuration : file not found : "+PATH_TO_SETTINGS + indexableContent.getIndex() + EXTENSION_MAPPING);
-                                }
-                                InputStream mapping = this.getClass().getResourceAsStream(PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
-                                if (mapping != null) {
-                                	String mappingAsString = StreamUtils.getContent(mapping);
-                                	if (mappingAsString != null) {                                		
-                                		requestBuilder.addMapping(indexableContent.getType(), mappingAsString);
-                                	} else {
-                                		LOGGER.log(Level.SEVERE, "Unable to put mapping : cannot read file : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
-                                	}
-                                } else {
-                                	LOGGER.log(Level.WARNING, "Unable to put mapping : file not found : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
-                                }
-                                requestBuilder.get();
-                                HashSet<String> types = new HashSet<>();
-                                types.add(indexableContent.getType());
-                                indices.put(indexableContent.getIndex(), types);
-                            }
-                        } else {
-                            checkType(indexableContent, adminClient);
-                        }
-                        if (indexableContent.isUpdate()) {
-                            LOGGER.log(Level.FINE, "Updating key [" + indexableContent.getId() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
-
-                            Script script = new Script(ScriptType.INLINE, DEFAULT_SCRIPT_LANG, scripts.get(indexableContent.getScript()), indexableContent.getScriptParams());
-                            client.prepareUpdate(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).setScript(script).get();
-                        } else {
-                            LOGGER.log(Level.FINE, "Indexing key [" + indexableContent.getId() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
-                            client.prepareIndex(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).setSource(indexableContent.getContent()).get();
-                        }
-                    } catch (IndexNotFoundException e) {
-                        LOGGER.log(Level.INFO, "Index not found: removing it from registry and re-trying to index key [" + key + "]");
-                        indices.remove(indexableContent.getIndex());
-//                        index(key);
-                        throw new ElasticSearchServiceException(e.getMessage(), e);
-                    } catch (IllegalArgumentException e) {
-                        LOGGER.log(Level.SEVERE, "IllegalArgumentException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
-                                "] in index [" + indexableContent.getIndex() + "]", e);
-                        LOGGER.log(Level.SEVERE, indexableContent.getContent());
-                        throw new ElasticSearchServiceException(e.getMessage(), e);
-                    } catch (DocumentMissingException e) {
-                        LOGGER.log(Level.SEVERE, "Document missing for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
-                                "] in index [" + indexableContent.getIndex() + "] " + e.getMessage());
-                        LOGGER.log(Level.SEVERE, indexableContent.getContent());
-                        throw new ElasticSearchServiceException(e.getMessage(), e);
-                    } catch (MapperParsingException e) {
-                        LOGGER.log(Level.SEVERE, "MapperParsingException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
-                                "] in index [" + indexableContent.getIndex() + "]", e);
-                        LOGGER.log(Level.SEVERE, indexableContent.getContent());
-                        throw new ElasticSearchServiceException(e.getMessage(), e);
-                    } catch (Exception e) {
-                        LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + indexableContent.getId() + "]", e);
-                        LOGGER.log(Level.SEVERE, indexableContent.getContent());
-                        throw new ElasticSearchServiceException(e.getMessage(), e);
-                    }
-                }
+            	indexDocument(indexableContent);
             }
         } catch (OrtolangException | KeyNotFoundException | RegistryServiceException | IndexingServiceException e) {
             throw new ElasticSearchServiceException("An unexpected error happened while indexing key [" + key + "]", e);
         }
     }
 
+    /**
+     * Indexes a document represented by the <code>OrtolangIndexableContent</code>.
+     * @param indexableContent
+     * @throws ElasticSearchServiceException
+     */
     @Override
-    public void remove(String key) throws ElasticSearchServiceException {
-        // TODO not implemented
+    public void indexDocument(OrtolangIndexableContent indexableContent) throws ElasticSearchServiceException {
+    	LOGGER.log(Level.FINEST, "Start to index key [" + indexableContent.getId() + "] of type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]");
+    	if (!indexableContent.isEmpty()) {
+    		try {
+    			IndicesAdminClient adminClient = client.admin().indices();
+    			if (!indices.containsKey(indexableContent.getIndex())) {
+    				// Check if index exists and create it if not
+    				if (adminClient.prepareExists(indexableContent.getIndex()).get().isExists()) {
+    					indices.put(indexableContent.getIndex(), new HashSet<>());
+    					checkType(indexableContent, adminClient);
+    				} else {
+    					LOGGER.log(Level.FINE, "Creating index [" + indexableContent.getIndex() + "] and add mapping for type [" + indexableContent.getType() + "]");
+    					CreateIndexRequestBuilder requestBuilder = adminClient.prepareCreate(indexableContent.getIndex());
+    					InputStream settings = this.getClass().getResourceAsStream(PATH_TO_SETTINGS + indexableContent.getIndex() + EXTENSION_MAPPING);
+    					if (settings != null) {
+    						String settingsAsString = StreamUtils.getContent(settings);
+    						if (settingsAsString != null) {                                		
+    							requestBuilder.setSettings(settingsAsString);
+    						} else {
+    							LOGGER.log(Level.SEVERE, "Unable to set configuration : cannot read file : "+PATH_TO_SETTINGS + indexableContent.getIndex() + EXTENSION_MAPPING);
+    						}
+    					} else {
+    						LOGGER.log(Level.WARNING, "Unable to set configuration : file not found : "+PATH_TO_SETTINGS + indexableContent.getIndex() + EXTENSION_MAPPING);
+    					}
+    					InputStream mapping = this.getClass().getResourceAsStream(PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
+    					if (mapping != null) {
+    						String mappingAsString = StreamUtils.getContent(mapping);
+    						if (mappingAsString != null) {                                		
+    							requestBuilder.addMapping(indexableContent.getType(), mappingAsString);
+    						} else {
+    							LOGGER.log(Level.SEVERE, "Unable to put mapping : cannot read file : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
+    						}
+    					} else {
+    						LOGGER.log(Level.WARNING, "Unable to put mapping : file not found : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
+    					}
+    					requestBuilder.get();
+    					HashSet<String> types = new HashSet<>();
+    					types.add(indexableContent.getType());
+    					indices.put(indexableContent.getIndex(), types);
+    				}
+    			} else {
+    				checkType(indexableContent, adminClient);
+    			}
+    			if (indexableContent.isUpdate()) {
+    				LOGGER.log(Level.FINE, "Updating key [" + indexableContent.getId() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
+
+    				Script script = new Script(ScriptType.INLINE, DEFAULT_SCRIPT_LANG, scripts.get(indexableContent.getScript()), indexableContent.getScriptParams());
+    				client.prepareUpdate(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).setScript(script).get();
+    			} else {
+    				LOGGER.log(Level.FINE, "Indexing key [" + indexableContent.getId() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
+    				client.prepareIndex(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).setSource(indexableContent.getContent()).get();
+    			}
+    		} catch (IndexNotFoundException e) {
+    			LOGGER.log(Level.INFO, "Index not found: removing it from registry and re-trying to index key [" + indexableContent.getId() + "]");
+    			indices.remove(indexableContent.getIndex());
+    			//                    index(key);
+    			throw new ElasticSearchServiceException(e.getMessage(), e);
+    		} catch (IllegalArgumentException e) {
+    			LOGGER.log(Level.SEVERE, "IllegalArgumentException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
+    					"] in index [" + indexableContent.getIndex() + "]", e);
+    			LOGGER.log(Level.SEVERE, indexableContent.getContent());
+    			throw new ElasticSearchServiceException(e.getMessage(), e);
+    		} catch (DocumentMissingException e) {
+    			LOGGER.log(Level.SEVERE, "Document missing for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
+    					"] in index [" + indexableContent.getIndex() + "] " + e.getMessage());
+    			LOGGER.log(Level.SEVERE, indexableContent.getContent());
+    			throw new ElasticSearchServiceException(e.getMessage(), e);
+    		} catch (MapperParsingException e) {
+    			LOGGER.log(Level.SEVERE, "MapperParsingException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
+    					"] in index [" + indexableContent.getIndex() + "]", e);
+    			LOGGER.log(Level.SEVERE, indexableContent.getContent());
+    			throw new ElasticSearchServiceException(e.getMessage(), e);
+    		} catch (Exception e) {
+    			LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + indexableContent.getId() + "]", e);
+    			LOGGER.log(Level.SEVERE, indexableContent.getContent());
+    			throw new ElasticSearchServiceException(e.getMessage(), e);
+    		}
+    	}
+
     }
 
+    @Override
+    public void remove(String key) throws ElasticSearchServiceException {
+    	OrtolangObjectIdentifier identifier;
+		try {
+			identifier = registry.lookup(key);
+	        OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
+	        List<OrtolangIndexableContent> indexableContents = service.getIndexableContent(key);
+	        
+	        for (OrtolangIndexableContent indexableContent : indexableContents) {
+	        	removeDocument(indexableContent);
+	        }
+		} catch (RegistryServiceException | KeyNotFoundException | OrtolangException | IndexingServiceException e) {
+			throw new ElasticSearchServiceException("An unexpected error happened while removing document from elasticsearch with key [" + key + "]", e);
+		}
+    }
+    
+    @Override
+    public void removeDocument(OrtolangIndexableContent indexableContent) throws ElasticSearchServiceException {
+    	DeleteResponse resp = client.prepareDelete(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).get();
+    	if (!resp.getResult().equals(Result.DELETED)) {
+    		throw new ElasticSearchServiceException("Respons result is not deleted but " + resp.getResult().toString()+ " while removing document from elasticsearch with key [" + indexableContent.getId() + "]");
+    	}
+    }
+
+    
     @Override
     public SearchResult search(SearchQuery query) {
     	LOGGER.log(Level.FINE, "Search in " + query.getIndex() + " and type " + query.getType() + " with query " + query.getQuery());
@@ -331,6 +366,17 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 	        	searchRequest.addAggregation(ElasticSearchAggregationParser.parse(agg));
 	        }
         }
+        if (query.hasHighlight()) {
+        	Highlight hl = query.getHighlight();
+        	HighlightBuilder builder = new HighlightBuilder();
+        	for (String field : hl.getFields()) {
+        		builder.field(field);
+        	}
+        	builder.preTags(hl.getPreTags());
+        	builder.postTags(hl.getPostTags());
+        	searchRequest.highlighter(builder);
+        }
+        
         return searchRequest;
     }
     

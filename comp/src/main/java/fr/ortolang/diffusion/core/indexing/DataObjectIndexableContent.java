@@ -38,59 +38,23 @@ package fr.ortolang.diffusion.core.indexing;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.content.ContentSearchService;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.PropertyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 public class DataObjectIndexableContent extends MetadataSourceIndexableContent {
-
-    private static final String[] DATA_OBJECT_MAPPING;
-
-    private static final Logger LOGGER = Logger.getLogger(DataObjectIndexableContent.class.getName());
-
-    static {
-        DATA_OBJECT_MAPPING = Stream.concat(Arrays.stream(METADATA_SOURCE_MAPPING),
-                Arrays.stream(new String[] {
-                        "size",
-                        "type=long",
-                        "mimeType",
-                        "type=string",
-                        "content",
-                        "type=string"
-                }))
-                .toArray(String[]::new);
-    }
 
     public DataObjectIndexableContent(DataObject object) throws IndexingServiceException, OrtolangException {
         super(object, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE);
         content.put("size", object.getSize());
         content.put("mimeType", object.getMimeType());
-//        BinaryStoreService binary = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
-//        try {
-//            String extraction = binary.extract(object.getStream());
-//            if (!extraction.isEmpty()) {
-//                content.put("content", extraction);
-//            }
-//        } catch (BinaryStoreServiceException | DataNotFoundException e) {
-//            LOGGER.log(Level.FINE, "Cannot extract content of data object with key [" + object.getKey() + "]", e);
-//        }
         setContent(content);
     }
-
-//    @Override
-//    public Object[] getMapping() {
-//        return DATA_OBJECT_MAPPING;
-//    }
 }

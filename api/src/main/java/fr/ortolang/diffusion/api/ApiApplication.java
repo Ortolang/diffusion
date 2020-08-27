@@ -57,6 +57,8 @@ import fr.ortolang.diffusion.api.mapper.AliasAlreadyExistsExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.AliasNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.BrowserServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.CollectionNotEmptyExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.ContentSearchExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.ContentSearchNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.CoreServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.EJBAccessExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.HandleNotFoundExceptionMapper;
@@ -125,6 +127,8 @@ public class ApiApplication extends Application {
         set.add(new CacheFilter());
         set.add(new AccessDeniedExceptionMapper());
         set.add(new BrowserServiceExceptionMapper());
+        set.add(new ContentSearchExceptionMapper());
+        set.add(new ContentSearchNotFoundExceptionMapper());
         set.add(new KeyAlreadyExistsExceptionMapper());
         set.add(new KeyNotFoundExceptionMapper());
         set.add(new AliasNotFoundExceptionMapper());

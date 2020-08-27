@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://www.ortolang.fr/schema/ignore/01#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "rules": {
+      "id": "http://www.ortolang.fr/schema/ignore/01#rules",
+      "type": "array",
+      "items": {
+      	"id": "http://www.ortolang.fr/schema/016#rules/item",
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "rules"
+  ]
+}

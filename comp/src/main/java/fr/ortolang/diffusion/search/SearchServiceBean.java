@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.search;
  */
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.security.PermitAll;
@@ -46,6 +47,8 @@ import javax.ejb.Stateless;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import fr.ortolang.diffusion.content.ContentSearchService;
+import fr.ortolang.diffusion.content.entity.ContentSearchResource;
 import fr.ortolang.diffusion.indexing.elastic.ElasticSearchService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
@@ -62,6 +65,9 @@ public class SearchServiceBean implements SearchService {
 	private AuthorisationService authorisation;
 	@EJB
 	private ElasticSearchService elasticService;
+	@EJB
+	private ContentSearchService contentService;
+	
 	
 	public SearchServiceBean() {
 	}
@@ -118,6 +124,11 @@ public class SearchServiceBean implements SearchService {
 	@Override
 	public String get(String index, String type, String id) {
 		return elasticService.get(index, type, id);
+	}
+	
+	@Override
+	public List<ContentSearchResource> listResources() {
+		return contentService.listResource();
 	}
 
 	@Override

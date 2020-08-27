@@ -59,6 +59,66 @@
 		</init-param>
 	</servlet>
 
+	<servlet>
+		<display-name>ORTOLANG SRU/CQL Service (HTTP Interface)</display-name>
+		<servlet-name>OrtolangEndpoint</servlet-name>
+		<servlet-class>eu.clarin.sru.server.utils.SRUServerServlet</servlet-class>
+		<init-param>
+			<param-name>eu.clarin.sru.server.numberOfRecords</param-name>
+			<param-value>25</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.maximumRecords</param-name>
+			<param-value>50</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.transport</param-name>
+			<param-value>http</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.host</param-name>
+			<param-value>repository.atilf.fr</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.port</param-name>
+			<param-value>80</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.database</param-name>
+			<param-value>api/sru/fcs</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.allowOverrideMaximumRecords</param-name>
+			<param-value>false</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.allowOverrideIndentResponse</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.utils.sruServerSearchEngineClass</param-name>
+			<param-value>fr.ortolang.diffusion.api.sru.fcs.OrtolangEndpoint</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.legacyNamespaceMode</param-name>
+			<param-value>loc</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.sruSupportedVersionDefault</param-name>
+			<param-value>2.0</param-value>
+		</init-param>
+		<init-param>
+			<param-name>eu.clarin.sru.server.sruSupportedVersionMax</param-name>
+			<param-value>2.0</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>OrtolangEndpoint</servlet-name>
+		<url-pattern>/sru/fcs</url-pattern>
+	</servlet-mapping>
+
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>
 		<url-pattern>/sub/*</url-pattern>

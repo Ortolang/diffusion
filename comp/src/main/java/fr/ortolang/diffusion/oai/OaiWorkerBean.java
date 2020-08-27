@@ -414,7 +414,7 @@ public class OaiWorkerBean implements OaiWorker {
     		try {
     			List<String> handles = handleStore.listHandlesForKey(key);
     			for (String handle : handles) {
-    				urls.add("http://hdl.handle.net/" + handle);
+    				urls.add(HandleStoreService.HDL_PROXY_URL + handle);
     			}
     		} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
     			LOGGER.log(Level.WARNING, "No handle for key " + key, e);
