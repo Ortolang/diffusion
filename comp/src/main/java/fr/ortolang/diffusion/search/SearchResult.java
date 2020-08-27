@@ -22,6 +22,17 @@ public class SearchResult {
 		return hits;
 	}
 	
+	public SearchHit getHit(int index) {
+		if (index<0 || index >= hits.length) {
+			return null;
+		}
+		return hits[index];
+	}
+	
+	public int countHits() {
+		return hits.length;
+	}
+	
 	public String[] getSourceOfHits() {
 		String[] hits = new String[this.hits.length];
 		for (int iHit = 0; iHit < this.hits.length; iHit++) {

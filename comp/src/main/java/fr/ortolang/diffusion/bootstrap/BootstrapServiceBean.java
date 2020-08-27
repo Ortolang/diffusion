@@ -318,6 +318,8 @@ public class BootstrapServiceBean implements BootstrapService {
             core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "", true,
                     false);
 
+            loadMetadataFormat(MetadataFormat.IGNORE, "Schema for ignoring file content", "", true, false);
+            
             InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
             String schemaWorkspaceHash = core.put(schemaWorkspaceInputStream);
             core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "", true, true);

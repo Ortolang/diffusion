@@ -52,6 +52,7 @@ import javax.persistence.Version;
 public class MetadataFormat {
 
     public static final String ACL = "ortolang-acl-json";
+    public static final String IGNORE = "ortolang-ignore-schema";
     public static final String ITEM = "ortolang-item-json";
     public static final String WORKSPACE = "ortolang-workspace-json";
     public static final String PID = "ortolang-pid-json";

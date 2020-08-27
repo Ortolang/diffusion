@@ -118,6 +118,7 @@ import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
+import fr.ortolang.diffusion.core.indexing.DataObjectIndexableContent;
 import fr.ortolang.diffusion.core.indexing.OrtolangItemIndexableContent;
 import fr.ortolang.diffusion.core.indexing.SuggestItemIndexableContent;
 import fr.ortolang.diffusion.core.indexing.UserMetadataIndexableContent;
@@ -2139,7 +2140,7 @@ public class CoreServiceBean implements CoreService {
             Properties properties = new Properties();
             properties.put(WORKSPACE_REGISTRY_PROPERTY_KEY, wskey);
             registry.register(key, object.getObjectIdentifier(), caller, properties);
-            indexing.index(key);
+//            indexing.index(key);
 
             authorisation.clonePolicy(key, ws.getHead());
             LOGGER.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
@@ -2168,7 +2169,7 @@ public class CoreServiceBean implements CoreService {
 
             return object;
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
-                | MembershipServiceException | BinaryStoreServiceException | DataNotFoundException | IndexingServiceException e) {
+                | MembershipServiceException | BinaryStoreServiceException | DataNotFoundException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during object creation", e);
             ctx.setRollbackOnly();
             throw new CoreServiceException("unable to create object into workspace [" + wskey + "] at path [" + path + "]", e);
@@ -2283,7 +2284,6 @@ public class CoreServiceBean implements CoreService {
                 em.merge(object);
                 registry.update(parent.getKey());
                 registry.update(object.getKey());
-                indexing.index(object.getKey());
                 LOGGER.log(Level.FINEST, "object updated");
 
                 try {
@@ -2307,7 +2307,7 @@ public class CoreServiceBean implements CoreService {
                 return cobject;
             }
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
-                | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException e) {
+                | BinaryStoreServiceException | DataNotFoundException | CloneException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while reading object", e);
             throw new CoreServiceException("unable to read object into workspace [" + wskey + "] at path [" + path + "]", e);
         }
@@ -2485,12 +2485,11 @@ public class CoreServiceBean implements CoreService {
                     registry.delete(mde.getKey());
                 }
                 registry.delete(leaf.getKey());
-                indexing.remove(leaf.getKey());
             }
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("ws-alias", ws.getAlias()).addArgument("key", leaf.getKey()).addArgument("path", npath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "delete"), argsBuilder.build());
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error while deleting object", e);
             throw new CoreServiceException("unable to delete object into workspace [" + wskey + "] at path [" + path + "]", e);
@@ -4046,9 +4045,9 @@ public class CoreServiceBean implements CoreService {
         OrtolangObject object = null;
         switch (identifier.getType()) {
         case DataObject.OBJECT_TYPE:
-            DataObject dataObject = em.find(DataObject.class, identifier.getId());
-            object = dataObject;
-            dataObject.setKey(key);
+//            DataObject dataObject = em.find(DataObject.class, identifier.getId());
+//            object = dataObject;
+//            dataObject.setKey(key);
 //            indexableContents.add(new DataObjectIndexableContent(dataObject));
             break;
         case Collection.OBJECT_TYPE:

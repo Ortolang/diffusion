@@ -1,16 +1,13 @@
 package fr.ortolang.diffusion.api.search;
 
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 
+import fr.ortolang.diffusion.search.Highlight;
 import fr.ortolang.diffusion.search.SearchQuery;
 
 public class SearchResourceHelper {
-
-    private static final Logger LOGGER = Logger.getLogger(SearchResourceHelper.class.getName());
 
     public static SearchQuery executeQuery(HttpServletRequest request) {
     	return executeQuery(request, null, null);
@@ -45,8 +42,9 @@ public class SearchResourceHelper {
             } else if ("orderDir".equals(parameter.getKey())) {
             	query.setOrderDir(parameter.getValue()[0]);
             } else if ("aggregations".equals(parameter.getKey())) {
-            	LOGGER.log(Level.INFO, "Aggregations : " + parameter.getValue());
             	query.setAggregations(parameter.getValue());
+            } else if ("highlight".equals(parameter.getKey())) {
+            	query.setHighlight(Highlight.highlight().fields(parameter.getValue()));
             } else if (!"scope".equals(parameter.getKey())) {
                 // Ignore scope param
             	query.addQuery(parameter.getKey(), parameter.getValue());

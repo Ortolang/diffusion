@@ -50,6 +50,11 @@
             <artifactId>jackson-databind</artifactId>
             <version>${version.fasterxml.jackson}</version>
         </dependency>
+		<dependency>
+			<groupId>eu.clarin.sru.fcs</groupId>
+			<artifactId>fcs-simple-endpoint</artifactId>
+			<version>${version.fcs}</version>
+		</dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

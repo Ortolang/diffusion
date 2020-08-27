@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This file has the same format as the XML serialization of endpoint
+    description from the CLARIN-FCS specification.
+-->
+<EndpointDescription xmlns="http://clarin.eu/fcs/endpoint-description"
+    version="2">
+    <Capabilities>
+        <Capability>http://clarin.eu/fcs/capability/basic-search</Capability>
+    </Capabilities>
+    <SupportedDataViews>
+        <SupportedDataView id="hits" delivery-policy="send-by-default">application/x-clarin-fcs-hits+xml</SupportedDataView>
+    </SupportedDataViews>
+    <SupportedLayers>
+    </SupportedLayers>
+    <Resources>
+     	<Resource pid="dummy pid">
+           <Title xml:lang="en">dummy resource</Title>
+           <Languages>
+               <Language>fra</Language>
+           </Languages>
+           <AvailableDataViews ref="hits"/>
+        </Resource>
+    </Resources>
+</EndpointDescription>

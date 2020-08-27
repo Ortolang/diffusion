@@ -81,6 +81,7 @@
         <version.saxon>9.7.0-7</version.saxon>
         <version.piwik>1.2</version.piwik>
         <version.javers>2.1.1</version.javers>
+        <version.fcs>1.4.0</version.fcs>
         <additionalparam>-Xdoclint:none</additionalparam>
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     </properties>

@@ -1,5 +1,8 @@
 package fr.ortolang.diffusion.api.search;
 
+import fr.ortolang.diffusion.api.sru.fcs.OrtolangSearchHits;
+import fr.ortolang.diffusion.content.ContentSearchService;
+
 /*
  * #%L
  * ORTOLANG
@@ -242,6 +245,14 @@ public class SearchResource {
 	public Response searchUserMetadata(@Context HttpServletRequest request) {
 		SearchQuery query = SearchResourceHelper.executeQuery(request, UserMetadataIndexableContent.INDEX);
 		return Response.ok(SearchResultRepresentation.fromSearchResult(search.search(query))).build();
+	}
+
+	@GET
+	@Path("/content")
+	@GZIP
+	public Response searchContent(@Context HttpServletRequest request) {
+		SearchQuery query = SearchResourceHelper.executeQuery(request, ContentSearchService.SERVICE_NAME);
+		return Response.ok(OrtolangSearchHits.valueOf(search.search(query))).build();
 	}
 
 }
