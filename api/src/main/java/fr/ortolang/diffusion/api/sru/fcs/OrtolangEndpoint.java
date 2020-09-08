@@ -115,7 +115,7 @@ public class OrtolangEndpoint extends SimpleEndpointSearchEngineBase {
         
         SearchResult result = search.search(query);
         
-		return new OrtolangSRUSearchResultSet(diagnostics, OrtolangSearchHits.valueOf(result), request.getStartRecord() - 1);
+		return new OrtolangSRUSearchResultSet(diagnostics, OrtolangSearchHits.valueOf(result), request.getStartRecord() - 2);
 	}
 
 

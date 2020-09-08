@@ -49,7 +49,7 @@ public class OrtolangSRUSearchResultSet extends SRUSearchResultSet {
 
 	@Override
 	public boolean nextRecord() throws SRUException {
-		return  (indexResult++ <= getRecordCount() ? true : false);
+		return  (++indexResult < getRecordCount() ? true : false);
 	}
 
 	@Override
