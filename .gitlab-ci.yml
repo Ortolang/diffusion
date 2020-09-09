@@ -5,7 +5,7 @@ services:
 
 variables:
   GIT_SSL_NO_VERIFY: "true"
-  ORTOLANG_DIFFUSION_IMAGE: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME
+  ORTOLANG_DIFFUSION_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
 
 stages:
   - test
@@ -27,8 +27,14 @@ test:
   script: 
     - mvn -q clean test -DjbossHome=$PWD/wildfly-11.0.0.Final -Djboss.home=$PWD/wildfly-11.0.0.Final
   only:
-    - master
-    - branches
+    refs:
+      - master
+      - branches
+    changes:
+      - Dockerfile
+      - api/**/*
+      - appli/**/*
+      - comp/**/*
      
 maven_docker_build:
   stage: build
@@ -39,9 +45,26 @@ maven_docker_build:
     - docker build -t $ORTOLANG_DIFFUSION_IMAGE --build-arg CUSTOM_UID=$OLREPO_UID --build-arg CUSTOM_GID=$OLREPO_GID --add-host=maven.ortolang.fr:192.168.37.63 .
     - docker push $ORTOLANG_DIFFUSION_IMAGE
   only:
-    - master
+    refs:
+      - master
+      - branches
+    changes:
+      - Dockerfile
+      - api/**/*
+      - appli/**/*
+      - comp/**/*
+
+docker_tag_from_master:
+  stage: build
+  tags:
+    - ortolang-docker-bind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE:master
+    - docker tag $CI_REGISTRY_IMAGE:master $ORTOLANG_DIFFUSION_IMAGE
+    - docker push $ORTOLANG_DIFFUSION_IMAGE
+  only:
     - tags
-    - branches
 
 deploy_on_dev:
   stage: deploy
@@ -62,4 +85,4 @@ deploy_on_dev:
     url: https://repo-dev.ortolang.fr/api/config/version
   image: registry2.atilf.fr/atilf/portainer-cli:1.0.0
   script:
-    - portainer-cli -u $PORTAINER_USERNAME -p $PORTAINER_PASSWORD -b https://portainer.atilf.fr deploy -e "Intégration-vdorto" -n ortolang-diffusion_vdorto -f docker/docker-stack.vdorto.yml
+    - portainer-cli -b https://orchestrator.ortolang.fr -u $PORTAINER_USERNAME -p $PORTAINER_PASSWORD -b https://portainer.atilf.fr deploy -e "Intégration-vdorto" -n ortolang-diffusion_vdorto -f docker/docker-stack.vdorto.yml
