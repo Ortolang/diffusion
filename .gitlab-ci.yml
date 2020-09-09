@@ -32,9 +32,9 @@ test:
       - branches
     changes:
       - Dockerfile
-      - api/**/*
-      - appli/**/*
-      - comp/**/*
+      - api/src/**/*
+      - appli/src/**/*
+      - comp/src/**/*
      
 maven_docker_build:
   stage: build
@@ -50,9 +50,9 @@ maven_docker_build:
       - branches
     changes:
       - Dockerfile
-      - api/**/*
-      - appli/**/*
-      - comp/**/*
+      - api/src/**/*
+      - appli/src/**/*
+      - comp/src/**/*
 
 docker_tag_from_master:
   stage: build
@@ -76,9 +76,9 @@ deploy_on_dev:
     changes:
       - Dockerfile
       - docker/*
-      - api/**/*
-      - appli/**/*
-      - comp/**/*
+      - api/src/**/*
+      - appli/src/**/*
+      - comp/src/**/*
       - src/main/docker/**/*
   environment:
     name: vdorto
