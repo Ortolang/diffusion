@@ -284,4 +284,6 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
     MetadataObject systemReadMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
     
     List<String> systemFindWorkspacesForProfile(String profile) throws CoreServiceException;
+    
+    void systemApplyPropertyOnWorkspaceElements(String wskey, String propertyKey, String propertyValue) throws CoreServiceException, KeyNotFoundException;
 }

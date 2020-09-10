@@ -685,6 +685,24 @@ public class RegistryServiceBean implements RegistryService {
         }
     }
     
+    @Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void systemSetProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "setting property [" + name + "] with value [" + value + "] for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        try {
+            entry.setProperty(name, value);
+            refresh(key);
+            em.merge(entry);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private RegistryEntry findEntryByKey(String key) throws KeyNotFoundException {
         RegistryEntry entry = em.find(RegistryEntry.class, key);

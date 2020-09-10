@@ -414,6 +414,13 @@ public class AdminResource {
         representation.setLimit(limit);
     	return Response.ok(representation).build();
     }
+
+    @POST
+    @Path("/workspaces/{wskey}")
+    public Response applyPropertyOnWorkpaceElements(@PathParam("wskey") String wskey, @FormParam("name") String name, @FormParam("value") String value) throws CoreServiceException, KeyNotFoundException {
+    	core.systemApplyPropertyOnWorkspaceElements(wskey, name, value);
+    	return Response.ok().build();
+    }
     
     @GET
     @Path("/runtime/types")
