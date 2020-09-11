@@ -4320,39 +4320,39 @@ public class CoreServiceBean implements CoreService {
         if (collection == null) {
             throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
         }
-        if (keys.add(key)) {
-            for (MetadataElement element : collection.getMetadatas()) {
-                keys.add(element.getKey());
-            }
+    	keys.add(key);
+    	
+        for (MetadataElement element : collection.getMetadatas()) {
+            keys.add(element.getKey());
+        }
 
-            for (CollectionElement element : collection.getElements()) {
+        for (CollectionElement element : collection.getElements()) {
+            keys.add(element.getKey());
+            if (element.getType().equals(Collection.OBJECT_TYPE)) {
+                systemListCollectionKeys(element.getKey(), keys);
+            }
+            if (element.getType().equals(DataObject.OBJECT_TYPE)) {
+                OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
+                checkObjectType(identifier, DataObject.OBJECT_TYPE);
+                DataObject object = em.find(DataObject.class, identifier.getId());
+                if (object == null) {
+                    throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
+                }
                 keys.add(element.getKey());
-                if (element.getType().equals(Collection.OBJECT_TYPE)) {
-                    systemListCollectionKeys(element.getKey(), keys);
+                for (MetadataElement mde : object.getMetadatas()) {
+                    keys.add(mde.getKey());
                 }
-                if (element.getType().equals(DataObject.OBJECT_TYPE)) {
-                    OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
-                    checkObjectType(identifier, DataObject.OBJECT_TYPE);
-                    DataObject object = em.find(DataObject.class, identifier.getId());
-                    if (object == null) {
-                        throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
-                    }
-                    keys.add(element.getKey());
-                    for (MetadataElement mde : object.getMetadatas()) {
-                        keys.add(mde.getKey());
-                    }
+            }
+            if (element.getType().equals(Link.OBJECT_TYPE)) {
+                OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
+                checkObjectType(identifier, Link.OBJECT_TYPE);
+                Link link = em.find(Link.class, identifier.getId());
+                if (link == null) {
+                    throw new CoreServiceException("unable to load link with id [" + identifier.getId() + "] from storage");
                 }
-                if (element.getType().equals(Link.OBJECT_TYPE)) {
-                    OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
-                    checkObjectType(identifier, Link.OBJECT_TYPE);
-                    Link link = em.find(Link.class, identifier.getId());
-                    if (link == null) {
-                        throw new CoreServiceException("unable to load link with id [" + identifier.getId() + "] from storage");
-                    }
-                    keys.add(element.getKey());
-                    for (MetadataElement mde : link.getMetadatas()) {
-                        keys.add(mde.getKey());
-                    }
+                keys.add(element.getKey());
+                for (MetadataElement mde : link.getMetadatas()) {
+                    keys.add(mde.getKey());
                 }
             }
         }
