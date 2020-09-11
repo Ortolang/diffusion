@@ -42,6 +42,7 @@ import fr.ortolang.diffusion.search.Highlight;
 import fr.ortolang.diffusion.search.SearchQuery;
 import fr.ortolang.diffusion.search.SearchResult;
 import fr.ortolang.diffusion.search.SearchService;
+import fr.ortolang.diffusion.store.handle.HandleNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
@@ -206,14 +207,14 @@ public class OrtolangEndpoint extends SimpleEndpointSearchEngineBase {
     	try {
     		String handleName = URLDecoder.decode(handleURL, StandardCharsets.UTF_8.name());
     		handleName = handleURL.replaceFirst(HandleStoreService.HDL_PROXY_URL, "");
-			List<Handle> handles = handleStore.findHandlesByName(handleName.toUpperCase());
+			List<Handle> handles = handleStore.listHandleValues(handleName.toUpperCase());
 			if (!handles.isEmpty()) {        		
 				String collectionKey = handles.get(0).getKey();
 				if (collectionKey != null) {
 					return registry.getProperty(collectionKey, CoreService.WORKSPACE_REGISTRY_PROPERTY_KEY);
 				}
 			}
-		} catch (HandleStoreServiceException | RegistryServiceException | KeyNotFoundException | PropertyNotFoundException | UnsupportedEncodingException e) {
+		} catch (HandleStoreServiceException | RegistryServiceException | KeyNotFoundException | PropertyNotFoundException | UnsupportedEncodingException | HandleNotFoundException e) {
 			LOGGER.log(Level.SEVERE, "unknown context identifier " + handleURL, e);
 			throw new SRUException(SRUConstants.SRU_CANNOT_PROCESS_QUERY_REASON_UNKNOWN, "unknown context identifier " + handleURL);
 		}
