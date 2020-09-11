@@ -4586,6 +4586,31 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
+    /**
+     * Allows to apply a property to all workspace elements.
+     * 
+     * @param wskey the workspace key
+     * @param propertyKey the property key
+     * @param propertyValue the property value
+     * @throws CoreServiceException, KeyNotFoundException
+     */
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void systemApplyPropertyOnWorkspaceElements(String wskey, String propertyKey, String propertyValue) throws CoreServiceException, KeyNotFoundException {
+    	Properties properties = new Properties();
+        properties.put(propertyKey, propertyValue);
+        
+        Set<String> keys = systemListWorkspaceKeys(wskey);
+        for (String key : keys) {        	
+        	try {
+				registry.systemSetProperty(key, propertyKey, propertyValue);
+			} catch (RegistryServiceException e) {
+				LOGGER.log(Level.SEVERE, "unable to set property to object with key " + key, e);
+				throw new CoreServiceException("unable to set property to object with key " + key);
+			}
+        }
+    }
+
     /* ### Internal operations ### */
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
