@@ -15,34 +15,16 @@ import fr.ortolang.diffusion.store.handle.HandleStoreService;
 
 public class OrtolangSearchHits {
 
-	private List<OrtolangSearchHit> hits;
 	private long totalHits;
+	private long tookInMillis;
+	private List<OrtolangSearchHit> hits;
 	
-	public OrtolangSearchHits(List<OrtolangSearchHit> hits, long totalHits) {
+	public OrtolangSearchHits(List<OrtolangSearchHit> hits, long totalHits, long tookInMillis) {
 		this.hits = hits;
 		this.totalHits = totalHits;
+		this.tookInMillis = tookInMillis;
 	}
 
-	public OrtolangSearchHit getHit(int index) {
-		return hits.get(index);
-	}
-	
-	public List<OrtolangSearchHit> getHits() {
-		return hits;
-	}
-
-	public void setHits(List<OrtolangSearchHit> hits) {
-		this.hits = hits;
-	}
-
-	public long getTotalHits() {
-		return totalHits;
-	}
-
-	public void setTotalHits(long totalHits) {
-		this.totalHits = totalHits;
-	}
-	
 	public static OrtolangSearchHits valueOf(SearchResult result) {
 		int ioHit = 1;
 		List<OrtolangSearchHit> oHits = new ArrayList<OrtolangSearchHit>();
@@ -55,7 +37,7 @@ public class OrtolangSearchHits {
 				}
 			}
 		}
-		return new OrtolangSearchHits(oHits, result.getTotalHits());
+		return new OrtolangSearchHits(oHits, result.getTotalHits(), result.getTookInMillis());
 	}
 	
 
@@ -87,4 +69,32 @@ public class OrtolangSearchHits {
 		}
 	}
 	
+	public OrtolangSearchHit getHit(int index) {
+		return hits.get(index);
+	}
+	
+	public List<OrtolangSearchHit> getHits() {
+		return hits;
+	}
+
+	public void setHits(List<OrtolangSearchHit> hits) {
+		this.hits = hits;
+	}
+
+	public long getTotalHits() {
+		return totalHits;
+	}
+
+	public void setTotalHits(long totalHits) {
+		this.totalHits = totalHits;
+	}
+	
+	public long getTookInMillis() {
+		return tookInMillis;
+	}
+
+	public void setTookInMillis(long tookInMillis) {
+		this.tookInMillis = tookInMillis;
+	}
+
 }

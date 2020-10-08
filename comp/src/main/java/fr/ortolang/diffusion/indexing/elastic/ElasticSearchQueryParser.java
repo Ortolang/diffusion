@@ -47,6 +47,20 @@ public class ElasticSearchQueryParser {
 						fieldValueFactorFunction.missing(1);
 						queryBuilder.must(QueryBuilders.functionScoreQuery(QueryBuilders.matchPhrasePrefixQuery(parameterKey, valuesQuery[0]), fieldValueFactorFunction));
 					}
+				} else if (keyQuery.endsWith("{}")) {
+					String parameterKey = keyQuery.substring(0, keyQuery.length() - 2);
+					if (valuesQuery.length==1) {					
+						FieldValueFactorFunctionBuilder fieldValueFactorFunction = ScoreFunctionBuilders.fieldValueFactorFunction("boost");
+						fieldValueFactorFunction.missing(1);
+						queryBuilder.must(QueryBuilders.functionScoreQuery(QueryBuilders.regexpQuery(parameterKey, valuesQuery[0]), fieldValueFactorFunction));
+					}
+				} else if (keyQuery.endsWith("=")) {
+					String parameterKey = keyQuery.substring(0, keyQuery.length() - 1);
+					if (valuesQuery.length==1) {					
+						FieldValueFactorFunctionBuilder fieldValueFactorFunction = ScoreFunctionBuilders.fieldValueFactorFunction("boost");
+						fieldValueFactorFunction.missing(1);
+						queryBuilder.must(QueryBuilders.functionScoreQuery(QueryBuilders.matchQuery(parameterKey, valuesQuery[0]), fieldValueFactorFunction));
+					}
 				} else {
 					if (valuesQuery.length==1) {
 						queryBuilder.must(QueryBuilders.termQuery(keyQuery, valuesQuery[0]));

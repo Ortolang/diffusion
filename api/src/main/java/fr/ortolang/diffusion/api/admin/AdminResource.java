@@ -56,7 +56,7 @@ import fr.ortolang.diffusion.content.ContentSearchService;
 import fr.ortolang.diffusion.content.ContentSearchServiceException;
 import fr.ortolang.diffusion.content.entity.ContentSearchResource;
 import fr.ortolang.diffusion.api.search.SearchResourceHelper;
-import fr.ortolang.diffusion.api.search.SearchResultsRepresentation;
+import fr.ortolang.diffusion.api.search.SearchResultRepresentation;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
@@ -565,7 +565,7 @@ public class AdminResource {
     @GZIP
     public Response search(@Context HttpServletRequest request) {
         SearchQuery query = SearchResourceHelper.executeQuery(request);
-		return Response.ok(SearchResultsRepresentation.fromSearchResult(search.systemSearch(query))).build();
+		return Response.ok(SearchResultRepresentation.fromSearchResult(search.systemSearch(query), false)).build();
     }
 
     @GET

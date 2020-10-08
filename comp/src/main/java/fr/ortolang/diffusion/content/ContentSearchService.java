@@ -20,7 +20,6 @@ public interface ContentSearchService extends OrtolangService {
     ContentSearchResource updateResource(String id, String pid, String title, String description, String landingPageURI) throws ContentSearchNotFoundException;
     void deleteResource(String id) throws ContentSearchNotFoundException;
     long countResources();
-    ContentSearchResource setResourceDocuments(String id, Set<String> documents) throws ContentSearchNotFoundException;
     void indexResourceFromWorkspace(String wskey, String snapshot) throws ContentSearchNotFoundException, ContentSearchServiceException;
     
     // Content document

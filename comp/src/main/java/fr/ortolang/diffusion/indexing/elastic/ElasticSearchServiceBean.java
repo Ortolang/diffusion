@@ -291,6 +291,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
         // Parses
         SearchResult result = new SearchResult();
         result.setTotalHits(searchResponse.getHits().getTotalHits());
+        result.setTookInMillis(searchResponse.getTookInMillis());
         result.setHits(searchResponse.getHits().getHits());
         if (query.getAggregations() != null) {
         	ElasticSearchServiceBean.fillAggregations(query.getAggregations(), searchResponse, result);
@@ -310,6 +311,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
         // Parses
         SearchResult result = new SearchResult();
         result.setTotalHits(searchResponse.getHits().getTotalHits());
+        result.setTookInMillis(searchResponse.getTookInMillis());
         result.setHits(searchResponse.getHits().getHits());
         if (query.getAggregations() != null) {
 	        ElasticSearchServiceBean.fillAggregations(query.getAggregations(), searchResponse, result);
@@ -374,6 +376,8 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
         	}
         	builder.preTags(hl.getPreTags());
         	builder.postTags(hl.getPostTags());
+        	builder.fragmentSize(hl.getFragmentSize());
+        	builder.numOfFragments(hl.getNumOfFragments());
         	searchRequest.highlighter(builder);
         }
         

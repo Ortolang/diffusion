@@ -59,9 +59,12 @@ public class OrtolangEndpoint extends SimpleEndpointSearchEngineBase {
 	
 	public static final String CLARIN_FCS_RECORD_SCHEMA = "http://clarin.eu/fcs/resource";
 	public static final String ORTOLANG_WEB_URL = "http://www.ortolang.fr/";
+	public static final String ORTOLANG_CONTEXT_ID_PATH = "workspace.key.keyword";
 	
 	public static final String HIGHLIGHT_PRETAG = "<hits:Hit>";
 	public static final String HIGHLIGHT_POSTTAG = "</hits:Hit>";
+	public static final int HIGHLIGHT_FRAGMENTSIZE = 100;
+	public static final int HIGHLIGHT_NUMFRAGMENT = 100;
 	
 	private static final int SEARCH_SIZE = 1000;
 	
@@ -169,7 +172,8 @@ public class OrtolangEndpoint extends SimpleEndpointSearchEngineBase {
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.setIndex(index);
         searchQuery.setType(DataObject.OBJECT_TYPE);
-        searchQuery.setHighlight(Highlight.highlight().field(DataObjectContentIndexableContent.CONTENT_FIELD).preTag(HIGHLIGHT_PRETAG).postTag(HIGHLIGHT_POSTTAG));
+        searchQuery.setHighlight(Highlight.highlight().field(DataObjectContentIndexableContent.CONTENT_FIELD).preTag(HIGHLIGHT_PRETAG)
+        		.postTag(HIGHLIGHT_POSTTAG).fragmentSize(HIGHLIGHT_FRAGMENTSIZE).numOfFragments(HIGHLIGHT_NUMFRAGMENT));
         searchQuery.setSize(SEARCH_SIZE);
         if (context != null && context.trim().length()>0) {
         	Set<String> wsKeys = new HashSet<String>();
@@ -179,7 +183,7 @@ public class OrtolangEndpoint extends SimpleEndpointSearchEngineBase {
         			wsKeys.add(wskey);
         		}
         	}
-        	searchQuery.addQuery("workspace.key.keyword", wsKeys.stream().toArray(String[]::new));
+        	searchQuery.addQuery(ORTOLANG_CONTEXT_ID_PATH, wsKeys.stream().toArray(String[]::new));
         }
         
         StringBuilder builder = new StringBuilder();
@@ -192,7 +196,8 @@ public class OrtolangEndpoint extends SimpleEndpointSearchEngineBase {
 				   SRUConstants.SRU_CANNOT_PROCESS_QUERY_REASON_UNKNOWN,
 				   "unknown cql node: " + node);
         }
-        searchQuery.addQuery("content*", new String[] {builder.toString()});
+        // Searches an exact word (=) in content field
+        searchQuery.addQuery("content=", new String[] {builder.toString()});
         
     	return searchQuery;
     }

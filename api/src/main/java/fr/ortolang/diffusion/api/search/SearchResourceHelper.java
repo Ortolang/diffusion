@@ -43,13 +43,31 @@ public class SearchResourceHelper {
             	query.setOrderDir(parameter.getValue()[0]);
             } else if ("aggregations".equals(parameter.getKey())) {
             	query.setAggregations(parameter.getValue());
-            } else if ("highlight".equals(parameter.getKey())) {
-            	query.setHighlight(Highlight.highlight().fields(parameter.getValue()));
+            } else if ("highlightFields".equals(parameter.getKey())) {
+            	Highlight hl = query.getHighlight();
+            	if (hl == null) {
+            		hl = Highlight.highlight();
+            	}
+            	query.setHighlight(hl.fields(parameter.getValue()));
+            } else if ("highlightNumOfFragments".equals(parameter.getKey())) {
+            	Highlight hl = query.getHighlight();
+            	if (hl == null) {
+            		hl = Highlight.highlight();
+            	}
+            	query.setHighlight(hl.numOfFragments(valueOf(parameter.getValue()[0], Highlight.HIGHLIGHT_PREFERRED_NUMFRAGMENT)));
             } else if (!"scope".equals(parameter.getKey())) {
                 // Ignore scope param
             	query.addQuery(parameter.getKey(), parameter.getValue());
             }
     	}
     	return query;
+    }
+    
+    private static Integer valueOf(String value, int defaultValue) {
+    	try {
+    		return Integer.valueOf(value);
+    	} catch(NumberFormatException e) {
+    	}
+    	return defaultValue;
     }
 }
