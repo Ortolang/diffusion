@@ -154,9 +154,8 @@ public class ContentSearchServiceBean implements ContentSearchService {
 		}
 	}
 	
-	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public ContentSearchResource setResourceDocuments(String id, Set<String> documents) throws ContentSearchNotFoundException {
+	private ContentSearchResource setResourceDocuments(String id, Set<String> documents) throws ContentSearchNotFoundException {
 		try {
 			ContentSearchResource res = em.find(ContentSearchResource.class, id);
 			res.setDocuments(documents);

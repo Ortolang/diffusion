@@ -12,10 +12,12 @@ public class SearchResult {
 	private SearchHit[] hits;
 	private long totalHits;
 	private Map<String, List<String>> aggregations;
+	private long tookInMillis;
 
 	public SearchResult() {
 		this.aggregations = new HashMap<String, List<String>>();
 		this.setTotalHits(0);
+		this.setTookInMillis(0);
 	}
 
 	public SearchHit[] getHits() {
@@ -68,6 +70,14 @@ public class SearchResult {
 
 	public void setTotalHits(long totalHits) {
 		this.totalHits = totalHits;
+	}
+
+	public long getTookInMillis() {
+		return tookInMillis;
+	}
+
+	public void setTookInMillis(long tookMili) {
+		this.tookInMillis = tookMili;
 	}
 
 }

@@ -252,7 +252,7 @@ public class SearchResource {
 	@GZIP
 	public Response searchContent(@Context HttpServletRequest request) {
 		SearchQuery query = SearchResourceHelper.executeQuery(request, ContentSearchService.SERVICE_NAME);
-		return Response.ok(OrtolangSearchHits.valueOf(search.search(query))).build();
+		return Response.ok(SearchResultRepresentation.fromSearchResult(search.search(query), false)).build();
 	}
 
 }
