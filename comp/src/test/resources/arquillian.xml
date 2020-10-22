@@ -6,7 +6,7 @@
     <container qualifier="wildfly-managed" default="true">
         <configuration>
             <property name="jbossHome">${jboss.home}</property>
-            <property name="serverConfig">ortolang-test-11.xml</property>
+            <property name="serverConfig">standalone.xml</property>
             <property name="allowConnectingToRunningServer">true</property>
             <property name="javaVmArguments">-Dortolang.home=${ortolang.home}</property>
             <!--<property name="javaVmArguments">-Dortolang.home=${ortolang.home} -agentlib:jdwp=transport=dt_socket,address=8787,server=y,suspend=y</property>-->

@@ -1,17 +1,17 @@
 FROM maven:3.5-jdk-8-slim as builder
 
-ENV JBOSS_HOME=/jboss/wildfly-11.0.0.Final
+ENV VERSION_WILDFLY=12.0.0.Final
+ENV JBOSS_HOME=/jboss/wildfly-${VERSION_WILDFLY}
 
 WORKDIR /app
-
 COPY . .
+RUN mvn -q clean package -DskipTests -DjbossHome=/jboss/wildfly-${VERSION_WILDFLY} -Djboss.home=/jboss/wildfly-${VERSION_WILDFLY}
 
-RUN mvn -q clean package -DskipTests -DjbossHome=/jboss/wildfly-11.0.0.Final -Djboss.home=/jboss/wildfly-11.0.0.Final
-
-FROM jboss/wildfly:11.0.0.Final
+FROM jboss/wildfly:12.0.0.Final
 
 ARG VERSION_PGSQL=9.4.1208
 ARG VERSION_KEYCLOAK=3.4.3.Final
+ARG VERSION_WILDFLY=12.0.0.Final
 ARG CUSTOM_UID=1100
 ARG CUSTOM_GID=1000
 
@@ -38,7 +38,10 @@ RUN curl -q -O "https://maven.ortolang.fr/service/local/repositories/releases/co
     tar zxvf keycloak-wildfly-adapter-dist-${VERSION_KEYCLOAK}.tar.gz && \
     $JBOSS_HOME/bin/jboss-cli.sh --file=bin/adapter-elytron-install-offline.cli
 
-COPY --chown=jboss:jboss src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration/    
+# Copies Wildfly configuration files
+COPY --chown=jboss:jboss src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration/
+# Overrides Wildfly configuration 
+COPY --chown=jboss:jboss src/main/docker/configuration/wildfly-${VERSION_WILDFLY}/standalone.xml /opt/jboss/wildfly/standalone/configuration/
 
 RUN mkdir -p /opt/jboss/.ortolang/binary-store
 COPY --chown=jboss:jboss src/main/docker/config.properties /opt/jboss/.ortolang
