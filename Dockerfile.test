@@ -1,13 +1,15 @@
 FROM maven:3-jdk-8
 
+ENV VERSION_WILDFLY=12.0.0.Final
+
 WORKDIR /app
 
-RUN curl -O "https://download.jboss.org/wildfly/11.0.0.Final/wildfly-11.0.0.Final.zip" \
-    && unzip wildfly-11.0.0.Final.zip \
-    && export JBOSS_HOME=$PWD/wildfly-11.0.0.Final
+RUN curl -O "https://download.jboss.org/wildfly/${VERSION_WILDFLY}/wildfly-${VERSION_WILDFLY}.zip" \
+    && unzip wildfly-${VERSION_WILDFLY}.zip \
+    && export JBOSS_HOME=$PWD/wildfly-${VERSION_WILDFLY}
 COPY . .
 
-RUN cp comp/src/test/resources/ortolang-users.properties /app/wildfly-11.0.0.Final/standalone/configuration/ \
-    && cp comp/src/test/resources/ortolang-roles.properties /app/wildfly-11.0.0.Final/standalone/configuration/ \
-    && cp comp/src/test/resources/ortolang-test-11.xml /app/wildfly-11.0.0.Final/standalone/configuration/ \
-    && mvn clean test -DjbossHome=/app/wildfly-11.0.0.Final -Djboss.home=/app/wildfly-11.0.0.Final
+RUN cp comp/src/test/resources/ortolang-users.properties /app/wildfly-${VERSION_WILDFLY}/standalone/configuration/ \
+    && cp comp/src/test/resources/ortolang-roles.properties /app/wildfly-${VERSION_WILDFLY}/standalone/configuration/ \
+    && cp comp/src/test/resources/ortolang-test-${VERSION_WILDFLY}.xml /app/wildfly-${VERSION_WILDFLY}/standalone/configuration/standalone.xml \
+    && mvn clean test -DjbossHome=/app/wildfly-${VERSION_WILDFLY} -Djboss.home=/app/wildfly-${VERSION_WILDFLY}

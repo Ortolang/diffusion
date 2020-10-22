@@ -33,7 +33,7 @@
         <version.ear.plugin>2.10.1</version.ear.plugin>
         <version.ejb.plugin>3.0.0</version.ejb.plugin>
         <version.wildfly.maven.plugin>1.1.0.Alpha11</version.wildfly.maven.plugin>
-        <version.wildfly>11.0.0.Final</version.wildfly>
+        <version.wildfly>12.0.0.Final</version.wildfly>
         <slf4j.version>1.6.4</slf4j.version>
         <version.apache.tika>1.13</version.apache.tika>
         <version.apache.velocity>1.7</version.apache.velocity>

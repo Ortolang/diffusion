@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
-<server xmlns="urn:jboss:domain:5.0">
+<server xmlns="urn:jboss:domain:6.0">
     <extensions>
         <extension module="org.jboss.as.clustering.infinispan"/>
         <extension module="org.jboss.as.connector"/>
@@ -20,7 +20,6 @@
         <extension module="org.jboss.as.sar"/>
         <extension module="org.jboss.as.security"/>
         <extension module="org.jboss.as.transactions"/>
-        <extension module="org.keycloak.keycloak-server-subsystem" />
         <extension module="org.jboss.as.webservices"/>
         <extension module="org.jboss.as.weld"/>
         <extension module="org.wildfly.extension.batch.jberet"/>
@@ -29,31 +28,10 @@
         <extension module="org.wildfly.extension.elytron"/>
         <extension module="org.wildfly.extension.io"/>
         <extension module="org.wildfly.extension.request-controller"/>
-        <extension module="org.wildfly.extension.messaging-activemq"/>
         <extension module="org.wildfly.extension.security.manager"/>
         <extension module="org.wildfly.extension.undertow"/>
-        <extension module="org.keycloak.keycloak-adapter-subsystem"/>
+        <extension module="org.wildfly.extension.messaging-activemq"/>
     </extensions>
-
-    <system-properties>
-        <property name="ortolang.db.url" value="${env.ORTOLANG_DB_URL}"/>
-        <property name="ortolang.db.user" value="${env.ORTOLANG_DB_USER}"/>
-        <property name="ortolang.db.pass" value="${env.ORTOLANG_DB_PASS}"/>
-        <property name='ortolang.keystore.name' value="${env.ORTOLANG_KEYSTORE_NAME}"/>
-        <property name='ortolang.keystore.alias' value="${env.ORTOLANG_KEYSTORE_ALIAS}"/>
-        <property name='ortolang.keystore.pass' value="${env.ORTOLANG_KEYSTORE_PASS}"/>
-        <property name="ortolang.key.pass" value="${env.ORTOLANG_KEY_PASS}"/>
-        <property name="ortolang.auth.url" value="${env.ORTOLANG_AUTH_URL}"/>
-        <property name="smtp.host" value="${env.ORTOLANG_SMTP_HOST}"/>
-        <property name="smtp.port" value="${env.ORTOLANG_SMTP_PORT}"/>
-        <property name="smtp.username" value="${env.ORTOLANG_SMTP_USERNAME}"/>
-        <property name="smtp.password" value="${env.ORTOLANG_SMTP_PASSWORD}"/>
-        <property name="smtp.ssl" value="${env.ORTOLANG_SMTP_SSL}"/>
-        <property name="hibvernate.eviction.maxentries" value="${env.ORTOLANG_HIBERNATE_EVICTION_MAXENTRIES}"/>
-        <property name="hibvernate.expiration.maxidle" value="${env.ORTOLANG_HIBERNATE_EXPIRATION_MAXIDLE}"/>
-        <property name="https.max-upload" value="${env.ORTOLANG_HTTPS_MAX_UPLOAD}"/>
-    </system-properties>
-
     <management>
         <security-realms>
             <security-realm name="ManagementRealm">
@@ -82,7 +60,7 @@
             <security-realm name="OrtolangRealm">
                 <server-identities>
                     <ssl>
-                        <keystore path="${ortolang.keystore.name:server.keystore}" relative-to="jboss.server.config.dir" keystore-password="${ortolang.keystore.pass:tagada54}" alias="${ortolang.keystore.alias:server}" key-password="${ortolang.key.pass:tagada54}"/>
+                        <keystore path="application.keystore" relative-to="jboss.server.config.dir" keystore-password="password" alias="server" key-password="password" generate-self-signed-certificate-host="localhost"/>
                     </ssl>
                 </server-identities>
                 <authentication>
@@ -120,7 +98,7 @@
         </access-control>
     </management>
     <profile>
-        <subsystem xmlns="urn:jboss:domain:logging:3.0">
+        <subsystem xmlns="urn:jboss:domain:logging:4.0">
             <console-handler name="CONSOLE">
                 <level name="INFO"/>
                 <formatter>
@@ -143,9 +121,6 @@
             </logger>
             <logger category="sun.rmi">
                 <level name="WARN"/>
-            </logger>
-            <logger category="org.keycloak">
-                <level name="${env.KEYCLOAK_LOGLEVEL:INFO}" />
             </logger>
             <root-logger>
                 <level name="INFO"/>
@@ -184,33 +159,9 @@
                         <password>sa</password>
                     </security>
                 </datasource>
-                <datasource jndi-name="java:jboss/datasources/OrtolangDS" pool-name="OrtolangDS" enabled="true" use-java-context="true">
-                    <connection-url>${ortolang.db.url:jdbc:h2:mem:ortolang;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}</connection-url>
-                    <driver>postgresql</driver>
-                    <pool>
-                        <min-pool-size>10</min-pool-size>
-                        <max-pool-size>20</max-pool-size>
-                        <prefill>true</prefill>
-                    </pool>
-                    <security>
-                        <user-name>${ortolang.db.user:sa}</user-name>
-                        <password>${ortolang.db.pass:sa}</password>
-                    </security>
-                </datasource>
-                <datasource jndi-name="java:jboss/datasources/KeycloakDS" pool-name="KeycloakDS" enabled="true" use-java-context="true">
-                    <connection-url>jdbc:h2:${jboss.server.data.dir}/keycloak;AUTO_SERVER=TRUE</connection-url>
-                    <driver>h2</driver>
-                    <security>
-                        <user-name>sa</user-name>
-                        <password>sa</password>
-                    </security>
-                </datasource>
                 <drivers>
                     <driver name="h2" module="com.h2database.h2">
                         <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
-                    </driver>
-                    <driver name="postgresql" module="org.postgresql.jdbc">
-                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                     </driver>
                 </drivers>
             </datasources>
@@ -283,7 +234,7 @@
             <default-missing-method-permissions-deny-access value="true"/>
             <log-system-exceptions value="true"/>
         </subsystem>
-        <subsystem xmlns="urn:wildfly:elytron:1.2" final-providers="combined-providers" disallowed-providers="OracleUcrypto">
+        <subsystem xmlns="urn:wildfly:elytron:2.0" final-providers="combined-providers" disallowed-providers="OracleUcrypto">
             <providers>
                 <aggregate-providers name="combined-providers">
                     <providers name="elytron"/>
@@ -304,12 +255,8 @@
                     <realm name="ManagementRealm" role-decoder="groups-to-roles"/>
                     <realm name="local" role-mapper="super-user-mapper"/>
                 </security-domain>
-                <security-domain name="KeycloakDomain" default-realm="KeycloakOIDCRealm" permission-mapper="default-permission-mapper" security-event-listener="local-audit">
-                    <realm name="KeycloakOIDCRealm"/>
-                </security-domain>
             </security-domains>
             <security-realms>
-                <custom-realm name="KeycloakOIDCRealm" module="org.keycloak.keycloak-wildfly-elytron-oidc-adapter" class-name="org.keycloak.adapters.elytron.KeycloakSecurityRealm"/>
                 <identity-realm name="local" identity="$local"/>
                 <properties-realm name="ApplicationRealm">
                     <users-properties path="application-users.properties" relative-to="jboss.server.config.dir" digest-realm-name="ApplicationRealm"/>
@@ -336,7 +283,6 @@
                     </permission-mapping>
                 </simple-permission-mapper>
                 <constant-realm-mapper name="local" realm-name="local"/>
-                <constant-realm-mapper name="keycloak-oidc-realm-mapper" realm-name="KeycloakOIDCRealm"/>
                 <simple-role-decoder name="groups-to-roles" attribute="groups"/>
                 <constant-role-mapper name="super-user-mapper">
                     <role name="SuperUser"/>
@@ -358,19 +304,7 @@
                         <mechanism mechanism-name="FORM"/>
                     </mechanism-configuration>
                 </http-authentication-factory>
-                <http-authentication-factory name="keycloak-http-authentication" http-server-mechanism-factory="keycloak-http-server-mechanism-factory" security-domain="KeycloakDomain">
-                    <mechanism-configuration>
-                        <mechanism mechanism-name="KEYCLOAK">
-                            <mechanism-realm realm-name="KeycloakOIDCRealm" realm-mapper="keycloak-oidc-realm-mapper"/>
-                        </mechanism>
-                    </mechanism-configuration>
-                </http-authentication-factory>
-                <aggregate-http-server-mechanism-factory name="keycloak-http-server-mechanism-factory">
-                    <http-server-mechanism-factory name="keycloak-oidc-http-server-mechanism-factory"/>
-                    <http-server-mechanism-factory name="global"/>
-                </aggregate-http-server-mechanism-factory>
                 <provider-http-server-mechanism-factory name="global"/>
-                <service-loader-http-server-mechanism-factory name="keycloak-oidc-http-server-mechanism-factory" module="org.keycloak.keycloak-wildfly-elytron-oidc-adapter"/>
             </http>
             <sasl>
                 <sasl-authentication-factory name="management-sasl-authentication" sasl-server-factory="configured" security-domain="ManagementDomain">
@@ -406,33 +340,7 @@
             <worker name="default"/>
             <buffer-pool name="default"/>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:infinispan:4.0">
-            <cache-container name="keycloak" jndi-name="infinispan/Keycloak">
-                <local-cache name="realms">
-                    <eviction strategy="LRU" max-entries="10000" />
-                </local-cache>
-                <local-cache name="users">
-                    <eviction strategy="LRU" max-entries="10000" />
-                </local-cache>
-                <local-cache name="sessions" />
-                <local-cache name="authenticationSessions" />
-                <local-cache name="offlineSessions" />
-                <local-cache name="clientSessions" />
-                <local-cache name="offlineClientSessions" />
-                <local-cache name="loginFailures" />
-                <local-cache name="work" />
-                <local-cache name="authorization">
-                    <eviction strategy="LRU" max-entries="10000" />
-                </local-cache>
-                <local-cache name="keys">
-                    <eviction strategy="LRU" max-entries="1000" />
-                    <expiration max-idle="3600000" />
-                </local-cache>
-                <local-cache name="actionTokens">
-                    <eviction strategy="NONE" max-entries="-1" />
-                    <expiration interval="300000" max-idle="-1" />
-                </local-cache>
-            </cache-container>
+        <subsystem xmlns="urn:jboss:domain:infinispan:5.0">
             <cache-container name="server" default-cache="default" module="org.wildfly.clustering.server">
                 <local-cache name="default">
                     <transaction mode="BATCH"/>
@@ -452,14 +360,14 @@
                     <file-store passivation="true" purge="false"/>
                 </local-cache>
             </cache-container>
-            <cache-container name="hibernate" module="org.hibernate.infinispan">
+            <cache-container name="hibernate" module="org.infinispan.hibernate-cache">
                 <local-cache name="entity">
                     <transaction mode="NON_XA"/>
-                    <eviction strategy="LRU" max-entries="${hibvernate.eviction.maxentries}"/>
-                    <expiration max-idle="${hibvernate.expiration.maxidle}"/>
+                    <object-memory size="10000"/>
+                    <expiration max-idle="100000"/>
                 </local-cache>
                 <local-cache name="local-query">
-                    <eviction strategy="LRU" max-entries="10000"/>
+                    <object-memory size="10000"/>
                     <expiration max-idle="100000"/>
                 </local-cache>
                 <local-cache name="timestamps"/>
@@ -494,13 +402,13 @@
         <subsystem xmlns="urn:jboss:domain:jpa:1.1">
             <jpa default-datasource="" default-extended-persistence-inheritance="DEEP"/>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:jsf:1.0"/>
+        <subsystem xmlns="urn:jboss:domain:jsf:1.1"/>
         <subsystem xmlns="urn:jboss:domain:mail:3.0">
             <mail-session name="default" jndi-name="java:jboss/mail/Default">
-                <smtp-server outbound-socket-binding-ref="mail-smtp" tls="${smtp.ssl:true}" username="${smtp.username:username}" password="${smtp.password:mySmtpPassword}"/>
+                <smtp-server outbound-socket-binding-ref="mail-smtp"/>
             </mail-session>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:messaging-activemq:1.0">
+        <subsystem xmlns="urn:jboss:domain:messaging-activemq:3.0">
             <server name="default">
                 <security-setting name="#">
                     <role name="guest" send="true" consume="true" create-non-durable-queue="true" delete-non-durable-queue="true"/>
@@ -510,21 +418,25 @@
                 <http-connector name="http-connector-throughput" socket-binding="http" endpoint="http-acceptor-throughput">
                     <param name="batch-delay" value="50"/>
                 </http-connector>
-                <in-vm-connector name="in-vm" server-id="0"/>
+                <in-vm-connector name="in-vm" server-id="0">
+                    <param name="buffer-pooling" value="false"/>
+                </in-vm-connector>
                 <http-acceptor name="http-acceptor" http-listener="default"/>
                 <http-acceptor name="http-acceptor-throughput" http-listener="default">
                     <param name="batch-delay" value="50"/>
                     <param name="direct-deliver" value="false"/>
                 </http-acceptor>
-                <in-vm-acceptor name="in-vm" server-id="0"/>
+                <in-vm-acceptor name="in-vm" server-id="0">
+                    <param name="buffer-pooling" value="false"/>
+                </in-vm-acceptor>
                 <jms-queue name="ExpiryQueue" entries="java:/jms/queue/ExpiryQueue"/>
                 <jms-queue name="DLQ" entries="java:/jms/queue/DLQ"/>
                 <jms-topic name="notificationTopic" entries="jms/topic/notification java:jboss/exported/jms/topic/notification"/>
                 <jms-topic name="indexingTopic" entries="jms/topic/indexing java:jboss/exported/jms/topic/indexing"/>
                 <jms-topic name="extractionTopic" entries="jms/topic/extraction java:jboss/exported/jms/topic/extraction"/>
-                <jms-topic name="archiveTopic" entries="jms/topic/archive java:jboss/exported/jms/topic/archive"/>
+                <jms-topic name="archiveTopic" entries="jms/topic/archive java:jboss/exported/jms/topic/archive" />
                 <connection-factory name="InVmConnectionFactory" entries="java:/ConnectionFactory" connectors="in-vm"/>
-                <connection-factory name="RemoteConnectionFactory" connectors="http-connector" entries="java:jboss/exported/jms/RemoteConnectionFactory"/>
+                <connection-factory name="RemoteConnectionFactory" entries="java:jboss/exported/jms/RemoteConnectionFactory" connectors="http-connector"/>
                 <pooled-connection-factory name="activemq-ra" entries="java:/JmsXA java:jboss/DefaultJMSConnectionFactory" connectors="in-vm" transaction="xa"/>
             </server>
         </subsystem>
@@ -533,7 +445,6 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:pojo:1.0"/>
         <subsystem xmlns="urn:jboss:domain:remoting:4.0">
-            <endpoint/>
             <http-connector name="http-remoting-connector" connector-ref="default" security-realm="ApplicationRealm"/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:resource-adapters:5.0"/>
@@ -578,11 +489,19 @@
                 </security-domain>
                 <security-domain name="ortolang" cache-type="default">
                     <authentication>
-                        <login-module code="Database" flag="sufficient">
-                            <module-option name="dsJndiName" value="java:jboss/datasources/OrtolangDS"/>
-                            <module-option name="principalsQuery" value="select secret from profile where id=?"/>
+                        <login-module code="UsersRoles" flag="sufficient">
+                            <module-option name="usersProperties" value="${jboss.server.config.dir}/ortolang-users.properties"/>
+                            <module-option name="rolesProperties" value="${jboss.server.config.dir}/ortolang-roles.properties"/>
+                            <module-option name="hashUserPassword" value="false"/>
+                        </login-module>
+                        <login-module code="Identity" flag="required">
+                            <module-option name="principal" value="anonymous"/>
+                            <module-option name="roles" value="user"/>
                         </login-module>
                     </authentication>
+                    <authorization>
+                        <policy-module code="Delegating" flag="required"/>
+                    </authorization>
                 </security-domain>
             </security-domains>
         </subsystem>
@@ -595,11 +514,11 @@
             <recovery-environment socket-binding="txn-recovery-environment" status-socket-binding="txn-status-manager"/>
             <object-store path="tx-object-store" relative-to="jboss.server.data.dir"/>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:undertow:4.0">
+        <subsystem xmlns="urn:jboss:domain:undertow:5.0">
             <buffer-cache name="default"/>
             <server name="default-server">
                 <http-listener name="default" socket-binding="http" redirect-socket="https" enable-http2="true"/>
-                <https-listener name="https" socket-binding="https" security-realm="OrtolangRealm" max-post-size="${https.max-upload:31457280}" enable-http2="true"/>
+                <https-listener name="https" socket-binding="https" security-realm="OrtolangRealm" enable-http2="true"/>
                 <host name="default-host" alias="localhost">
                     <location name="/" handler="welcome-content"/>
                     <filter-ref name="server-header"/>
@@ -618,80 +537,6 @@
                 <response-header name="server-header" header-name="Server" header-value="WildFly/11"/>
                 <response-header name="x-powered-by-header" header-name="X-Powered-By" header-value="Undertow/1"/>
             </filters>
-            <application-security-domains>
-                <application-security-domain name="other" http-authentication-factory="keycloak-http-authentication"/>
-            </application-security-domains>
-        </subsystem>
-        <subsystem xmlns="urn:jboss:domain:keycloak-server:1.1">
-            <web-context>auth</web-context>
-            <providers>
-                <provider>
-                    classpath:${jboss.home.dir}/providers/*
-                </provider>
-            </providers>
-            <master-realm-name>master</master-realm-name>
-            <scheduled-task-interval>900</scheduled-task-interval>
-            <theme>
-                <staticMaxAge>2592000</staticMaxAge>
-                <cacheThemes>true</cacheThemes>
-                <cacheTemplates>true</cacheTemplates>
-                <dir>${jboss.home.dir}/themes</dir>
-            </theme>
-            <spi name="eventsStore">
-                <provider name="jpa" enabled="true">
-                    <properties>
-                        <property name="exclude-events" value="[&quot;REFRESH_TOKEN&quot;]" />
-                    </properties>
-                </provider>
-            </spi>
-            <spi name="userCache">
-                <provider name="default" enabled="true" />
-            </spi>
-            <spi name="userSessionPersister">
-                <default-provider>jpa</default-provider>
-            </spi>
-            <spi name="timer">
-                <default-provider>basic</default-provider>
-            </spi>
-            <spi name="connectionsHttpClient">
-                <provider name="default" enabled="true" />
-            </spi>
-            <spi name="connectionsJpa">
-                <provider name="default" enabled="true">
-                    <properties>
-                        <property name="dataSource" value="java:jboss/datasources/KeycloakDS" />
-                        <property name="initializeEmpty" value="true" />
-                        <property name="migrationStrategy" value="update" />
-                        <property name="migrationExport" value="${jboss.home.dir}/keycloak-database-update.sql" />
-                    </properties>
-                </provider>
-            </spi>
-            <spi name="realmCache">
-                <provider name="default" enabled="true" />
-            </spi>
-            <spi name="connectionsInfinispan">
-                <default-provider>default</default-provider>
-                <provider name="default" enabled="true">
-                    <properties>
-                        <property name="cacheContainer" value="java:comp/env/infinispan/Keycloak" />
-                    </properties>
-                </provider>
-            </spi>
-            <spi name="jta-lookup">
-                <default-provider>${keycloak.jta.lookup.provider:jboss}</default-provider>
-                <provider name="jboss" enabled="true" />
-            </spi>
-            <spi name="publicKeyStorage">
-                <provider name="infinispan" enabled="true">
-                    <properties>
-                        <property name="minTimeBetweenRequests" value="10" />
-                    </properties>
-                </provider>
-            </spi>
-            <spi name="x509cert-lookup">
-                <default-provider>${keycloak.x509cert.lookup.provider:default}</default-provider>
-                <provider name="default" enabled="true" />
-            </spi>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:webservices:2.0">
             <wsdl-host>${jboss.bind.address:127.0.0.1}</wsdl-host>
@@ -704,17 +549,6 @@
             <client-config name="Standard-Client-Config"/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:weld:4.0"/>
-        <subsystem xmlns="urn:jboss:domain:keycloak:1.1">
-            <secure-deployment name="api.war">
-                <realm>ortolang</realm>
-                <resource>api</resource>
-                <enable-basic-auth>true</enable-basic-auth>
-                <public-client>true</public-client>
-                <auth-server-url>${ortolang.auth.url}</auth-server-url>
-                <ssl-required>EXTERNAL</ssl-required>
-                <principal-attribute>preferred_username</principal-attribute>
-            </secure-deployment>
-        </subsystem>
     </profile>
     <interfaces>
         <interface name="management">
@@ -722,6 +556,9 @@
         </interface>
         <interface name="public">
             <inet-address value="${jboss.bind.address:127.0.0.1}"/>
+        </interface>
+        <interface name="unsecure">
+            <inet-address value="${jboss.bind.address.unsecure:127.0.0.1}"/>
         </interface>
     </interfaces>
     <socket-binding-group name="standard-sockets" default-interface="public" port-offset="${jboss.socket.binding.port-offset:0}">
@@ -733,7 +570,7 @@
         <socket-binding name="txn-recovery-environment" port="4712"/>
         <socket-binding name="txn-status-manager" port="4713"/>
         <outbound-socket-binding name="mail-smtp">
-            <remote-destination host="${smtp.host:localhost}" port="${smtp.port:25}"/>
+            <remote-destination host="localhost" port="25"/>
         </outbound-socket-binding>
     </socket-binding-group>
 </server>

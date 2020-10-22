@@ -4,7 +4,7 @@ services:
   olrepo:
     build: 
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
       args:
         CUSTOM_UID: '1158'
         CUSTOM_GID: '1146'
@@ -14,7 +14,7 @@ services:
     command: > 
       bash -c "cp /opt/jboss/.ortolang/config.properties /tmp/ && 
               envsubst < /tmp/config.properties > /opt/jboss/.ortolang/config.properties && 
-              /opt/jboss/docker-entrypoint.sh -b 0.0.0.0 -bmanagement=0.0.0.0 --debug -Dkeycloak.migration.action=import -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.file=/opt/jboss/wildfly/standalone/configuration/ortolang-realm.json -Dkeycloak.migration.strategy=IGNORE_EXISTING"
+              /opt/jboss/docker-entrypoint.sh -b 0.0.0.0 -bmanagement=0.0.0.0 --debug"
     environment:
       - 'KEYCLOAK_USER=admin'
       - 'KEYCLOAK_PASSWORD=tagada54'
