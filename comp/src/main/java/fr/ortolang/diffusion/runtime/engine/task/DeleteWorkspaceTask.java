@@ -92,7 +92,6 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 		
 		try {
 			try {
-				getUserTransaction().setTransactionTimeout(2000);
 				LOGGER.log(Level.FINE, "Reading workspace");
 		        Workspace workspace = getCoreService().readWorkspace(wskey);
 				if ( workspace.getType().equals(WorkspaceType.SYSTEM.toString())) {

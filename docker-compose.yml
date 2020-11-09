@@ -11,10 +11,6 @@ services:
     image: ortolang-diffusion
     user: '1158:1146'
     container_name: ortolang-diffusion
-    command: > 
-      bash -c "cp /opt/jboss/.ortolang/config.properties /tmp/ && 
-              envsubst < /tmp/config.properties > /opt/jboss/.ortolang/config.properties && 
-              /opt/jboss/docker-entrypoint.sh -b 0.0.0.0 -bmanagement=0.0.0.0 --debug"
     environment:
       - 'KEYCLOAK_USER=admin'
       - 'KEYCLOAK_PASSWORD=tagada54'
@@ -50,6 +46,9 @@ services:
       - ORTOLANG_HTTPS_MAX_UPLOAD=3221225472
       - ORTOLANG_FACILE_HOST=http://docker.for.mac.localhost:38080
       - ORTOLANG_FACILE_PATH=ws/xml
+      - ORTOLANG_ADDRESS_SETTING_MAX_SIZE_BYTES=10485760
+      - ORTOLANG_ADDRESS_SETTING_PAGE_SIZE_BYTES=2097152
+      - ORTOLANG_ADDRESS_SETTING_MESSAGE_COUNTER_HISTORY=10
     volumes:
       - ./ortolang-data/binary-store:/opt/jboss/.ortolang/binary-store
       - /Users/cpestel/Projets/ortolang/referentiels/00_init:/referentials

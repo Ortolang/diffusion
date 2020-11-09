@@ -49,9 +49,10 @@
         <property name="smtp.username" value="${env.ORTOLANG_SMTP_USERNAME}"/>
         <property name="smtp.password" value="${env.ORTOLANG_SMTP_PASSWORD}"/>
         <property name="smtp.ssl" value="${env.ORTOLANG_SMTP_SSL}"/>
-        <property name="hibvernate.eviction.maxentries" value="${env.ORTOLANG_HIBERNATE_EVICTION_MAXENTRIES}"/>
-        <property name="hibvernate.expiration.maxidle" value="${env.ORTOLANG_HIBERNATE_EXPIRATION_MAXIDLE}"/>
         <property name="https.max-upload" value="${env.ORTOLANG_HTTPS_MAX_UPLOAD}"/>
+        <property name="address-setting.max-size-bytes" value="${env.ORTOLANG_ADDRESS_SETTING_MAX_SIZE_BYTES}"/>
+        <property name="address-setting.page-size-bytes" value="${env.ORTOLANG_ADDRESS_SETTING_PAGE_SIZE_BYTES}"/>
+        <property name="address-setting.message-counter-history-day-limit" value="${env.ORTOLANG_ADDRESS_SETTING_MESSAGE_COUNTER_HISTORY}"/>
     </system-properties>
 
     <management>
@@ -512,7 +513,7 @@
                 <security-setting name="#">
                     <role name="guest" send="true" consume="true" create-non-durable-queue="true" delete-non-durable-queue="true" />
                 </security-setting>
-                <address-setting name="#" dead-letter-address="jms.queue.DLQ" expiry-address="jms.queue.ExpiryQueue" max-size-bytes="10485760" page-size-bytes="2097152" message-counter-history-day-limit="10" />
+                <address-setting name="#" dead-letter-address="jms.queue.DLQ" expiry-address="jms.queue.ExpiryQueue" max-size-bytes="${address-setting.max-size-bytes:10485760}" page-size-bytes="${address-setting.page-size-bytes:2097152}" message-counter-history-day-limit="${address-setting.message-counter-history-day-limit:10}" />
                 <http-connector name="http-connector" socket-binding="http" endpoint="http-acceptor" />
                 <http-connector name="http-connector-throughput" socket-binding="http" endpoint="http-acceptor-throughput">
                     <param name="batch-delay" value="50" />
