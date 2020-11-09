@@ -54,6 +54,7 @@ maven_docker_build:
       - api/src/**/*
       - appli/src/**/*
       - comp/src/**/*
+      - src/main/docker/**/*
 
 docker_tag_from_master:
   stage: build

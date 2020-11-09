@@ -267,7 +267,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 	        	removeDocument(indexableContent);
 	        }
 		} catch (RegistryServiceException | KeyNotFoundException | OrtolangException | IndexingServiceException e) {
-			throw new ElasticSearchServiceException("An unexpected error happened while removing document from elasticsearch with key [" + key + "]", e);
+			throw new ElasticSearchServiceException("An unexpected error happened while removing document from elasticsearch with key [" + key + "] : " + e.getMessage(), e);
 		}
     }
     
@@ -275,7 +275,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     public void removeDocument(OrtolangIndexableContent indexableContent) throws ElasticSearchServiceException {
     	DeleteResponse resp = client.prepareDelete(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).get();
     	if (!resp.getResult().equals(Result.DELETED)) {
-    		throw new ElasticSearchServiceException("Respons result is not deleted but " + resp.getResult().toString()+ " while removing document from elasticsearch with key [" + indexableContent.getId() + "]");
+    		throw new ElasticSearchServiceException("Response indicates that it is not deleted but " + resp.getResult().toString()+ " while removing document from elasticsearch with key [" + indexableContent.getId() + "]");
     	}
     }
 

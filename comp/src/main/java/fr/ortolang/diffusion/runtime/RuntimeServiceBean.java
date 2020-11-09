@@ -152,7 +152,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void importProcessTypes() throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Importing configured process types");
+        LOGGER.log(Level.FINE, "Importing configured process types");
         try {
             String[] types = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.RUNTIME_DEFINITIONS).split(",");
             engine.deployDefinitions(types);
@@ -165,7 +165,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<ProcessType> listProcessTypes(boolean onlyLatestVersions) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Listing process types of " + (onlyLatestVersions ? "latest" : "all" + " versions"));
+        LOGGER.log(Level.FINE, "Listing process types of " + (onlyLatestVersions ? "latest" : "all" + " versions"));
         try {
             return engine.listProcessTypes(onlyLatestVersions);
         } catch (RuntimeEngineException e) {
@@ -177,7 +177,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Process createProcess(String key, String type, String name, String workspace) throws RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "Creating new process of type: " + type);
+        LOGGER.log(Level.FINE, "Creating new process of type: " + type);
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
 
@@ -214,7 +214,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void startProcess(String key, Map<String, Object> variables) throws RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "Starting process with key: " + key);
+        LOGGER.log(Level.FINE, "Starting process with key: " + key);
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -255,7 +255,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void abortProcess(String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "Killing process with key: " + key);
+        LOGGER.log(Level.FINE, "Killing process with key: " + key);
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -291,7 +291,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Process> systemListProcesses(State state) throws RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "#SYSTEM# Listing all processes in " + ((state != null) ? "state=" + state : "all states"));
+        LOGGER.log(Level.FINE, "#SYSTEM# Listing all processes in " + ((state != null) ? "state=" + state : "all states"));
         try {
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -326,14 +326,14 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Process> systemListUserProcesses(String username, State state) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "#SYSTEM# Listing processes for user [" + username + "] in " + ((state != null) ? "state=" + state : "all states"));
+        LOGGER.log(Level.FINE, "#SYSTEM# Listing processes for user [" + username + "] in " + ((state != null) ? "state=" + state : "all states"));
         return listUserProcesses(username, state);
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Process> listCallerProcesses(State state) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Listing caller processes in " + ((state != null) ? "state=" + state : "all states"));
+        LOGGER.log(Level.FINE, "Listing caller processes in " + ((state != null) ? "state=" + state : "all states"));
         String caller = membership.getProfileKeyForConnectedIdentifier();
         return listUserProcesses(caller, state);
     }
@@ -368,7 +368,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Process> listWorkspaceProcesses(String wskey, State state) throws RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "Listing workspace processes in " + ((state != null) ? "state=" + state : "all states"));
+        LOGGER.log(Level.FINE, "Listing workspace processes in " + ((state != null) ? "state=" + state : "all states"));
         try {
             TypedQuery<Process> query;
             if (state != null) {
@@ -397,7 +397,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Process readProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "Reading process with key: " + key);
+        LOGGER.log(Level.FINE, "Reading process with key: " + key);
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkPermission(key, subjects, "read");
@@ -420,7 +420,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, Object> listProcessVariables(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "Listing process variables for process with key: " + key);
+        LOGGER.log(Level.FINE, "Listing process variables for process with key: " + key);
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkPermission(key, subjects, "read");
@@ -445,7 +445,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public File readProcessTrace(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "Reading trace of process with key: " + key);
+        LOGGER.log(Level.FINE, "Reading trace of process with key: " + key);
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkPermission(key, subjects, "read");
@@ -471,7 +471,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void updateProcessState(String pid, State state) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Updating state of process with pid: " + pid);
+        LOGGER.log(Level.FINE, "Updating state of process with pid: " + pid);
         try {
             Process process = em.find(Process.class, pid);
             if (process == null) {
@@ -499,7 +499,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void updateProcessStatus(String pid, String status, String explanation) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Updating status of process with pid: " + pid);
+        LOGGER.log(Level.FINE, "Updating status of process with pid: " + pid);
         try {
             Process process = em.find(Process.class, pid);
             if (process == null) {
@@ -525,7 +525,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void appendProcessLog(String pid, String log) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Appending log to process with pid: " + pid);
+        LOGGER.log(Level.FINE, "Appending log to process with pid: " + pid);
         try {
             Process process = em.find(Process.class, pid);
             if (process == null) {
@@ -551,7 +551,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void appendProcessTrace(String pid, String trace) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Appending trace to process with pid: " + pid);
+        LOGGER.log(Level.FINE, "Appending trace to process with pid: " + pid);
         try {
             Path logfile = Paths.get(getBase().toString(), pid + TRACE_FILE_EXTENSION);
             if (!Files.exists(logfile)) {
@@ -568,7 +568,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void updateProcessActivity(String pid, String name, int progress) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Updating activity of process with pid: " + pid);
+        LOGGER.log(Level.FINE, "Updating activity of process with pid: " + pid);
         try {
             Process process = em.find(Process.class, pid);
             if (process == null) {
@@ -593,7 +593,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void pushTaskEvent(String pid, String tid, Set<IdentityLink> candidates, String assignee, RuntimeEngineEvent.Type type) {
-        LOGGER.log(Level.INFO, "Pushing task event to notification service, pid:" + pid + ", tid: " + tid);
+        LOGGER.log(Level.FINE, "Pushing task event to notification service, pid:" + pid + ", tid: " + tid);
         try {
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("tid", tid);
             String eventName = type.name().substring(type.name().lastIndexOf("_") + 1).toLowerCase();
@@ -620,7 +620,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<HumanTask> systemListTasks() throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "#SYSTEM# Listing all tasks");
+        LOGGER.log(Level.FINE, "#SYSTEM# Listing all tasks");
         try {
             return engine.listAllTasks();
         } catch (Exception e) {
@@ -632,7 +632,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<HumanTask> listCandidateTasks() throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "Listing candidate tasks");
+        LOGGER.log(Level.FINE, "Listing candidate tasks");
         String caller = membership.getProfileKeyForConnectedIdentifier();
         try {
             List<String> groups = membership.getProfileGroups(caller);
@@ -645,7 +645,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<HumanTask> systemListUserCandidateTasks(String username) throws RuntimeServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "#SYSTEM# Listing candidate tasks");
+        LOGGER.log(Level.FINE, "#SYSTEM# Listing candidate tasks");
         try {
             Profile profile = membership.systemReadProfile(username);
             return listUserCandidateTasks(username, Arrays.asList(profile.getGroups()));
@@ -671,7 +671,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<HumanTask> listAssignedTasks() throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Listing assigned tasks");
+        LOGGER.log(Level.FINE, "Listing assigned tasks");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             return engine.listAssignedTasks(caller);
@@ -684,7 +684,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void claimTask(String id) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Claiming task with tid: " + id);
+        LOGGER.log(Level.FINE, "Claiming task with tid: " + id);
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> groups = membership.getProfileGroups(caller);
@@ -702,7 +702,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void unclaimTask(String id) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Unclaiming task with tid: " + id);
+        LOGGER.log(Level.FINE, "Unclaiming task with tid: " + id);
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             if (caller.equals(MembershipService.SUPERUSER_IDENTIFIER) || engine.isAssigned(id, caller)) {
@@ -719,7 +719,7 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void completeTask(String id, Map<String, Object> variables) throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "Complete task with tid: " + id);
+        LOGGER.log(Level.FINE, "Complete task with tid: " + id);
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             if (caller.equals(MembershipService.SUPERUSER_IDENTIFIER) || engine.isAssigned(id, caller)) {
