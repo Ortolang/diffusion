@@ -1,5 +1,9 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 /*
  * #%L
  * ORTOLANG
@@ -39,9 +43,15 @@ package fr.ortolang.diffusion.runtime.engine.task;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.transaction.Status;
+
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 
+import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
+import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.publication.PublicationService;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
@@ -79,11 +89,55 @@ public class PublishTask extends RuntimeEngineTask {
         
         String wskey = (String) getWskey().getValue(execution);
         String snapshot = (String) getSnapshot().getValue(execution);
-        
+        try {
+            if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+                LOGGER.log(Level.FINE, "starting new user transaction.");
+                getUserTransaction().begin();
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+        }
         try {
             LOGGER.log(Level.FINE, "starting publication...");
-            getPublicationService().publishSnapshot(wskey, snapshot);
+            String caller = getMembershipService().getProfileKeyForConnectedIdentifier();
+            
+            LOGGER.log(Level.FINE, "building publication map...");
+            Map<String, Map<String, List<String>>> map = getCoreService().buildWorkspacePublicationMap(wskey, snapshot);
+            
+            long tscommit = System.currentTimeMillis();
+            //TODO log event or status to set process progression
+            for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
+            	try {
+            		getPublicationService().publishKey(entry.getKey(), entry.getValue());
+	            } catch (Exception e) {
+	                throw new RuntimeEngineTaskException("unexpected error during publish task execution", e);
+	            }
+            	try {
+                    if (System.currentTimeMillis() - tscommit > 30000 && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
+                        LOGGER.log(Level.FINE, "committing active user transaction.");
+                        getUserTransaction().commit();
+                        tscommit = System.currentTimeMillis();
+                        getUserTransaction().begin();
+                    }
+                } catch (Exception e) {
+                    LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+                }
+            }
+
+            try {
+                LOGGER.log(Level.FINE, "committing active user transaction and starting new one.");
+                LOGGER.log(Level.INFO, "[PublishTask] All object imported");
+                getUserTransaction().commit();
+                getUserTransaction().begin();
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+            }
             LOGGER.log(Level.FINE, "publication done.");
+
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("snapshot", snapshot);
+            getNotificationService().throwEvent(wskey, caller, Workspace.OBJECT_TYPE, 
+                    OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, Workspace.OBJECT_TYPE, "publish-snapshot"), argumentsBuilder.build());
+            
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All elements published succesfully"));
         } catch (Exception e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to publish elements: " + e.getMessage()));
@@ -98,7 +152,7 @@ public class PublishTask extends RuntimeEngineTask {
     
     @Override
     public int getTransactionTimeout() {
-        return 1800;
+        return 5000;
     }
 
 }

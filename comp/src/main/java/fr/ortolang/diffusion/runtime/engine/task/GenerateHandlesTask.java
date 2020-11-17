@@ -134,7 +134,7 @@ public class GenerateHandlesTask extends RuntimeEngineTask {
                     getHandleStore().recordHandle(pid.getName(), pid.getKey(), pid.getTarget());
                     report.append(pid).append(" OK\r\n");
                 } catch (Exception e) {
-                    throw new RuntimeEngineTaskException("unexpected error during publish task execution", e);
+                    throw new RuntimeEngineTaskException("unexpected error during generate handle task execution", e);
                 }
                 if (pidCount%500 == 0) {
                 	LOGGER.log(Level.INFO, "[GenerateHandlesTask] Count of object imported : " + pidCount);

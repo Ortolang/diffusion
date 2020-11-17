@@ -39,7 +39,6 @@ package fr.ortolang.diffusion.publication;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,10 +56,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectState;
-import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -168,34 +164,6 @@ public class PublicationServiceBean implements PublicationService {
         return this.ctx;
     }
 
-    @Override
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void publishSnapshot(String wskey, String snapshot) throws PublicationServiceException {
-        LOGGER.log(Level.FINE, "publishing snapshot ...");
-        try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
-            LOGGER.log(Level.FINE, "building publication map...");
-            Map<String, Map<String, List<String>>> map = core.buildWorkspacePublicationMap(wskey, snapshot);
-            
-            LOGGER.log(Level.FINE, "starting publication...");
-            //TODO log event or status to set process progression
-            for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
-                publishKey(entry.getKey(), entry.getValue());
-            }
-            
-            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("snapshot", snapshot);
-            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, 
-                    OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, Workspace.OBJECT_TYPE, "publish-snapshot"), argumentsBuilder.build());
-            
-        } catch (CoreServiceException | AccessDeniedException | NotificationServiceException e) {
-            LOGGER.log(Level.SEVERE, "error during publication of key", e);
-            ctx.setRollbackOnly();
-            throw new PublicationServiceException("error during publishing key : " + e);
-        }
-        
-        
-    }
-    
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void publishKey(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException {
