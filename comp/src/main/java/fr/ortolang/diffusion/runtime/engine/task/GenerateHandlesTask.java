@@ -125,7 +125,7 @@ public class GenerateHandlesTask extends RuntimeEngineTask {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "handles list built with: " + pids.size() + " entries"));
 
             LOGGER.log(Level.FINE, "starting handle creation...");
-            LOGGER.log(Level.INFO, "[GenerateHandlesTask] Count of handle to import : " + pids.size());
+            LOGGER.log(Level.INFO, "[GenerateHandlesTask] Count of handle to generate : " + pids.size());
             long tscommit = System.currentTimeMillis();
             long pidCount = 0;
             for (OrtolangObjectPid pid : pids) {
@@ -137,13 +137,13 @@ public class GenerateHandlesTask extends RuntimeEngineTask {
                     throw new RuntimeEngineTaskException("unexpected error during generate handle task execution", e);
                 }
                 if (pidCount%500 == 0) {
-                	LOGGER.log(Level.INFO, "[GenerateHandlesTask] Count of object imported : " + pidCount);
+                	LOGGER.log(Level.INFO, "[GenerateHandlesTask] Count of object generated : " + pidCount);
                 }
                 try {
                     if (System.currentTimeMillis() - tscommit > 30000 && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
                         report.append("[COMMIT-TRAN]\r\n");
                         LOGGER.log(Level.FINE, "committing active user transaction.");
-                        LOGGER.log(Level.INFO, "[GenerateHandlesTask] Total of pid imported : " + pidCount);
+                        LOGGER.log(Level.INFO, "[GenerateHandlesTask] Total of pid generated before new transaction : " + pidCount);
                         getUserTransaction().commit();
                         tscommit = System.currentTimeMillis();
                         getUserTransaction().begin();
