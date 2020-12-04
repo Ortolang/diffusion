@@ -41,7 +41,7 @@
         <version.apache.httpcore>4.4.4</version.apache.httpcore>
         <version.javax.javaee>7.0</version.javax.javaee>
         <version.jboss.resteasy>3.0.24.Final</version.jboss.resteasy>
-        <version.keycloak>3.4.3</version.keycloak>
+        <version.keycloak>11.0.3</version.keycloak>
         <version.shrinkwrap>1.2.6</version.shrinkwrap>
         <version.shrinkwrap-resolver>2.2.2</version.shrinkwrap-resolver>
         <version.arquillian>1.4.0.Final</version.arquillian>
