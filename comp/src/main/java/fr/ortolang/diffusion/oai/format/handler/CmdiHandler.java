@@ -3,6 +3,7 @@ package fr.ortolang.diffusion.oai.format.handler;
 import java.io.StringReader;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,6 +13,7 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
+import javax.json.JsonValue;
 
 import static fr.ortolang.diffusion.oai.format.Constant.*;
 import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
@@ -344,10 +346,118 @@ public class CmdiHandler implements MetadataHandler {
 
 	@Override
 	public void write(String json, MetadataBuilder builder) throws MetadataHandlerException {
-		// TODO Auto-generated method stub
-		
+		StringReader reader = new StringReader(json);
+		JsonReader jsonReader = Json.createReader(reader);
+		try {
+			JsonObject jsonDoc = jsonReader.readObject();
+			
+			JsonObject CMD = jsonDoc.getJsonObject(CMDI_ELEMENT);
+			
+			String schemaLocation = CMDI_NAMESPACE_URI + " " + CMDI_NAMESPACE_SCHEMA_LOCATION;
+			String cmdiVersion = CMDI_VERSION_VALUE_ATTRIBUTE;
+			String cmdiXmlns = CMDI_NAMESPACE_URI;
+			if (CMD != null && CMD.containsKey(XMLNS)) {
+				cmdiXmlns = CMD.getString(XMLNS);
+			}
+			if (CMD != null && CMD.containsKey(XSI_SCHEMA_LOCATION)) {
+				String[] schemaLocationSplit = CMD.getString(XSI_SCHEMA_LOCATION).split(" ");
+				if (schemaLocationSplit.length > 1) {
+					schemaLocation = schemaLocationSplit[1];
+				}
+			}
+			if (CMD != null && CMD.containsKey(CMDI_VERSION_ATTRIBUTE)) {
+				cmdiVersion = CMD.getString(CMDI_VERSION_ATTRIBUTE);
+			}
+			
+			writeCmdiDocumentWithProfile(builder, cmdiXmlns, schemaLocation, cmdiVersion);
+			if (CMD != null && CMD.containsKey(CMDI_HEADER_ELEMENT)) {
+				writeCmdComponent(builder, CMDI_HEADER_ELEMENT, CMD.getJsonObject(CMDI_HEADER_ELEMENT));
+			}
+			JsonObject resourcesList = CMD.getJsonObject(CMDI_RESOURCES_ELEMENT);
+			if (resourcesList != null) {
+				JsonObject resourceProxyList = resourcesList.getJsonObject(CMDI_RESOURCEPROXYLIST_ELEMENT);
+				if (resourceProxyList != null) {
+					JsonArray resourceProxy = resourceProxyList.getJsonArray(CMDI_RESOURCEPROXY_ELEMENT);
+					if (resourceProxy != null) {
+						writeCmdResources(builder, resourceProxy);
+					}
+				}
+			}
+			
+			if (CMD != null && CMD.containsKey(CMDI_COMPONENTS_ELEMENT)) {
+				writeCmdComponent(builder, CMDI_COMPONENTS_ELEMENT, CMD.getJsonObject(CMDI_COMPONENTS_ELEMENT));
+			}
+			
+        	builder.writeEndDocument();
+			
+		} catch (Exception e) {
+			throw new MetadataHandlerException("unable to write CmdiHandler metadata", e);
+		} finally {
+			jsonReader.close();
+			reader.close();
+		}
 	}
 
+	public static void writeCmdComponent(MetadataBuilder builder, String name, JsonValue component) throws MetadataBuilderException {
+		if (JsonValue.ValueType.OBJECT.equals(component.getValueType())) {
+			XmlDumpAttributes attrs = new XmlDumpAttributes();
+			if (((JsonObject) component).containsKey(CMDI_REF_ATTRIBUT)) {
+				attrs.put(CMDI_REF_ATTRIBUT, ((JsonObject) component).getString(CMDI_REF_ATTRIBUT));
+			}
+			builder.writeStartElement(CMDI_NAMESPACE_PREFIX, name, attrs);
+			for (Map.Entry<String, JsonValue> entry : ((JsonObject) component).entrySet()) {
+				if (!entry.getKey().equals(CMDI_REF_ATTRIBUT)) {
+					writeCmdComponent(builder, entry.getKey(), entry.getValue());
+				}
+			}
+			builder.writeEndElement();
+		} else if (JsonValue.ValueType.STRING.equals(component.getValueType())) {
+			builder.writeStartEndElement(CMDI_NAMESPACE_PREFIX, name, null, ((JsonString) component).getString());
+		} else if (JsonValue.ValueType.ARRAY.equals(component.getValueType())) {
+			for ( JsonValue comp : (JsonArray) component) {
+				writeCmdComponent(builder, name, comp);
+			}
+		}
+	}
+	
+	public static void writeCmdResources(MetadataBuilder builder, JsonArray resources) throws MetadataBuilderException {
+		builder.writeStartElement(CMDI_NAMESPACE_PREFIX, CMDI_RESOURCES_ELEMENT);
+		
+		if (resources != null && !resources.isEmpty()) {
+			builder.writeStartElement(CMDI_NAMESPACE_PREFIX, CMDI_RESOURCEPROXYLIST_ELEMENT);
+			
+			for ( JsonValue comp : (JsonArray) resources) {
+				XmlDumpAttributes attrs = new XmlDumpAttributes();
+				attrs.put(CMDI_RESOURCEPROXYID_ELEMENT, ((JsonObject) comp).getString(CMDI_RESOURCEPROXYID_ELEMENT));
+				builder.writeStartElement(CMDI_NAMESPACE_PREFIX, CMDI_RESOURCEPROXY_ELEMENT, attrs); // ResourceProxy
+				
+				JsonObject resourceType = ((JsonObject) comp).getJsonObject(CMDI_RESOURCETYPE_ELEMENT);
+				if (resourceType != null) {
+					XmlDumpAttributes attrsResType = new XmlDumpAttributes();
+					String mimetype = resourceType.getString(CMDI_MIMETYPE_ATTRIBUT);
+					String text = resourceType.getString(CMDI_TEXT_VALUE);
+					if (mimetype != null) {
+						attrsResType.put(CMDI_MIMETYPE_ATTRIBUT, mimetype);
+					}
+					builder.writeStartElement(CMDI_NAMESPACE_PREFIX, CMDI_RESOURCETYPE_ELEMENT, attrsResType, text);
+					builder.writeEndElement(); // ResourceType
+				}
+				String resourceRef = ((JsonObject) comp).getString(CMDI_RESOURCEREF_ELEMENT);
+				builder.writeStartEndElement(CMDI_NAMESPACE_PREFIX, CMDI_RESOURCEREF_ELEMENT, resourceRef);
+				
+				builder.writeEndElement(); // ResourceProxy
+			}
+			builder.writeEndElement(); // ResourceProxyList
+		}
+		else {
+			builder.writeStartEndElement(CMDI_NAMESPACE_PREFIX, CMDI_RESOURCEPROXYLIST_ELEMENT);
+		}
+		
+		builder.writeStartEndElement(CMDI_NAMESPACE_PREFIX, CMDI_JOURNALFILEPROXYLIST_ELEMENT);
+		builder.writeStartEndElement(CMDI_NAMESPACE_PREFIX, CMDI_RESOURCERELATIONLISTT_ELEMENT);
+		builder.writeEndElement();
+	}
+	
 	public static void writeCmdiDocument(MetadataBuilder builder) throws MetadataBuilderException {
 		XmlDumpNamespaces namespaces = new XmlDumpNamespaces();
 		namespaces.put(CMDI_NAMESPACE_PREFIX, new XmlDumpNamespace(CMDI_NAMESPACE_URI, CMDI_NAMESPACE_SCHEMA_LOCATION));
@@ -356,6 +466,16 @@ public class CmdiHandler implements MetadataHandler {
 		builder.setNamespaces(namespaces);
 		XmlDumpAttributes attrs = new XmlDumpAttributes();
 		attrs.put(CMDI_VERSION_ATTRIBUTE, CMDI_VERSION_VALUE_ATTRIBUTE);
+		builder.writeStartDocument(CMDI_NAMESPACE_PREFIX, CMDI_ELEMENT, attrs);
+	}
+
+	public static void writeCmdiDocumentWithProfile(MetadataBuilder builder, String cmdiXmlns, String schemaLocation, String cmdiVersion) throws MetadataBuilderException {
+		XmlDumpNamespaces namespaces = new XmlDumpNamespaces();
+		namespaces.put(CMDI_NAMESPACE_PREFIX, new XmlDumpNamespace(cmdiXmlns, schemaLocation));
+		namespaces.put(XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(XSI_NAMESPACE_URI));
+		builder.setNamespaces(namespaces);
+		XmlDumpAttributes attrs = new XmlDumpAttributes();
+		attrs.put(CMDI_VERSION_ATTRIBUTE, cmdiVersion);
 		builder.writeStartDocument(CMDI_NAMESPACE_PREFIX, CMDI_ELEMENT, attrs);
 	}
 	

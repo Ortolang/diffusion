@@ -461,7 +461,8 @@ public class OaiWorkerBean implements OaiWorker {
     		}
     		
     		if ( cmdi ) {
-    			//TODO Transform CMDI/JSON to CMDI/XML
+    			String cmdiXml = buildXMLFromMetadataObject(key, MetadataFormat.CMDI);
+    			oai.createRecord(key, MetadataFormat.CMDI, registry.getLastModificationDate(key), cmdiXml, setsWorkspace);
     		} else if ( olac ) {
     			String cmdiXml = buildXMLFromMetadataObject(key, MetadataFormat.OLAC, MetadataFormat.CMDI);
     			oai.createRecord(key, MetadataFormat.CMDI, registry.getLastModificationDate(key), cmdiXml, setsWorkspace);
@@ -528,12 +529,19 @@ public class OaiWorkerBean implements OaiWorker {
     					handler.setListHandlesRoot(listHandlesForKey(key));
     					handler.write(StreamUtils.getContent(binaryStore.get(md.getStream())), builder);
     				} else if (outputMetadataFormat.equals(MetadataFormat.CMDI)) {
-    					// Output : CMDI OLAC XML
-    					// Input : OLAC | OAI_DC JSON
-    					CmdiOutputConverter converter = new CmdiOutputConverter();
-    					converter.setId(key);
-    					converter.setListHandles(listHandlesForKey(key));
-    					converter.convert(StreamUtils.getContent(binaryStore.get(md.getStream())), metadataPrefix, builder);
+						// Output : CMDI OLAC XML
+    					if (metadataPrefix.equals(MetadataFormat.CMDI)) {
+    						// Input : CMDI JSON
+    						CmdiHandler handler = new CmdiHandler();
+        					handler.write(StreamUtils.getContent(binaryStore.get(md.getStream())), builder);
+    					} else {
+    						// Output : CMDI OLAC XML
+    						// Input : OLAC | OAI_DC JSON
+    						CmdiOutputConverter converter = new CmdiOutputConverter();
+    						converter.setId(key);
+    						converter.setListHandles(listHandlesForKey(key));
+    						converter.convert(StreamUtils.getContent(binaryStore.get(md.getStream())), metadataPrefix, builder);
+    					}
     				}
 
     				if (writer != null) {

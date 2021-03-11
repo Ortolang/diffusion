@@ -12,6 +12,7 @@ import javax.json.JsonString;
 
 public class Constant {
 
+	public static final String XMLNS = "xmlns";
 	// OAI_DC metadata format
 	public static final String OAI_DC_NAMESPACE_PREFIX = "oai_dc";
 	public static final String OAI_DC_NAMESPACE_URI = "http://www.openarchives.org/OAI/2.0/oai_dc/";
@@ -115,6 +116,9 @@ public class Constant {
 	public static final String CMDI_RESOURCERELATIONLISTT_ELEMENT = "ResourceRelationList";
 	public static final String CMDI_COMPONENTS_ELEMENT = "Components";
 	public static final String CMDI_OLAC_ELEMENT = "OLAC-DcmiTerms";
+	public static final String CMDI_REF_ATTRIBUT = "ref";
+	public static final String CMDI_MIMETYPE_ATTRIBUT = "mimetype";
+	public static final String CMDI_TEXT_VALUE = "#text";
 	
 	public static final String CMDI_MDCREATOR_VALUE = "ORTOLANG Repository";
 	public static final String CMDI_OLAC_PROFILE_VALUE = "clarin.eu:cr1:p_1288172614026";

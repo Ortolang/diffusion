@@ -1,0 +1,157 @@
+{
+  "CMD": {
+    "xmlns": "http://www.clarin.eu/cmd/",
+    "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+    "CMDVersion": "1.1",
+    "xsi:schemaLocation": "http://www.clarin.eu/cmd/ https://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1493735943953/xsd ",
+    "Header": {
+      "MdCreator": "Carlo Geraci",
+      "MdCreationDate": "2020-03-03+01:00",
+      "MdProfile": "https://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1493735943953/xsd"
+    },
+    "Resources": {
+      "ResourceProxyList": {
+        "ResourceProxy": [
+          {
+            "id": "res_c495c1e5-e3c9-4bc5-86f9-1699898f635a",
+            "ResourceType": {
+              "mimetype": "video/mp4",
+              "#text": "Resource"
+            },
+            "ResourceRef": "LSF/Videos%20compressed%20for%20streaming/T2.4-LSF-N00-2-LSF-20010601-NA.mp4"
+          }
+        ]
+      },
+      "JournalFileProxyList": {},
+      "ResourceRelationList": {}
+    },
+    "Components": {
+      "SL-TLA": {
+        "SL-Session": {
+          "ResourceShortName": "ElderlySigners",
+          "Date": "01/06/2001",
+          "Description": {
+            "Description": ""
+          }
+        },
+        "Project": {
+          "Name": "SIGN-HUB",
+          "Title": "SIGN-HUB: Preserving, researching and fostering the linguistic, historical and cultural heritage of European Deaf signing communities with an integral resource",
+          "ID": "H2020: 693349",
+          "Funder": "European Research Council",
+          "Website": "https://sign-hub.eu",
+          "Description": {
+            "Description": "SIGN-HUB is a web-based platform designed to provide an innovative and inclusive resource hub for the linguistic, historical and cultural documentation of the Deaf communities' heritage and for sign language assessment in clinical intervention and school settings."
+          },
+          "Contact": {
+            "Person": "Josep Quer",
+            "Address": "38, Roc Boronat, Barcelona, Spain",
+            "Email": "sign-hub@upf.edu",
+            "Organisation": "Universitat Pompeu Fabra (UPF)"
+          },
+          "Duration": {
+            "StartYear": "2016",
+            "CompletionYear": "2020"
+          }
+        },
+        "Location": {
+          "Country": {
+            "Code": "FR"
+          }
+        },
+        "SL-ActorSigner": [
+          {
+            "Pseudonym": "",
+            "Role": "Interviewee",
+            "Age": "",
+            "Sex": "Unspecified",
+            "Handedness": "Unknown",
+            "Deafness": "Deaf",
+            "DeafnessMother": "Unspecified",
+            "DeafnessFather": "Unspecified",
+            "DeafnessPartner": "Unspecified",
+            "DeafnessFamily": "",
+            "ActorLanguages": {
+              "ActorLanguage": {
+                "Language": {
+                  "LanguageName": "LSF; French Sign Language; Langue des signes française",
+                  "ISO639": {
+                    "iso-639-3-code": "fsl"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "SL-ActorResearcher": {
+          "FullName": "Caterina Donati",
+          "Role": "Researcher",
+          "Sex": "Unspecified",
+          "Deafness": "Unspecified",
+          "Contact": "",
+          "Description": {
+            "Description": "Local PI"
+          },
+          "ActorLanguages": {
+            "ActorLanguage": {
+              "Language": {
+                "LanguageName": "English",
+                "ISO639": {
+                  "iso-639-3-code": "eng"
+                }
+              }
+            }
+          }
+        },
+        "SL-Content": {
+          "Genre": "Interview",
+          "CommunicationContext": "",
+          "descriptions": {
+            "Description": [
+              "Deaf Identity",
+              "Discrimination",
+              "Elderly Signer",
+              "Sourdes agéès"
+            ]
+          }
+        },
+        "SL-Resources": [
+          {
+            "LicenseName": "",
+            "LicenseURL": "",
+            "LicenseDescription": "",
+            "MultipleCamerasNumber": "",
+            "iprHolderOrganization": {
+              "role": "iprHolder",
+              "organizationInfo": {
+                "organizationName": "Université de Paris-Diderot",
+                "organizationShortName": "Paris-Diderot",
+                "communicationInfo": {
+                  "email": ""
+                }
+              }
+            },
+            "SL-MediaFile": [
+              {
+                "ref": "res_c495c1e5-e3c9-4bc5-86f9-1699898f635a",
+                "Id": "T2.4-LSF-N00-2-LSF-20010601-NA.mp4",
+                "Type": "video",
+                "Quality": "Unspecified",
+                "RecordingConditions": "",
+                "CameraViewpoint": "",
+                "Description": {
+                  "Description": ""
+                },
+                "SL-TimePositionAndDuration": "",
+                "Access": {
+                  "Availability": "The resource is available for streaming only",
+                  "Contact": ""
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -46,8 +46,8 @@ public class CmdiHandlerTest {
 			
 			XmlUtils.validateXml(result.toString());
 			
-			LOGGER.log(Level.INFO, "Build CMDI from json Item");
-			LOGGER.log(Level.INFO, result.toString());
+			LOGGER.log(Level.INFO, "WriteItem : Build CMDI from json Item");
+			LOGGER.log(Level.INFO, "WriteItem : " + result.toString());
 		} catch (IOException | MetadataHandlerException | XMLStreamException | FactoryConfigurationError | SAXException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
@@ -56,6 +56,29 @@ public class CmdiHandlerTest {
 
 	@Test
 	public void write() {
-		//TODO
+		InputStream cmdiInputStream = getClass().getClassLoader().getResourceAsStream("json/sample-cmdi.json");
+		try {
+			String cmdi_json = StreamUtils.getContent(cmdiInputStream);
+
+			StringWriter result = new StringWriter();
+			XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(result);
+
+			XMLMetadataBuilder builder = new XMLMetadataBuilder(writer);
+			CmdiHandler handler = new CmdiHandler();
+
+			// Writes metadata from JSON to XML
+			handler.write(cmdi_json, builder);
+			
+			writer.flush();
+			writer.close();
+			
+			LOGGER.log(Level.INFO, "Write : Build CMDI XML from json");
+			LOGGER.log(Level.INFO, "Write : " + result.toString());
+			
+			XmlUtils.validateXml(result.toString());
+		} catch (IOException | MetadataHandlerException | XMLStreamException | FactoryConfigurationError | SAXException e) {
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			fail(e.getMessage());
+		}
 	}
 }

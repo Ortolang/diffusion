@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CMD xmlns="http://www.clarin.eu/cmd/"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     CMDVersion="1.1"
+     xsi:schemaLocation="http://www.clarin.eu/cmd/ https://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1493735943953/xsd ">
+   <Header>
+      <MdCreator>Josep Quer</MdCreator>
+      <MdCreationDate>2020-06-10+02:00</MdCreationDate>
+      <MdProfile>https://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1493735943953/xsd</MdProfile>
+   </Header>
+   <Resources>
+      <ResourceProxyList>
+         
+         <ResourceProxy id="res_fce1c9d4-151f-4183-9f5e-37aca4ac0c28">
+            <ResourceType mimetype="video/mp4">Resource</ResourceType>
+            <ResourceRef>LSC/Videos%20compressed%20for%20streaming/T2.4-LSC-F01-1-20170224-1.mp4</ResourceRef>
+         </ResourceProxy>
+         <ResourceProxy id="res_21f099aa-8303-4d5f-923e-156c9eab37d2">
+            <ResourceType mimetype="text/vtt">Resource</ResourceType>
+            <ResourceRef>LSC/Subtitles/T2.4-LSC-F01-1-20170224-1_ENG.vtt</ResourceRef>
+         </ResourceProxy>
+         <ResourceProxy id="res_fd4d1f2e-5185-4d2e-a206-526e1fd901c7">
+            <ResourceType mimetype="text/vtt">Resource</ResourceType>
+            <ResourceRef>LSC/Subtitles/T2.4-LSC-F01-1-20170224-1_SPA.vtt</ResourceRef>
+         </ResourceProxy>
+      </ResourceProxyList>
+      <JournalFileProxyList/>
+      <ResourceRelationList/>
+   </Resources>
+   <Components>
+      <SL-TLA>
+         <SL-Session>
+            <ResourceShortName>LSCF01signname1</ResourceShortName>
+            <Date>24/02/2017</Date>
+            <Description>
+               <Description/>
+            </Description>
+         </SL-Session>
+         
+         <Project>
+            <Name>SIGN-HUB</Name>
+            <Title>SIGN-HUB: Preserving, researching and fostering the linguistic, historical and cultural heritage of European Deaf signing communities with an integral resource</Title>
+            <ID>H2020: 693349</ID>
+            <Funder>European Research Council</Funder>
+            <Website>https://sign-hub.eu</Website>
+            <Description>
+               <Description>SIGN-HUB is a web-based platform designed to provide an innovative and inclusive resource hub for the linguistic, historical and cultural documentation of the Deaf communities' heritage and for sign language assessment in clinical intervention and school settings.</Description>
+            </Description>
+            <Contact>
+               <Person>Josep Quer</Person>
+               <Address>38, Roc Boronat, Barcelona, Spain</Address>
+               <Email>sign-hub@upf.edu</Email>
+               <Organisation>Universitat Pompeu Fabra (UPF)</Organisation>
+            </Contact>
+            <Duration>
+               <StartYear>2016</StartYear>
+               <CompletionYear>2020</CompletionYear>
+            </Duration>
+         </Project>
+         <Location>
+            <Country>
+               <Code>ES</Code>
+            </Country>
+         </Location>
+         <SL-ActorSigner>
+            <Pseudonym>F01</Pseudonym>
+            <Role>Interviewee</Role>
+            <Age/>
+            <Sex>Unspecified</Sex>
+            <Handedness>Unknown</Handedness>
+            <Deafness>Deaf</Deafness>
+            <DeafnessMother>Unspecified</DeafnessMother>
+            <DeafnessFather>Unspecified</DeafnessFather>
+            <DeafnessPartner>Unspecified</DeafnessPartner>
+            <DeafnessFamily/>
+            <ActorLanguages>
+               <ActorLanguage>
+                  <Language>
+                     <LanguageName>Catalan Sign Language, LSC, Llengua de signes catalana</LanguageName>
+                     <ISO639>
+                        <iso-639-3-code>csc</iso-639-3-code>
+                     </ISO639>
+                  </Language>
+               </ActorLanguage>
+            </ActorLanguages>
+         </SL-ActorSigner>
+         <SL-ActorResearcher>
+            <FullName>Josep Quer</FullName>
+            <Role>Researcher</Role>
+            <Sex>Unspecified</Sex>
+            <Deafness>Unspecified</Deafness>
+            <Contact/>
+            <Description>
+               <Description>Local PI</Description>
+            </Description>
+            <ActorLanguages>
+               <ActorLanguage>
+                  <Language>
+                     <LanguageName>English</LanguageName>
+                     <ISO639>
+                        <iso-639-3-code>eng</iso-639-3-code>
+                     </ISO639>
+                  </Language>
+               </ActorLanguage>
+            </ActorLanguages>
+         </SL-ActorResearcher>
+         <SL-ActorResearcher>
+            <FullName>Francisco Javier Álvarez Reyes</FullName>
+            <Role>Researcher</Role>
+            <Sex>Unspecified</Sex>
+            <Deafness>Unspecified</Deafness>
+            <Contact/>
+            <Description>
+               <Description>Interviewer</Description>
+            </Description>
+            <ActorLanguages>
+               <ActorLanguage>
+                  <Language>
+                     <LanguageName>Catalan Sign Language, LSC, Llengua de signes catalana</LanguageName>
+                     <ISO639>
+                        <iso-639-3-code>csc</iso-639-3-code>
+                     </ISO639>
+                  </Language>
+               </ActorLanguage>
+            </ActorLanguages>
+         </SL-ActorResearcher>
+         <SL-Content>
+            <Genre>Interview</Genre>
+            <CommunicationContext/>
+            <descriptions>
+               <Description>Deaf school</Description>
+               <Description>Sign name</Description>
+               <Description>First contact with LSC</Description>
+            </descriptions>
+         </SL-Content>
+         <SL-Resources>
+            <LicenseName/>
+            <LicenseURL/>
+            <LicenseDescription/>
+            <MultipleCamerasNumber>2</MultipleCamerasNumber>
+            
+            
+            
+            <iprHolderOrganization>
+               <role>iprHolder</role>
+               <organizationInfo>
+                  <organizationName>Universitat Pompeu Fabra</organizationName>
+                  <organizationShortName>UPF</organizationShortName>
+                  <communicationInfo>
+                     <email/>
+                  </communicationInfo>
+               </organizationInfo>
+            </iprHolderOrganization>
+            <SL-MediaFile ref="res_fce1c9d4-151f-4183-9f5e-37aca4ac0c28">
+               <Id>T2.4-LSC-F01-1-20170224-1.mp4</Id>
+               <Type>video</Type>
+               <Quality>Unspecified</Quality>
+               <RecordingConditions/>
+               <CameraViewpoint>Portrait</CameraViewpoint>
+               <Description>
+                  <Description/>
+               </Description>
+               <SL-TimePositionAndDuration/>
+               <Access>
+                  <Availability>The resource is available for streaming only</Availability>
+                  <Contact/>
+               </Access>
+            </SL-MediaFile>
+            <SL-AnnotationDocument ref="res_21f099aa-8303-4d5f-923e-156c9eab37d2">
+               <Type>text</Type>
+               <SubType>vtt</SubType>
+               <Format>utf-8</Format>
+               <LanguageId>eng</LanguageId>
+               <Access>
+                  <Availability>Subtitles are available only for streaming</Availability>
+                  <CatalogueLink>LSC/Subtitles/T2.4-LSC-F01-1-20170224-1_ENG.vtt</CatalogueLink>
+                  <Contact/>
+               </Access>
+               <Description>
+                  <Description/>
+               </Description>
+            </SL-AnnotationDocument>
+            <SL-AnnotationDocument ref="res_fd4d1f2e-5185-4d2e-a206-526e1fd901c7">
+               <Type>text</Type>
+               <SubType>vtt</SubType>
+               <Format>utf-8</Format>
+               <LanguageId>spa</LanguageId>
+               <Access>
+                  <Availability>Subtitles are available only for streaming</Availability>
+                  <CatalogueLink>LSC/Subtitles/T2.4-LSC-F01-1-20170224-1_SPA.vtt</CatalogueLink>
+                  <Contact/>
+               </Access>
+               <Description>
+                  <Description/>
+               </Description>
+            </SL-AnnotationDocument>
+         </SL-Resources>
+         
+      </SL-TLA>
+   </Components>
+</CMD>

@@ -23,8 +23,15 @@ public class SchemaResourceResolver implements LSResourceResolver {
 	     // note: in this sample, the XSD's are expected to be in the root of the classpath
 		String[] systemIdSplit = systemId.split("/");
 		if (systemIdSplit.length > 0) {
+			// Looks up to the xsd resource folder (ex. xsd/xsd)
 			InputStream resourceAsStream = this.getClass().getClassLoader()
 	            .getResourceAsStream(schema_directory + resource_separator + systemIdSplit[systemIdSplit.length - 1]);
+			
+			if (resourceAsStream == null && systemIdSplit.length > 2) {
+				// Looks up deeper to the xsd resource folder (ex. xsd/clarinprofile/xsd)
+				resourceAsStream = this.getClass().getClassLoader()
+			            .getResourceAsStream(schema_directory + resource_separator + systemIdSplit[systemIdSplit.length - 2] + resource_separator + systemIdSplit[systemIdSplit.length - 1]);
+			}
 			if (resourceAsStream == null) {
 				try {
 					resourceAsStream = new URL(systemId).openStream();
