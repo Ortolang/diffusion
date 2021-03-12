@@ -437,6 +437,37 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
+
+    @Override
+    @RolesAllowed({ "admin", "system" })
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public OrtolangObject systemFindObject(String key) throws OrtolangException {
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+
+            if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case Workspace.OBJECT_TYPE:
+                return systemReadWorkspace(key);
+            case DataObject.OBJECT_TYPE:
+                return systemReadDataObject(key);
+            case Collection.OBJECT_TYPE:
+                return systemReadCollection(key);
+            case Link.OBJECT_TYPE:
+                return systemReadLink(key);
+            case MetadataObject.OBJECT_TYPE:
+                return readMetadataObject(key);
+            }
+
+            throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+        } catch (CoreServiceException | RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to find an object for key " + key);
+        }
+    }
+    
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<String> systemFindWorkspacesForProfile(String profile) throws CoreServiceException {
@@ -4266,6 +4297,50 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
+
+    @Override
+    @RolesAllowed({ "admin", "system" })
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public DataObject systemReadDataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "#SYSTEM# reading object with key [" + key + "]");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, DataObject.OBJECT_TYPE);
+            DataObject object = em.find(DataObject.class, identifier.getId());
+            if (object == null) {
+                throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
+            }
+            object.setKey(key);
+
+            return object;
+        } catch (RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while reading object", e);
+            throw new CoreServiceException("unable to read object with key [" + key + "]", e);
+        }
+    }
+
+    @Override
+    @RolesAllowed({ "admin", "system" })
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Link systemReadLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "#SYSTEM# reading link with key [" + key + "]");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, Link.OBJECT_TYPE);
+            Link link = em.find(Link.class, identifier.getId());
+            if (link == null) {
+                throw new CoreServiceException("unable to load link with id [" + identifier.getId() + "] from storage");
+            }
+            link.setKey(key);
+
+            return link;
+        } catch (RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while reading link", e);
+            throw new CoreServiceException("unable to read link with key [" + key + "]", e);
+        }
+    }
+
+    
     @Override
     @RolesAllowed({ "admin", "system" })
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)

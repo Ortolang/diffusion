@@ -117,7 +117,7 @@ public class GenerateHandlesTask extends RuntimeEngineTask {
         
         try {
             LOGGER.log(Level.FINE, "building handles list...");
-            Workspace workspace = getCoreService().readWorkspace(wskey);
+            Workspace workspace = getCoreService().systemReadWorkspace(wskey);
             TagElement te = workspace.findTagBySnapshot(snapshot);
             LOGGER.log(Level.INFO, "[GenerateHandlesTask] Generating PID list");
             Set<OrtolangObjectPid> pids = buildWorkspacePidList(wskey, te.getName());
@@ -182,7 +182,7 @@ public class GenerateHandlesTask extends RuntimeEngineTask {
     public Set<OrtolangObjectPid> buildWorkspacePidList(String wskey, String tag) throws RuntimeEngineTaskException {
         LOGGER.log(Level.FINE, "building pid list for workspace [" + wskey + "]");
         try {
-            Workspace workspace = getCoreService().readWorkspace(wskey);
+            Workspace workspace = getCoreService().systemReadWorkspace(wskey);
             if (workspace == null) {
                 throw new CoreServiceException(
                         "unable to load workspace with key [" + wskey + "] from storage");
@@ -213,7 +213,7 @@ public class GenerateHandlesTask extends RuntimeEngineTask {
             String apiUrlBase, String marketUrlBase, long tscommit)
             throws RuntimeEngineTaskException {
         try {
-            OrtolangObject object = getCoreService().findObject(key);
+            OrtolangObject object = getCoreService().systemFindObject(key);
             LOGGER.log(Level.FINE, "Generating pid for key: " + key);
             String target = ((path.isRoot()) ? marketUrlBase : apiUrlBase) + "/" + wsalias + "/" + tag
                     + ((path.isRoot()) ? "" : path.build());
@@ -249,7 +249,7 @@ public class GenerateHandlesTask extends RuntimeEngineTask {
                 MetadataElement mde = ((MetadataSource) object).findMetadataByName(MetadataFormat.PID);
                 if (mde != null) {
                     LOGGER.log(Level.FINE, "PID metadata found, load json and generate corresponding pids");
-                    MetadataObject md = getCoreService().readMetadataObject(mde.getKey());
+                    MetadataObject md = getCoreService().systemReadMetadataObject(mde.getKey());
                     try {
                         JsonReader reader = Json.createReader(getBinaryStore().get(md.getStream()));
                         JsonObject json = reader.readObject();

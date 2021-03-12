@@ -260,6 +260,8 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     /* System */
 
+    OrtolangObject systemFindObject(String key) throws OrtolangException;
+    
     Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException;
 
     void systemSetWorkspaceReadOnly(String wskey, boolean readonly) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
@@ -280,6 +282,10 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
     Workspace systemReadWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException;
 
     Collection systemReadCollection(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+    
+    DataObject systemReadDataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+    
+    Link systemReadLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
     
     MetadataObject systemReadMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
     
