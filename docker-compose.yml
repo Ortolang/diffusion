@@ -31,9 +31,9 @@ services:
       - ORTOLANG_STATIC_SITE_VERSION=latest
       - ORTOLANG_API_URL_SSL=http://docker.for.mac.localhost:8080/api
       - ORTOLANG_API_URL_NOSSL=http://docker.for.mac.localhost:8080/api
-      - ORTOLANG_AUTH_URL=http://docker.for.mac.localhost:8080/auth
-      - ORTOLANG_AUTH_LOGOUT=http://docker.for.mac.localhost:8080/
-      - ORTOLANG_MARKET_URL=http://docker.for.mac.localhost:8888/
+      - ORTOLANG_AUTH_URL=http://docker.for.mac.localhost:18080/auth
+      - ORTOLANG_AUTH_LOGOUT=http://docker.for.mac.localhost:18080/
+      - ORTOLANG_MARKET_URL=http://docker.for.mac.localhost:9000/
       - ORTOLANG_PRERENDERING_ACTIVATED=false
       - ORTOLANG_CACHE_VERSION=1
       - ORTOLANG_SMTP_HOST=localhost
