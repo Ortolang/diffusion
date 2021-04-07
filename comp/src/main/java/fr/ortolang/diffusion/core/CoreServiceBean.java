@@ -1182,7 +1182,7 @@ public class CoreServiceBean implements CoreService {
                     .getPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT);
             Map<String, String> aclParams = new HashMap<String, String>();
             aclParams.put("${workspace.members}", workspace.getMembers());
-            if (workspace.getPrivileged() != "") {
+            if (!workspace.getPrivileged().trim().equals("")) {
                 aclParams.put("${workspace.privileged}", workspace.getPrivileged());
             }
             builtPublicationMap(root, map, authorisation.getPolicyRules(defaultTemplate.getTemplate()), aclParams);
@@ -1215,7 +1215,7 @@ public class CoreServiceBean implements CoreService {
                     for (Entry<String, List<String>> entry : rules.entrySet()) {
                         if (params.containsKey(entry.getKey())) {
                             filtered.put(params.get(entry.getKey()), entry.getValue());
-                        } else {
+                        } else if (!entry.getKey().startsWith("${")) {
                             filtered.put(entry.getKey(), entry.getValue());
                         }
                     }

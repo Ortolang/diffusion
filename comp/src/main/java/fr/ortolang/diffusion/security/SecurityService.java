@@ -42,6 +42,7 @@ import java.util.Map;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 
 public interface SecurityService extends OrtolangService {
 
@@ -51,6 +52,8 @@ public interface SecurityService extends OrtolangService {
 
     String getOwner(String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
 
+    List<AuthorisationPolicyTemplate> listPolicyTemplates() throws SecurityServiceException;
+    
     Map<String, List<String>> listRules(String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
 
     void setRules(String key, Map<String, List<String>> rules) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;

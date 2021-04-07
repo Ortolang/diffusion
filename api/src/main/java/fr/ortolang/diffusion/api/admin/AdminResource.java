@@ -88,6 +88,7 @@ import fr.ortolang.diffusion.search.SearchQuery;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.statistics.StatisticsService;
 import fr.ortolang.diffusion.statistics.StatisticsServiceException;
 import fr.ortolang.diffusion.store.binary.*;
@@ -212,6 +213,22 @@ public class AdminResource {
     public Response deleteEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
         registry.delete(key, true);
         return Response.ok().build();
+    }
+    
+    @GET
+    @Path("/security/templates")
+    @GZIP
+    public Response listPolicyTempate() throws SecurityServiceException {
+    	List<AuthorisationPolicyTemplate> templates = security.listPolicyTemplates();
+    	return Response.ok(templates).build();
+    }
+    
+    @GET
+    @Path("/security/rules/{key}")
+    @GZIP
+    public Response getRules(@PathParam("key") String key) throws AccessDeniedException, SecurityServiceException, KeyNotFoundException {
+    	Map<String, List<String>> permissions = security.listRules(key);
+        return Response.ok(permissions).build();
     }
     
     @PUT
