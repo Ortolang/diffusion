@@ -9,6 +9,10 @@ services:
         CUSTOM_UID: '1158'
         CUSTOM_GID: '1146'
     image: ortolang-diffusion
+    command: >
+      bash -c "cp /opt/jboss/.ortolang/config.properties /tmp/ &&
+              envsubst < /tmp/config.properties > /opt/jboss/.ortolang/config.properties &&
+              /opt/jboss/wildfly/bin/standalone.sh --debug -b 0.0.0.0 -bmanagement=0.0.0.0"
     user: '1158:1146'
     container_name: ortolang-diffusion
     environment:
