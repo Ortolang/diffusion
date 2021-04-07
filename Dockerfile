@@ -1,4 +1,4 @@
-FROM maven:3.5-jdk-8-slim as builder
+FROM maven:3.6.1-jdk-8-alpine as builder
 
 ENV VERSION_WILDFLY=12.0.0.Final
 ENV JBOSS_HOME=/jboss/wildfly-${VERSION_WILDFLY}
@@ -53,3 +53,8 @@ COPY --chown=jboss:jboss --from=builder /app/appli/target/ortolang-diffusion.ear
 CMD cp /opt/jboss/.ortolang/config.properties /tmp/ && \
     envsubst < /tmp/config.properties > /opt/jboss/.ortolang/config.properties && \
     /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0
+
+EXPOSE 8080
+EXPOSE 8443
+EXPOSE 8787
+EXPOSE 9990

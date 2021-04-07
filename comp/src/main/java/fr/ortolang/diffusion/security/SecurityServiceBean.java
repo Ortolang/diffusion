@@ -71,6 +71,7 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 
 @Local(SecurityService.class)
 @Stateless(name = SecurityService.SERVICE_NAME)
@@ -171,6 +172,17 @@ public class SecurityServiceBean implements SecurityService {
             throw new SecurityServiceException(e);
         }
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<AuthorisationPolicyTemplate> listPolicyTemplates() throws SecurityServiceException {
+    	 LOGGER.log(Level.FINE, "listing policy templates");
+         try {
+			return authorisation.listPolicyTemplates();
+		} catch (AuthorisationServiceException e) {
+			throw new SecurityServiceException(e);
+		}
+    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -255,9 +267,12 @@ public class SecurityServiceBean implements SecurityService {
                 throw new SecurityServiceException("key [" + key + "] is locked and cannot be modified.");
             }
 
-            OrtolangObjectIdentifier identifier = registry.lookup(subject);
-            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
-                throw new SecurityServiceException("rule subject must be an object managed by " + MembershipService.SERVICE_NAME);
+            if (!force) {
+            	// Checks if subject is an existing profile
+	            OrtolangObjectIdentifier identifier = registry.lookup(subject);
+	            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+	                throw new SecurityServiceException("rule subject must be an object managed by " + MembershipService.SERVICE_NAME);
+	            }
             }
             Map<String, List<String>> rules = authorisation.getPolicyRules(key);
             if ( permissions == null || permissions.isEmpty() ) {
