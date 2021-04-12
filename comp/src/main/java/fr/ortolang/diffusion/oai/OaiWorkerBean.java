@@ -70,6 +70,7 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import fr.ortolang.diffusion.util.StreamUtils;
+import fr.ortolang.diffusion.util.URLUtils;
 import fr.ortolang.diffusion.util.XmlUtils;
 
 @Startup
@@ -414,7 +415,7 @@ public class OaiWorkerBean implements OaiWorker {
     		try {
     			List<String> handles = handleStore.listHandlesForKey(key);
     			for (String handle : handles) {
-    				urls.add(HandleStoreService.HDL_PROXY_URL + handle);
+    				urls.add(HandleStoreService.HDL_PROXY_URL + URLUtils.encodeURIComponent(handle));
     			}
     		} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
     			LOGGER.log(Level.WARNING, "No handle for key " + key, e);
