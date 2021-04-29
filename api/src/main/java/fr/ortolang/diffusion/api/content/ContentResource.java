@@ -332,7 +332,8 @@ public class ContentResource {
         case Collection.OBJECT_TYPE:
             try {
                 Set<CollectionElement> elements = ((Collection) object).getElements();
-                ArchiveEntry centry = factory.createArchiveEntry(path.build() + "/", infos.getLastModificationDate(), 0L);
+                // Removes the first '/' (issue ortolang/ortolang-diffusion#13)
+                ArchiveEntry centry = factory.createArchiveEntry(path.build().substring(1) + "/", infos.getLastModificationDate(), 0L);
                 try {
                     aos.putArchiveEntry(centry);
                     for (CollectionElement element : elements) {
@@ -360,7 +361,8 @@ public class ContentResource {
             }
             try (InputStream input = core.download(object.getObjectKey())) {
                 DataObject dataObject = (DataObject) object;
-                ArchiveEntry oentry = factory.createArchiveEntry(path.build(), infos.getLastModificationDate(), dataObject.getSize());
+                // Removes the first '/' (issue ortolang/ortolang-diffusion#13)
+                ArchiveEntry oentry = factory.createArchiveEntry(path.build().substring(1), infos.getLastModificationDate(), dataObject.getSize());
                 try {
                     aos.putArchiveEntry(oentry);
                     IOUtils.copy(input, aos);
