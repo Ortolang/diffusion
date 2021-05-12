@@ -32,6 +32,7 @@ test:
       - master
       - branches
     changes:
+      - .gitlab-ci.yml
       - Dockerfile
       - api/src/**/*
       - appli/src/**/*
@@ -50,6 +51,7 @@ maven_docker_build:
       - master
       - branches
     changes:
+      - .gitlab-ci.yml
       - Dockerfile
       - api/src/**/*
       - appli/src/**/*
@@ -76,6 +78,7 @@ deploy_on_dev:
     refs:
       - master
     changes:
+      - .gitlab-ci.yml
       - Dockerfile
       - docker/*
       - api/src/**/*
