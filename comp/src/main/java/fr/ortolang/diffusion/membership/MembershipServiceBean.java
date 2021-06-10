@@ -1211,6 +1211,9 @@ public class MembershipServiceBean implements MembershipService {
                 break;
             }
             Profile profile = em.find(Profile.class, identifier.getId());
+            if ( profile == null) {
+            	throw new OrtolangException("Profile " + identifier + " is not in the database");
+            }
             profile.setKey(key);
             return Collections.singletonList(new ProfileIndexableContent(profile));
 //        case Group.OBJECT_TYPE:
