@@ -12,11 +12,14 @@ FROM jboss/wildfly:12.0.0.Final
 ARG VERSION_PGSQL=9.4.1208
 ARG VERSION_KEYCLOAK=3.4.3.Final
 ARG VERSION_WILDFLY=12.0.0.Final
+ARG VERSION_FLYWAY=4.0.3
 ARG CUSTOM_UID=1100
 ARG CUSTOM_GID=1000
 
 USER root
 # Install envsubst
+# Sets a custom UID and GID for jboss user
+# Sets language to fr
 RUN yum install -y gettext && \
     sed -i -E "s/^jboss:x:[[:digit:]]+:[[:digit:]]+:(.*)$/jboss:x:${CUSTOM_UID}:${CUSTOM_GID}:\1/" /etc/passwd && \
     sed -i -E "s/^jboss:x:[[:digit:]]+:(.*)$/jboss:x:${CUSTOM_GID}:\1/" /etc/group && \
@@ -36,23 +39,24 @@ RUN curl -q -O "https://maven.ortolang.fr/service/local/repositories/releases/co
     unzip -q ortolang-pgsql-wf-module-${VERSION_PGSQL}.zip -d /opt/jboss/wildfly/ && \
     curl -L -q -O "https://downloads.jboss.org/keycloak/${VERSION_KEYCLOAK}/adapters/keycloak-oidc/keycloak-wildfly-adapter-dist-${VERSION_KEYCLOAK}.tar.gz" && \
     tar zxvf keycloak-wildfly-adapter-dist-${VERSION_KEYCLOAK}.tar.gz && \
-    $JBOSS_HOME/bin/jboss-cli.sh --file=bin/adapter-elytron-install-offline.cli
+    $JBOSS_HOME/bin/jboss-cli.sh --file=bin/adapter-elytron-install-offline.cli && \
+    curl -q -O "https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${VERSION_FLYWAY}/flyway-commandline-${VERSION_FLYWAY}-linux-x64.tar.gz" && \
+    tar zxvf "flyway-commandline-${VERSION_FLYWAY}-linux-x64.tar.gz" && \ 
+    mv "/opt/jboss/wildfly/flyway-${VERSION_FLYWAY}" /opt/jboss/flyway
 
 # Copies Wildfly configuration files
-COPY --chown=jboss:jboss src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration/
+COPY --chown=jboss:jboss src/main/docker/configuration/server.keystore /opt/jboss/wildfly/standalone/configuration/
 # Overrides Wildfly configuration 
 COPY --chown=jboss:jboss src/main/docker/configuration/wildfly-${VERSION_WILDFLY}/standalone.xml /opt/jboss/wildfly/standalone/configuration/
 
 RUN mkdir -p /opt/jboss/.ortolang/binary-store
 COPY --chown=jboss:jboss src/main/docker/config.properties /opt/jboss/.ortolang
-
-RUN curl -O -L 'https://github.com/vishnubob/wait-for-it/raw/master/wait-for-it.sh' && chmod +x wait-for-it.sh
-
+COPY --chown=jboss:jboss src/main/docker/docker-entrypoint.sh /opt/jboss
+# Copies EAR from builder stage
 COPY --chown=jboss:jboss --from=builder /app/appli/target/ortolang-diffusion.ear /opt/jboss/wildfly/standalone/deployments/
 
-CMD cp /opt/jboss/.ortolang/config.properties /tmp/ && \
-    envsubst < /tmp/config.properties > /opt/jboss/.ortolang/config.properties && \
-    /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0
+ENTRYPOINT [ "/opt/jboss/docker-entrypoint.sh" ]
+CMD [ "run" ]
 
 EXPOSE 8080
 EXPOSE 8443
