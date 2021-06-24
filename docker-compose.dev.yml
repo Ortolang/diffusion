@@ -4,12 +4,12 @@ services:
   olrepo:
     build: 
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
       args:
         CUSTOM_UID: '1158'
         CUSTOM_GID: '1146'
     image: ortolang-diffusion
-    command: "run"
+    command: dev
     user: '1158:1146'
     container_name: ortolang-diffusion
     environment:
