@@ -26,18 +26,39 @@ test:
     - cp comp/src/test/resources/ortolang-roles.properties wildfly-${WILDFLY_VERSION}/standalone/configuration/
     - cp comp/src/test/resources/ortolang-test-${WILDFLY_VERSION}.xml wildfly-${WILDFLY_VERSION}/standalone/configuration/standalone.xml
   script: 
-    - mvn clean test -DjbossHome=$PWD/wildfly-${WILDFLY_VERSION} -Djboss.home=$PWD/wildfly-${WILDFLY_VERSION}
+    - mvn -q clean test -DjbossHome=$PWD/wildfly-${WILDFLY_VERSION} -Djboss.home=$PWD/wildfly-${WILDFLY_VERSION}
   only:
     refs:
       - master
       - branches
     changes:
-      - .gitlab-ci.yml
       - Dockerfile
       - api/src/**/*
       - appli/src/**/*
       - comp/src/**/*
-     
+
+# See https://dtrack.ortolang.fr/projects/
+vulnerability_detection:
+  image: maven:3.6.1-jdk-8-alpine
+  stage: test
+  tags:
+    - ortolang-docker-bind
+  before_script:
+    - apk add --update coreutils
+  script: 
+    - mvn -q -DskipTests cyclonedx:makeAggregateBom
+    - ./dtrack-bom-upload.sh
+  only:
+    refs:
+      - master
+    changes:
+      - .gitlab-ci.yml
+      - dtrack-bom-upload.sh
+      - pom.xml
+      - api/pom.xml
+      - appli/pom.xml
+      - comp/pom.xml
+
 maven_docker_build:
   stage: build
   tags:
