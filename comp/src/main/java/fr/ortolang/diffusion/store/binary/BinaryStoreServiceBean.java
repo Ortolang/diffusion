@@ -62,6 +62,7 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
@@ -198,7 +199,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
             throw new BinaryStoreServiceException(e);
         }
     }
-
+    
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public String type(String identifier) throws BinaryStoreServiceException, DataNotFoundException {

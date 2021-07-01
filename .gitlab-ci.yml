@@ -26,12 +26,13 @@ test:
     - cp comp/src/test/resources/ortolang-roles.properties wildfly-${WILDFLY_VERSION}/standalone/configuration/
     - cp comp/src/test/resources/ortolang-test-${WILDFLY_VERSION}.xml wildfly-${WILDFLY_VERSION}/standalone/configuration/standalone.xml
   script: 
-    - mvn -q clean test -DjbossHome=$PWD/wildfly-${WILDFLY_VERSION} -Djboss.home=$PWD/wildfly-${WILDFLY_VERSION}
+    - mvn clean test -DjbossHome=$PWD/wildfly-${WILDFLY_VERSION} -Djboss.home=$PWD/wildfly-${WILDFLY_VERSION}
   only:
     refs:
       - master
       - branches
     changes:
+      - .gitlab-ci.yml
       - Dockerfile
       - api/src/**/*
       - appli/src/**/*
@@ -70,7 +71,6 @@ maven_docker_build:
   only:
     refs:
       - master
-      - branches
     changes:
       - .gitlab-ci.yml
       - Dockerfile

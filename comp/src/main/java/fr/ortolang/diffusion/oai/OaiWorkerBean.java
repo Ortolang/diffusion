@@ -47,6 +47,10 @@ import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.oai.entity.Record;
 import fr.ortolang.diffusion.oai.exception.MetadataConverterException;
 import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
@@ -54,10 +58,12 @@ import fr.ortolang.diffusion.oai.exception.MetadataPrefixUnknownException;
 import fr.ortolang.diffusion.oai.exception.OaiServiceException;
 import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
 import fr.ortolang.diffusion.oai.exception.SetAlreadyExistsException;
+import fr.ortolang.diffusion.oai.format.Constant;
 import fr.ortolang.diffusion.oai.format.builder.XMLMetadataBuilder;
 import fr.ortolang.diffusion.oai.format.converter.CmdiOutputConverter;
 import fr.ortolang.diffusion.oai.format.converter.DublinCoreOutputConverter;
 import fr.ortolang.diffusion.oai.format.handler.CmdiHandler;
+import fr.ortolang.diffusion.oai.format.handler.DataCiteHandler;
 import fr.ortolang.diffusion.oai.format.handler.DublinCoreHandler;
 import fr.ortolang.diffusion.oai.format.handler.OlacHandler;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -98,6 +104,8 @@ public class OaiWorkerBean implements OaiWorker {
 	private HandleStoreService handleStore;
 	@EJB
 	private BinaryStoreService binaryStore;
+	@EJB
+	private MembershipService membership;
     
     @Resource
     @SuppressWarnings("EjbEnvironmentInspection")
@@ -227,7 +235,7 @@ public class OaiWorkerBean implements OaiWorker {
         
         public void buildFromWorkspace(String wskey, String snapshot) throws OaiServiceException {
     		try {
-    			HashSet<String> setsWorkspace = new HashSet<String>(Arrays.asList(wskey));
+    			HashSet<String> setsWorkspace = new HashSet<String>(Arrays.asList(wskey, Constant.OAI_OPENAIRE_SET_SPEC));
 
     			if (snapshot == null) {
     				snapshot = core.findWorkspaceLatestPublishedSnapshot(wskey);
@@ -289,6 +297,8 @@ public class OaiWorkerBean implements OaiWorker {
     				buildXMLFromItem(root, MetadataFormat.OLAC), setsWorkspace);
     		oai.createRecord(wskey, MetadataFormat.CMDI, registry.getLastModificationDate(root),
     				buildXMLFromItem(root, MetadataFormat.CMDI), setsWorkspace);
+    		oai.createRecord(wskey, MetadataFormat.OAI_DATACITE, registry.getLastModificationDate(root),
+    				buildXMLFromItem(root, MetadataFormat.OAI_DATACITE), setsWorkspace);
 
     		java.util.Set<CollectionElement> elements = core.systemReadCollection(root).getElements();
     		for (CollectionElement element : elements) {
@@ -356,6 +366,15 @@ public class OaiWorkerBean implements OaiWorker {
     			LOGGER.log(Level.SEVERE, "unable to get json content from root collection " + root);
     			throw new OaiServiceException("unable to get json content from root collection " + root, e1);
     		}
+    		Profile owner = null;
+    		
+    		try {
+    			String author = registry.getAuthor(root);
+				owner = membership.systemReadProfile(author);
+			} catch (RegistryServiceException | KeyNotFoundException | MembershipServiceException e) {
+				LOGGER.log(Level.SEVERE, "unable to get author of root collection " + root);
+    			throw new OaiServiceException("unable to get author of root collection " + root, e);
+			}
 
     		if (item == null) {
     			throw new OaiServiceException("unable to build xml from root collection cause item metadata is null " + root);
@@ -381,6 +400,23 @@ public class OaiWorkerBean implements OaiWorker {
     				// Writes CMDI metadata 
     				CmdiHandler handler = new CmdiHandler();
     				handler.setId(root);
+    				handler.setListHandlesRoot(listHandlesForKey(root));
+    				handler.writeItem(item, builder);
+    			} else if (metadataPrefix.equals(MetadataFormat.OAI_DATACITE)) {
+    				// Writes OAI_DATACITE metadata 
+    				DataCiteHandler handler = new DataCiteHandler();
+    				handler.setOwner(owner);
+    				try {
+						List<ProfileData> infos = membership.listProfileInfos(owner.getKey(), null);
+						if (infos != null) {
+							for(ProfileData info : infos) {
+								if (info.getName().equals("organisation")) {
+									handler.setOrganization(info.getValue());
+								}
+							}
+						}
+					} catch (AccessDeniedException | MembershipServiceException | KeyNotFoundException e) {
+					}
     				handler.setListHandlesRoot(listHandlesForKey(root));
     				handler.writeItem(item, builder);
     			}
