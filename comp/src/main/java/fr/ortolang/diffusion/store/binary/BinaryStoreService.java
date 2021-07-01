@@ -122,7 +122,7 @@ public interface BinaryStoreService extends OrtolangService {
      * @throws BinaryStoreServiceException
      */
     long size(String hash) throws BinaryStoreServiceException, DataNotFoundException;
-
+   
     /**
      * Retrieve the data mime type associated with this identifier.
      *

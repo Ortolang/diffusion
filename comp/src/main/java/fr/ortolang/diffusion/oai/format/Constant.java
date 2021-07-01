@@ -29,6 +29,58 @@ public class Constant {
 	public static final String SIP_NAMESPACE_PREFIX = "sip";
 	public static final String SIP_NAMESPACE_URI = "http://www.cines.fr/pac/sip";
 	public static final String SIP_NAMESPACE_SCHEMA_LOCATION = "http://www.cines.fr/pac/sip.xsd";
+
+	public static final String OAI_DATACITE_NAMESPACE_PREFIX = "datacite";
+	public static final String OAI_DATACITE_NAMESPACE_URI = "http://datacite.org/schema/kernel-4";
+	public static final String OAI_DATACITE_NAMESPACE_SCHEMA_LOCATION = "https://schema.datacite.org/meta/kernel-4/metadata.xsd";
+	
+	public static final String OAI_OPENAIRE_SET_NAME = "OpenAIRE";
+	public static final String OAI_OPENAIRE_SET_SPEC = "openaire_data";
+	
+	public static final String OAI_DATACITE_DOCUMENT = "resource";
+	public static final String OAI_DATACITE_ALTERNATE_IDENTIFIERS_ELEMENT = "alternateIdentifiers";
+	public static final String OAI_DATACITE_ALTERNATE_IDENTIFIER_ELEMENT = "alternateIdentifier";
+	public static final String OAI_DATACITE_CREATORS_ELEMENT = "creators";
+	public static final String OAI_DATACITE_CREATOR_ELEMENT = "creator";
+	public static final String OAI_DATACITE_CREATOR_NAME_ELEMENT = "creatorName";
+	public static final String OAI_DATACITE_NAME_TYPE_ATTRIBUTE = "nameType";
+	public static final String OAI_DATACITE_NAME_TYPE_PERSONAL_VALUE = "Personal";
+	public static final String OAI_DATACITE_GIVEN_NAME_ELEMENT = "givenName";
+	public static final String OAI_DATACITE_FAMILY_NAME_ELEMENT = "familyName";
+	public static final String OAI_DATACITE_AFFILIATION_ELEMENT = "affiliation";
+	public static final String OAI_DATACITE_TITLES_ELEMENT = "titles";
+	public static final String OAI_DATACITE_TITLE_ELEMENT = "title";
+	public static final String OAI_DATACITE_PUBLICATIONYEAR_ELEMENT = "publicationYear";
+	public static final String OAI_DATACITE_RESOURCE_TYPE_ELEMENT = "resourceType";
+	public static final String OAI_DATACITE_RESOURCE_TYPE_ATTRIBUTE = "resourceTypeGeneral";
+	public static final String OAI_DATACITE_RESOURCE_TYPE_DATASET_VALUE = "Dataset";
+	public static final String OAI_DATACITE_RESOURCE_TYPE_SOFTWARE_VALUE = "Software";
+	public static final String OAI_DATACITE_RESOURCE_TYPE_SERVICE_VALUE = "Service";
+	public static final String OAI_DATACITE_DATES_ELEMENT = "dates";
+	public static final String OAI_DATACITE_DATE_ELEMENT = "date";
+	public static final String OAI_DATACITE_DATE_TYPE_ELEMENT = "dateType";
+	public static final String OAI_DATACITE_DATE_TYPE_ISSUED_VALUE = "Issued";
+	public static final String OAI_DATACITE_DESCRIPTIONS_ELEMENT = "descriptions";
+	public static final String OAI_DATACITE_DESCRIPTION_ELEMENT = "description";
+	public static final String OAI_DATACITE_DESCRIPTION_TYPE_ATTRIBUTE = "descriptionType";
+	public static final String OAI_DATACITE_DESCRIPTION_TYPE_ABSTRACT_VALUE = "Abstract";
+	public static final String OAI_DATACITE_RIGHTS_LIST_ELEMENT = "rightsList";
+	public static final String OAI_DATACITE_RIGHTS_ELEMENT = "rights";
+	public static final String OAI_DATACITE_RIGHTS_URI_ATTRIBUTE = "rightsURI";
+	public static final String OAI_DATACITE_RIGHTS_URI_OPENACCESS_VALUE = "info:eu-repo/semantics/openAccess";
+	public static final String OAI_DATACITE_RIGHTS_URI_RESTRICTED_VALUE = "info:eu-repo/semantics/restrictedAccess";
+	public static final String OAI_DATACITE_SIZES_ELEMENT = "sizes";
+	public static final String OAI_DATACITE_SIZE_ELEMENT = "size";
+	public static final String OAI_DATACITE_SUBJECTS_ELEMENT = "subjects";
+	public static final String OAI_DATACITE_SUBJECT_ELEMENT = "subject";
+	public static final String OAI_DATACITE_CONTRIBUTORS_ELEMENT = "contributors";
+	public static final String OAI_DATACITE_CONTRIBUTOR_ELEMENT = "contributor";
+	public static final String OAI_DATACITE_CONTRIBUTOR_NAME_ELEMENT = "contributorName";
+	public static final String OAI_DATACITE_CONTRIBUTOR_TYPE_ATTRIBUTE = "contributorType";
+	public static final String OAI_DATACITE_EDITOR_VALUE = "Editor";
+	public static final String OAI_DATACITE_OTHER_VALUE = "Other";
+	public static final String OAI_DATACITE_SPONSOR_VALUE = "Sponsor";
+	public static final String OAI_DATACITE_RESEARCHER_VALUE = "Researcher";
 	
 	public static final String OAI_DC_ELEMENT = "dc";
 	

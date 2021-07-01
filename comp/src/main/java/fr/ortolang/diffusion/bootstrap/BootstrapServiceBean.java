@@ -69,6 +69,9 @@ import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.form.FormService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.entity.ProfileStatus;
+import fr.ortolang.diffusion.oai.OaiService;
+import fr.ortolang.diffusion.oai.exception.SetAlreadyExistsException;
+import fr.ortolang.diffusion.oai.format.Constant;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
@@ -97,7 +100,9 @@ public class BootstrapServiceBean implements BootstrapService {
     private RuntimeService runtime;
     @EJB
     private FormService form;
-
+    @EJB
+    private OaiService oai;
+    
     public BootstrapServiceBean() {
         LOGGER.log(Level.FINE, "new bootstrap service instance created");
     }
@@ -384,6 +389,13 @@ public class BootstrapServiceBean implements BootstrapService {
             LOGGER.log(Level.INFO, "reimport process types");
             runtime.importProcessTypes();
 
+            LOGGER.log(Level.INFO, "create OAI OpenAIRE Set");
+			try {
+				oai.createSet(Constant.OAI_OPENAIRE_SET_SPEC, Constant.OAI_OPENAIRE_SET_NAME);
+			} catch (SetAlreadyExistsException e) { // It's ok if it already exists
+			}
+			
+            
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "error during bootstrap", e);
             throw new BootstrapServiceException("error during bootstrap", e);

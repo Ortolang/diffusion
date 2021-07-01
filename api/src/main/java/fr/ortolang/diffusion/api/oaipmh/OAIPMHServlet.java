@@ -78,6 +78,7 @@ import fr.ortolang.diffusion.api.oaipmh.dataprovider.DiffusionDataProvider;
 import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionItemRepository;
 import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionSetRepository;
 import fr.ortolang.diffusion.oai.OaiService;
+import fr.ortolang.diffusion.oai.format.Constant;
 
 @Path("/oai")
 @Produces({ MediaType.APPLICATION_XML })
@@ -102,6 +103,7 @@ public class OAIPMHServlet {
         context.withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
         context.withMetadataFormat(MetadataFormat.metadataFormat("olac").withNamespace("http://www.language-archives.org/OLAC/1.1/").withSchemaLocation("http://www.language-archives.org/OLAC/1.1/olac.xsd"));
         context.withMetadataFormat(MetadataFormat.metadataFormat("cmdi").withNamespace("http://www.clarin.eu/cmd/1").withSchemaLocation("https://infra.clarin.eu/CMDI/1.x/xsd/cmd-envelop.xsd"));
+        context.withMetadataFormat(MetadataFormat.metadataFormat(fr.ortolang.diffusion.core.entity.MetadataFormat.OAI_DATACITE).withNamespace(Constant.OAI_DATACITE_NAMESPACE_URI).withSchemaLocation(Constant.OAI_DATACITE_NAMESPACE_SCHEMA_LOCATION));
 
         DiffusionSetRepository setRepository = new DiffusionSetRepository(oai);
         DiffusionItemRepository itemRepository = new DiffusionItemRepository(oai);
