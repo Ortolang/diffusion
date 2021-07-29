@@ -78,15 +78,9 @@ public class DataCiteHandler implements MetadataHandler {
 			writeDataCiteElement(OAI_DATACITE_TITLE_ELEMENT, jsonDoc, builder);
 			builder.writeEndElement(); // end of titles
 			
-			// Publisher
-			JsonArray producers = jsonDoc.getJsonArray("producers");
-			if (producers != null) {
-				for (JsonObject producer : producers.getValuesAs(JsonObject.class)) {
-					if (producer.containsKey("fullname")) {
-						builder.writeStartEndElement(OAI_DATACITE_NAMESPACE_PREFIX, DC_ELEMENTS.get(8), producer.getString("fullname"));
-					}
-				}
-			}
+			// Publisher is fixed with ORTOLANG
+			builder.writeStartEndElement(OAI_DATACITE_NAMESPACE_PREFIX, DC_ELEMENTS.get(8), "ORTOLANG");
+			
 			// Contributors
 			JsonArray contributors = jsonDoc.getJsonArray("contributors");
 			JsonArray sponsors = jsonDoc.getJsonArray("sponsors");
@@ -221,11 +215,6 @@ public class DataCiteHandler implements MetadataHandler {
 			JsonArray corporaLanguages = jsonDoc.getJsonArray("corporaLanguages");
 			if (corporaLanguages != null) {
 				for (JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
-					JsonArray multilingualLabels = corporaLanguage.getJsonArray("labels");
-
-					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-						writeDataCiteMultilingualElement("language", label, builder);
-					}
 					if (corporaLanguage.containsKey("id")) {
 						builder.writeStartEndElement(OAI_DATACITE_NAMESPACE_PREFIX, "language", corporaLanguage.getString("id"));
 					}
