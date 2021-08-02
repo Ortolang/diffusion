@@ -56,6 +56,7 @@ public class Constant {
 	public static final String OAI_DATACITE_RESOURCE_TYPE_DATASET_VALUE = "Dataset";
 	public static final String OAI_DATACITE_RESOURCE_TYPE_SOFTWARE_VALUE = "Software";
 	public static final String OAI_DATACITE_RESOURCE_TYPE_SERVICE_VALUE = "Service";
+	public static final String OAI_DATACITE_RESOURCE_TYPE_OTHER_VALUE = "Other";
 	public static final String OAI_DATACITE_DATES_ELEMENT = "dates";
 	public static final String OAI_DATACITE_DATE_ELEMENT = "date";
 	public static final String OAI_DATACITE_DATE_TYPE_ELEMENT = "dateType";
