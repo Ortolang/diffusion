@@ -158,6 +158,8 @@ public class DataCiteHandler implements MetadataHandler {
 					attrsResourceType.put(OAI_DATACITE_RESOURCE_TYPE_ATTRIBUTE, OAI_DATACITE_RESOURCE_TYPE_SOFTWARE_VALUE); break;
 				case CMDI_RESOURCE_CLASS_WEBSITE:
 					attrsResourceType.put(OAI_DATACITE_RESOURCE_TYPE_ATTRIBUTE, OAI_DATACITE_RESOURCE_TYPE_SERVICE_VALUE); break;
+				default:
+					attrsResourceType.put(OAI_DATACITE_RESOURCE_TYPE_ATTRIBUTE, OAI_DATACITE_RESOURCE_TYPE_OTHER_VALUE); break;
 			}
 			builder.writeStartEndElement(OAI_DATACITE_NAMESPACE_PREFIX, OAI_DATACITE_RESOURCE_TYPE_ELEMENT, attrsResourceType, resourceType.getString());
 			
@@ -214,19 +216,23 @@ public class DataCiteHandler implements MetadataHandler {
 			// Language
 			JsonArray corporaLanguages = jsonDoc.getJsonArray("corporaLanguages");
 			if (corporaLanguages != null) {
+				// Takes only the firts one (OpenAIR Language : Occurence = 1)
 				for (JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
 					if (corporaLanguage.containsKey("id")) {
 						builder.writeStartEndElement(OAI_DATACITE_NAMESPACE_PREFIX, "language", corporaLanguage.getString("id"));
+						break;
 					}
 				}
 			}
 			// Size
 			JsonString datasize = jsonDoc.getJsonString("datasize");
-			long size = Long.valueOf(datasize.getString());
-			String sizeToDisplay = FileUtils.byteCountToDisplaySize(size);
-			builder.writeStartElement(OAI_DATACITE_NAMESPACE_PREFIX, OAI_DATACITE_SIZES_ELEMENT);
-			builder.writeStartEndElement(OAI_DATACITE_NAMESPACE_PREFIX, OAI_DATACITE_SIZE_ELEMENT, sizeToDisplay);
-			builder.writeEndElement(); // end of sizes
+			if (datasize != null) {
+				long size = Long.valueOf(datasize.getString());
+				String sizeToDisplay = FileUtils.byteCountToDisplaySize(size);
+				builder.writeStartElement(OAI_DATACITE_NAMESPACE_PREFIX, OAI_DATACITE_SIZES_ELEMENT);
+				builder.writeStartEndElement(OAI_DATACITE_NAMESPACE_PREFIX, OAI_DATACITE_SIZE_ELEMENT, sizeToDisplay);
+				builder.writeEndElement(); // end of sizes
+			}
 			// Subject
 			builder.writeStartElement(OAI_DATACITE_NAMESPACE_PREFIX, OAI_DATACITE_SUBJECTS_ELEMENT);
 			writeDataCiteElement("keywords", jsonDoc, OAI_DATACITE_SUBJECT_ELEMENT, builder);
