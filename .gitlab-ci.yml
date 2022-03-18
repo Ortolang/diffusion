@@ -109,6 +109,6 @@ deploy_on_dev:
   environment:
     name: vdorto
     url: https://repo-dev.ortolang.fr/api/config/version
-  image: registry2.atilf.fr/atilf/portainer-cli:1.6.0
+  image: cyrilpestel/portainer-cli:1.6.0
   script:
     - portainer-cli -u $PORTAINER_USERNAME -p $PORTAINER_PASSWORD -b http://192.168.37.13:9000 deploy -e "Intégration-vdorto" -n ortolang-diffusion_vdorto -f docker/docker-stack.vdorto.yml
