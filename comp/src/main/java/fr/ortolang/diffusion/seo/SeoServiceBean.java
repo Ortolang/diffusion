@@ -302,13 +302,7 @@ public class SeoServiceBean implements SeoService {
         CORPORA("market/" + CORPUS.getSection(), "0.8", CORPUS.getMetadataType(), CORPUS.getSection()),
         LEXICONS("market/" + LEXICON.getSection(), "0.8", LEXICON.getMetadataType(), LEXICON.getSection()),
         TOOLS("market/" + TOOL.getSection(), "0.8", TOOL.getMetadataType(), LEXICON.getSection()),
-        TERMINOLOGIES("market/" + TERMINOLOGY.getSection(), "0.8", TERMINOLOGY.getMetadataType(), TERMINOLOGY.getSection()),
-        // Do not add marketType for applications as they do not have a description page
-        APPLICATIONS("market/" + APPLICATION.getSection(), "0.8", APPLICATION.getMetadataType(), null),
-        INFORMATION("information", "0.8", null, null),
-        INFORMATION_EN("information?lang=en", "0.8", null, null),
-        LEGAL_NOTICES("legal-notices", "0.3", null, null),
-    	LEGAL_NOTICES_EN("legal-notices?lang=en", "0.3", null, null);
+        TERMINOLOGIES("market/" + TERMINOLOGY.getSection(), "0.8", TERMINOLOGY.getMetadataType(), TERMINOLOGY.getSection());
 
         private final String path;
         private final String mdValue;
