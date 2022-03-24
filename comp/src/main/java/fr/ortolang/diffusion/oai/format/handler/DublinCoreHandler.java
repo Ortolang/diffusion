@@ -57,7 +57,6 @@ public class DublinCoreHandler implements MetadataHandler {
 
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 						writeDcMultilingualElement("subject", label, builder);
-						writeDcMultilingualElement("language", label, builder);
 					}
 					if (corporaLanguage.containsKey("id")) {
 						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "language", corporaLanguage.getString("id"));
@@ -74,7 +73,6 @@ public class DublinCoreHandler implements MetadataHandler {
 					
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 						writeDcMultilingualElement("subject", label, builder);
-						writeDcMultilingualElement("language", label, builder);
 					}
 					if (lexiconInputLanguage.containsKey("id")) {
 						builder.writeStartEndElement(DC_NAMESPACE_PREFIX, "language", lexiconInputLanguage.getString("id"));
