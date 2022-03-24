@@ -265,6 +265,17 @@ public class OaiServiceBean implements OaiService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public boolean isSetExists(String spec) {
+		try {
+			findSet(spec);
+		} catch (SetNotFoundException e) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public long countSets() {
 		try {
 			TypedQuery<Long> query = em.createNamedQuery("countSets", Long.class);

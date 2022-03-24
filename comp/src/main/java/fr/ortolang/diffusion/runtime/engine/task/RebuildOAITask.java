@@ -13,6 +13,10 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.oai.entity.Record;
+import fr.ortolang.diffusion.oai.entity.Set;
+import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
+import fr.ortolang.diffusion.oai.exception.SetNotFoundException;
 import fr.ortolang.diffusion.publication.PublicationService;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
@@ -60,6 +64,12 @@ public class RebuildOAITask extends RuntimeEngineTask {
 			}
 		}
         
+		// Cleans sets and records
+		List<Set> sets = this.getOaiService().listSets();
+		List<Record>  records = this.getOaiService().listRecords();
+		removeOAIRecords(records);
+		removeOAISets(sets);
+
         for (String alias : aliases) {
         	try {
                 String wskey = getCoreService().resolveWorkspaceAlias(alias);
@@ -100,6 +110,26 @@ public class RebuildOAITask extends RuntimeEngineTask {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All elements rebuiled succesfully"));
         }
         throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "Report: \r\n" + report.toString(), null));
+	}
+
+	private void removeOAIRecords(List<Record>  records) {
+		records.forEach(rec -> {
+			try {
+				this.getOaiService().deleteRecord(rec.getId());
+			} catch (RecordNotFoundException | RuntimeEngineTaskException e) {
+				LOGGER.log(Level.SEVERE, "Unable to delete OAI record {0}", rec.getId());
+			}
+		});
+	}
+
+	private void removeOAISets(List<Set> sets) {
+		sets.forEach(set -> {
+			try {
+				this.getOaiService().deleteSet(set.getSpec());
+			} catch (SetNotFoundException | RuntimeEngineTaskException e) {
+				LOGGER.log(Level.SEVERE, "Unable to delete OAI record {0}", set.getSpec());
+			}
+		});
 	}
 
 }

@@ -17,9 +17,9 @@ public class URLUtils {
 		String result = null;
 
 		try {
-			result = URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20").replaceAll("\\%21", "!")
-					.replaceAll("\\%27", "'").replaceAll("\\%28", "(").replaceAll("\\%29", ")")
-					.replaceAll("\\%7E", "~");
+			result = URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20").replaceAll("%21", "!")
+					.replaceAll("%27", "'").replaceAll("%28", "(").replaceAll("%29", ")")
+					.replaceAll("%7E", "~").replaceAll("%2F", "/").replaceAll("%3f", "?");
 		}
 
 		// This exception should never occur.

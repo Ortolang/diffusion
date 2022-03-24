@@ -40,6 +40,7 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -51,6 +52,8 @@ import java.util.regex.Pattern;
 public class OrtolangIndexableContentParser {
 
     private static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\"\\$\\{([\\w:.\\-]+)}\"");
+    private static final int startReferentialKeyPostion = 2;
+    private static final int startReferentialIdPosition = 2 + ReferentialService.SERVICE_NAME.length() + 1;
 
     public static String parse(String json) throws IndexableContentParsingException {
         try {
@@ -74,6 +77,10 @@ public class OrtolangIndexableContentParser {
     }
     
     public static String extractKey(String expression) {
-    	return expression.substring(2, expression.length()-1);
+    	return expression.substring(startReferentialKeyPostion, expression.length()-1);
+    }
+
+    public static String extractReferentialId(String expression) {
+        return expression.substring(startReferentialIdPosition, expression.length()-1);
     }
 }

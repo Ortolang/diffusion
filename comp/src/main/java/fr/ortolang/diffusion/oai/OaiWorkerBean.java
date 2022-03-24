@@ -32,6 +32,9 @@ import javax.xml.stream.XMLStreamWriter;
 import org.jboss.ejb3.annotation.SecurityDomain;
 import org.xml.sax.SAXException;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -40,11 +43,13 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContentParser;
 import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -235,7 +240,6 @@ public class OaiWorkerBean implements OaiWorker {
         
         public void buildFromWorkspace(String wskey, String snapshot) throws OaiServiceException {
     		try {
-    			HashSet<String> setsWorkspace = new HashSet<String>(Arrays.asList(wskey, Constant.OAI_OPENAIRE_SET_SPEC));
 
     			if (snapshot == null) {
     				snapshot = core.findWorkspaceLatestPublishedSnapshot(wskey);
@@ -247,7 +251,22 @@ public class OaiWorkerBean implements OaiWorker {
     			LOGGER.log(Level.FINE, "build from workspace " + wskey + " and snapshot " + snapshot);
     			Workspace workspace = core.systemReadWorkspace(wskey);
     			String root = workspace.findSnapshotByName(snapshot).getKey();
+    			HashSet<String> setsWorkspace = new HashSet<String>(Arrays.asList(workspace.getAlias(), Constant.OAI_OPENAIRE_SET_SPEC));
 
+    			// Adds all producers as sets to the OAI Record
+    			Collection rootCollection = core.systemReadCollection(root);
+    			List<String> producers = extractProducers(rootCollection);
+    			for (String producer : producers) {
+    				setsWorkspace.add(OaiService.SET_PREFIX_PRODUCER + OaiService.SET_SPEC_SEPARATOR + producer);
+					if (!oai.isSetExists(producer)) {
+						try {
+							oai.createSet(OaiService.SET_PREFIX_PRODUCER + OaiService.SET_SPEC_SEPARATOR + producer, OaiService.SET_NAME_PREFIX_PRODUCER + producer);
+						} catch (SetAlreadyExistsException e) {
+							LOGGER.log(Level.WARNING, "unable to create a Set " + producer + " from " + wskey + " because it's already exists");
+						}
+					}
+    			}
+    			
     			List<Record> records = null;
     			try {
     				records = oai.listRecordsByIdentifier(wskey);
@@ -257,9 +276,9 @@ public class OaiWorkerBean implements OaiWorker {
     				LOGGER.log(Level.FINE, "creating OAI records and a set for workspace " + wskey);
     				// Creating a Set for the workspace
     				try {
-    					oai.createSet(wskey, "Workspace " + wskey);
+    					oai.createSet(workspace.getAlias(), OaiService.SET_NAME_PREFIX_WORKSPACE + wskey);
     				} catch (SetAlreadyExistsException e) {
-    					LOGGER.log(Level.WARNING, "unable to create a Set " + wskey);
+    					LOGGER.log(Level.WARNING, "unable to create a Set {} because it's already exists", wskey);
     				}
     				createRecordsForItem(wskey, root, setsWorkspace);
     			} else {
@@ -269,7 +288,7 @@ public class OaiWorkerBean implements OaiWorker {
     				// Deleting all Records linking of the workspace
     				List<Record> recordsOfWorkspace;
     				try {
-    					recordsOfWorkspace = oai.listRecordsBySet(wskey);
+    					recordsOfWorkspace = oai.listRecordsBySet(workspace.getAlias());
     					recordsOfWorkspace.forEach(rec -> {
     						try {
     							oai.deleteRecord(rec.getId());
@@ -615,6 +634,33 @@ public class OaiWorkerBean implements OaiWorker {
     		} catch (AccessDeniedException | CoreServiceException e) {
     		}
     		return false;
+    	}
+    	
+
+    	/**
+    	 * Extracts the producers from the item JSON metadata of the collection.
+    	 * @param collection a collection
+    	 * @return the list of producers
+    	 */
+    	public List<String> extractProducers(Collection collection) {
+    		ArrayList<String> fieldValue = new ArrayList<String>();
+    		MetadataElement mde = collection.findMetadataByName(MetadataFormat.ITEM);
+    		if (mde != null) {
+    			try {
+    				MetadataObject meta = core.systemReadMetadataObject(mde.getKey());
+    				ObjectMapper mapper = new ObjectMapper();
+    				Map<String, Object> content = mapper.readValue(binaryStore.getFile(meta.getStream()), new TypeReference<Map<String, Object>>(){});
+    				Object producers = content.get("producers");
+    				if (producers != null && producers instanceof List) {
+    					@SuppressWarnings("unchecked")
+						List<String> producersList = (List<String>) producers;
+						producersList.forEach(producerId -> fieldValue.add(OrtolangIndexableContentParser.extractReferentialId(producerId)));
+    				}
+    			} catch (AccessDeniedException | CoreServiceException | KeyNotFoundException | IOException | BinaryStoreServiceException | DataNotFoundException e) {
+    				LOGGER.log(Level.WARNING, "unexpected error when reading metadata object", e);
+    			}
+    		}
+    		return fieldValue;
     	}
     	
     }
