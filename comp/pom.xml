@@ -9,7 +9,7 @@
 	<parent>
 		<groupId>fr.ortolang.diffusion</groupId>
 		<artifactId>ortolang-diffusion</artifactId>
-		<version>9.5.2-SNAPSHOT</version>
+		<version>9.6.0</version>
 	</parent>
 
     <dependencies>
