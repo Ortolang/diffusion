@@ -251,8 +251,11 @@ public class OaiWorkerBean implements OaiWorker {
     			LOGGER.log(Level.FINE, "build from workspace " + wskey + " and snapshot " + snapshot);
     			Workspace workspace = core.systemReadWorkspace(wskey);
     			String root = workspace.findSnapshotByName(snapshot).getKey();
-    			HashSet<String> setsWorkspace = new HashSet<String>(Arrays.asList(workspace.getAlias(), Constant.OAI_OPENAIRE_SET_SPEC));
-
+    			HashSet<String> setsWorkspace = new HashSet<String>();
+    			setsWorkspace.add(OaiService.SET_PREFIX_OBJECT_TYPE + OaiService.SET_SPEC_SEPARATOR + Workspace.OBJECT_TYPE);
+    			setsWorkspace.add(OaiService.SET_PREFIX_WORKSPACE_ALIAS + OaiService.SET_SPEC_SEPARATOR + workspace.getAlias());
+    			setsWorkspace.add(Constant.OAI_OPENAIRE_SET_SPEC);
+    			
     			// Adds all producers as sets to the OAI Record
     			Collection rootCollection = core.systemReadCollection(root);
     			List<String> producers = extractProducers(rootCollection);
@@ -273,22 +276,22 @@ public class OaiWorkerBean implements OaiWorker {
     			} catch (RecordNotFoundException e) {
     			}
     			if (records == null) {
-    				LOGGER.log(Level.FINE, "creating OAI records and a set for workspace " + wskey);
+    				LOGGER.log(Level.FINE, "creating OAI records and a set for workspace " + workspace.getAlias());
     				// Creating a Set for the workspace
     				try {
-    					oai.createSet(workspace.getAlias(), OaiService.SET_NAME_PREFIX_WORKSPACE + wskey);
+    					oai.createSet(OaiService.SET_PREFIX_WORKSPACE_ALIAS + OaiService.SET_SPEC_SEPARATOR + workspace.getAlias(), OaiService.SET_NAME_PREFIX_WORKSPACE + wskey);
     				} catch (SetAlreadyExistsException e) {
     					LOGGER.log(Level.WARNING, "unable to create a Set {} because it's already exists", wskey);
     				}
-    				createRecordsForItem(wskey, root, setsWorkspace);
+    				createRecordsForItem(wskey, workspace.getAlias(), root, setsWorkspace);
     			} else {
-    				LOGGER.log(Level.FINE, "updating OAI records and set for workspace " + wskey);
+    				LOGGER.log(Level.FINE, "updating OAI records and set for workspace " + workspace.getAlias());
     				// Set is already created (see below), so just cleans and
     				// creates new records
     				// Deleting all Records linking of the workspace
     				List<Record> recordsOfWorkspace;
     				try {
-    					recordsOfWorkspace = oai.listRecordsBySet(workspace.getAlias());
+    					recordsOfWorkspace = oai.listRecordsBySet(OaiService.SET_PREFIX_WORKSPACE_ALIAS + OaiService.SET_SPEC_SEPARATOR + workspace.getAlias());
     					recordsOfWorkspace.forEach(rec -> {
     						try {
     							oai.deleteRecord(rec.getId());
@@ -298,7 +301,7 @@ public class OaiWorkerBean implements OaiWorker {
     				} catch (RecordNotFoundException e1) {
     					// No record
     				}
-    				createRecordsForItem(wskey, root, setsWorkspace);
+    				createRecordsForItem(wskey, workspace.getAlias(), root, setsWorkspace);
     			}
     		} catch (RegistryServiceException | KeyNotFoundException | OaiServiceException | CoreServiceException
     				| MetadataPrefixUnknownException | OrtolangException e) {
@@ -307,7 +310,7 @@ public class OaiWorkerBean implements OaiWorker {
     		}
     	}
 
-    	private void createRecordsForItem(String wskey, String root, HashSet<String> setsWorkspace)
+    	private void createRecordsForItem(String wskey, String wsAlias, String root, HashSet<String> setsWorkspace)
     			throws CoreServiceException, KeyNotFoundException, RegistryServiceException, OaiServiceException,
     			MetadataPrefixUnknownException, OrtolangException {
     		oai.createRecord(wskey, MetadataFormat.OAI_DC, registry.getLastModificationDate(root),
@@ -321,7 +324,9 @@ public class OaiWorkerBean implements OaiWorker {
 
     		java.util.Set<CollectionElement> elements = core.systemReadCollection(root).getElements();
     		for (CollectionElement element : elements) {
-    			createRecordsFromMetadataObject(element.getKey(), setsWorkspace);
+    			HashSet<String> setsMetadataObject = new HashSet<String>();
+    			setsMetadataObject.add(OaiService.SET_PREFIX_WORKSPACE_ALIAS + OaiService.SET_SPEC_SEPARATOR + wsAlias);
+    			createRecordsFromMetadataObject(element.getKey(), setsMetadataObject);
     		}
     	}
 
@@ -344,10 +349,13 @@ public class OaiWorkerBean implements OaiWorker {
     			CoreServiceException, MetadataPrefixUnknownException {
     		OrtolangObjectIdentifier identifier = registry.lookup(key);
     		String type = identifier.getType();
-
+    		HashSet<String> setsObject = new HashSet<String>();
+    		
     		switch (type) {
     		case Collection.OBJECT_TYPE:
-    			createRecordsForEarchMetadataObject(key, setsWorkspace);
+    			setsObject.add(OaiService.SET_PREFIX_OBJECT_TYPE + OaiService.SET_SPEC_SEPARATOR + Collection.OBJECT_TYPE);
+    			setsObject.addAll(setsWorkspace);
+    			createRecordsForEarchMetadataObject(key, setsObject);
     			
     			java.util.Set<CollectionElement> elements = core.systemReadCollection(key).getElements();
     			for (CollectionElement element : elements) {
@@ -355,7 +363,9 @@ public class OaiWorkerBean implements OaiWorker {
     			}
     			break;
     		case DataObject.OBJECT_TYPE:
-    			createRecordsForEarchMetadataObject(key, setsWorkspace);
+    			setsObject.add(OaiService.SET_PREFIX_OBJECT_TYPE + OaiService.SET_SPEC_SEPARATOR + DataObject.OBJECT_TYPE);
+    			setsObject.addAll(setsWorkspace);
+    			createRecordsForEarchMetadataObject(key, setsObject);
     			break;
     		}
     	}

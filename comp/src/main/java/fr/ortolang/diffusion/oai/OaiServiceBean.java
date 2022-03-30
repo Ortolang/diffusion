@@ -29,12 +29,16 @@ import javax.persistence.criteria.Root;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.oai.entity.Record;
 import fr.ortolang.diffusion.oai.entity.Set;
 import fr.ortolang.diffusion.oai.exception.OaiServiceException;
 import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
 import fr.ortolang.diffusion.oai.exception.SetAlreadyExistsException;
 import fr.ortolang.diffusion.oai.exception.SetNotFoundException;
+import fr.ortolang.diffusion.oai.format.Constant;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
@@ -272,6 +276,26 @@ public class OaiServiceBean implements OaiService {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void createPermanentSets() {
+		try {
+			createSet(Constant.OAI_OPENAIRE_SET_SPEC, Constant.OAI_OPENAIRE_SET_NAME);
+		} catch (SetAlreadyExistsException e) {
+			LOGGER.log(Level.INFO, "OAI OpenAIRE set already exists");
+		}
+		try {
+			createSet(OaiService.SET_PREFIX_OBJECT_TYPE + OaiService.SET_SPEC_SEPARATOR + Workspace.OBJECT_TYPE
+					, Workspace.OBJECT_TYPE);
+			createSet(OaiService.SET_PREFIX_OBJECT_TYPE + OaiService.SET_SPEC_SEPARATOR + Collection.OBJECT_TYPE
+						, Collection.OBJECT_TYPE);
+			createSet(OaiService.SET_PREFIX_OBJECT_TYPE + OaiService.SET_SPEC_SEPARATOR + DataObject.OBJECT_TYPE
+						, DataObject.OBJECT_TYPE);
+		} catch (SetAlreadyExistsException e) {
+			LOGGER.log(Level.INFO, "OAI Object type sets already exists");
+		}
 	}
 
 	@Override

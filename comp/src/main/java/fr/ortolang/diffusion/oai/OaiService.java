@@ -18,6 +18,8 @@ public interface OaiService extends OrtolangService {
     String INFO_COUNT_RECORDS = "count.records";
     
     String SET_PREFIX_PRODUCER = "producer";
+    String SET_PREFIX_OBJECT_TYPE = "object_type";
+    String SET_PREFIX_WORKSPACE_ALIAS = "workspace";
     String SET_SPEC_SEPARATOR = ":";
     String SET_NAME_PREFIX_PRODUCER = "Producer ";
     String SET_NAME_PREFIX_WORKSPACE = "Workspace ";
@@ -57,6 +59,8 @@ public interface OaiService extends OrtolangService {
     void deleteSet(String spec) throws SetNotFoundException;
 
     boolean isSetExists(String spec);
+    
+    void createPermanentSets();
     
     long countSets();
     
