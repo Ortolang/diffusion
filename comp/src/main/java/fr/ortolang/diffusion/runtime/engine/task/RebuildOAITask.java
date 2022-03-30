@@ -69,6 +69,8 @@ public class RebuildOAITask extends RuntimeEngineTask {
 		List<Record>  records = this.getOaiService().listRecords();
 		removeOAIRecords(records);
 		removeOAISets(sets);
+		
+		this.getOaiService().createPermanentSets();
 
         for (String alias : aliases) {
         	try {

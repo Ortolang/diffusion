@@ -64,7 +64,10 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.form.FormService;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -389,12 +392,8 @@ public class BootstrapServiceBean implements BootstrapService {
             LOGGER.log(Level.INFO, "reimport process types");
             runtime.importProcessTypes();
 
-            LOGGER.log(Level.INFO, "create OAI OpenAIRE Set");
-			try {
-				oai.createSet(Constant.OAI_OPENAIRE_SET_SPEC, Constant.OAI_OPENAIRE_SET_NAME);
-			} catch (SetAlreadyExistsException e) { // It's ok if it already exists
-			}
-			
+            LOGGER.log(Level.INFO, "creating Permanent OAI Sets...");
+            oai.createPermanentSets();
             
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "error during bootstrap", e);
