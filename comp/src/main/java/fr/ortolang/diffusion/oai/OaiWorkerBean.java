@@ -248,8 +248,12 @@ public class OaiWorkerBean implements OaiWorker {
     				LOGGER.log(Level.WARNING, "finds no published snapshot for workspace " + wskey);
     				return;
     			}
-    			LOGGER.log(Level.FINE, "build from workspace " + wskey + " and snapshot " + snapshot);
     			Workspace workspace = core.systemReadWorkspace(wskey);
+    			if (workspace.isArchive()) {
+    				LOGGER.log(Level.WARNING, wskey + " workspace is archived ; disable oai exposure");
+    				return;
+    			}
+    			LOGGER.log(Level.FINE, "build from workspace " + wskey + " and snapshot " + snapshot);
     			String root = workspace.findSnapshotByName(snapshot).getKey();
     			HashSet<String> setsWorkspace = new HashSet<String>();
     			setsWorkspace.add(OaiService.SET_PREFIX_OBJECT_TYPE + OaiService.SET_SPEC_SEPARATOR + Workspace.OBJECT_TYPE);
