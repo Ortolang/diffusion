@@ -217,6 +217,7 @@ public class SeoServiceBean implements SeoService {
     private void generateWorkspacesEntries(Element urlset, Document doc, String marketServerUrl) {
 //        List<ODocument> workspaces = json.systemSearch("SELECT key, lastModificationDate as lastModificationDate, `meta_ortolang-item-json.type` as type, `meta_ortolang-workspace-json.wsalias` as alias, `meta_ortolang-workspace-json.snapshotName` as snapshotName FROM collection WHERE status = 'published' AND `meta_ortolang-item-json.type` IS NOT null AND `meta_ortolang-workspace-json.wsalias` IS NOT null");
     	SearchQuery query = new SearchQuery();
+    	query.addQuery("archive", new String[] {"false"});
     	query.setIndex(OrtolangItemIndexableContent.INDEX);
     	query.setSize(1000);
     	SearchResult result = search.search(query);
