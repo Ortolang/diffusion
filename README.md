@@ -58,6 +58,14 @@ Au-delà de la réunion de ces partenaires réunissant des compétences discipli
 * sociolinguistique ([LLL](http://www.lll.cnrs.fr/), [MoDyCo](http://www.modyco.fr/)),
 * traitement Automatique des Langues ([LORIA](http://www.loria.fr/), [LPL](http://www.lpl-aix.fr/), [ATILF](http://www.atilf.fr/)).
 
-___
+## Tests
 
-**Plus d'information sur [www.ortolang.fr](https://www.ortolang.fr/information/presentation)**
+Créé l'image contenant l'environnement de test :
+```
+docker build -t ortolang-diffusion-test -f Dockerfile.test .
+```
+
+Lancer les tests :
+```
+docker run --rm ortolang-diffusion-test
+```

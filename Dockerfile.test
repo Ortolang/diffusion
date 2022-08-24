@@ -1,6 +1,6 @@
 FROM maven:3.6.1-jdk-8-alpine
 
-ENV VERSION_WILDFLY=12.0.0.Final
+ENV VERSION_WILDFLY=24.0.0.Final
 
 WORKDIR /app
 
@@ -11,5 +11,6 @@ COPY . .
 
 RUN cp comp/src/test/resources/ortolang-users.properties /app/wildfly-${VERSION_WILDFLY}/standalone/configuration/ \
     && cp comp/src/test/resources/ortolang-roles.properties /app/wildfly-${VERSION_WILDFLY}/standalone/configuration/ \
-    && cp comp/src/test/resources/ortolang-test-${VERSION_WILDFLY}.xml /app/wildfly-${VERSION_WILDFLY}/standalone/configuration/standalone.xml \
-    && mvn clean test -DjbossHome=/app/wildfly-${VERSION_WILDFLY} -Djboss.home=/app/wildfly-${VERSION_WILDFLY}
+    && cp comp/src/test/resources/ortolang-test-${VERSION_WILDFLY}.xml /app/wildfly-${VERSION_WILDFLY}/standalone/configuration/standalone.xml
+
+CMD [ "mvn", "-X", "clean", "test", "-DjbossHome=/app/wildfly-24.0.0.Final", "-Djboss.home=/app/wildfly-24.0.0.Final" ]
