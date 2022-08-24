@@ -1,17 +1,17 @@
 FROM maven:3.6.1-jdk-8-alpine as builder
 
-ENV VERSION_WILDFLY=12.0.0.Final
+ENV VERSION_WILDFLY=24.0.0.Final
 ENV JBOSS_HOME=/jboss/wildfly-${VERSION_WILDFLY}
 
 WORKDIR /app
 COPY . .
 RUN mvn -q clean package -DskipTests -DjbossHome=/jboss/wildfly-${VERSION_WILDFLY} -Djboss.home=/jboss/wildfly-${VERSION_WILDFLY}
 
-FROM jboss/wildfly:12.0.0.Final
+FROM jboss/wildfly:24.0.0.Final
 
 ARG VERSION_PGSQL=9.4.1208
-ARG VERSION_KEYCLOAK=3.4.3.Final
-ARG VERSION_WILDFLY=12.0.0.Final
+ARG VERSION_KEYCLOAK=11.0.3
+ARG VERSION_WILDFLY=24.0.0.Final
 ARG VERSION_FLYWAY=4.0.3
 ARG CUSTOM_UID=1100
 ARG CUSTOM_GID=1000

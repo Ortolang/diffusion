@@ -45,8 +45,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.security.auth.login.LoginException;
@@ -74,7 +74,7 @@ public class HandleStoreServiceTest {
 	@PersistenceContext
     private EntityManager em;
     
-    @Resource(name="java:jboss/UserTransaction")
+	@Inject
     private UserTransaction utx;
     
     @EJB
