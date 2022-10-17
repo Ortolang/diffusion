@@ -50,6 +50,7 @@ import org.activiti.engine.delegate.Expression;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
+import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.publication.PublicationService;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
@@ -89,6 +90,19 @@ public class PublishTask extends RuntimeEngineTask {
         
         String wskey = (String) getWskey().getValue(execution);
         String snapshot = (String) getSnapshot().getValue(execution);
+
+        LOGGER.log(Level.FINE, "starting publication...");
+        String caller = getMembershipService().getProfileKeyForConnectedIdentifier();
+        
+        LOGGER.log(Level.FINE, "building publication map...");
+        Map<String, Map<String, List<String>>> map;
+        try {
+            map = getCoreService().buildWorkspacePublicationMap(wskey, snapshot);
+        } catch (Exception e) {
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to build workspace publication map: " + e.getMessage()));
+            throw new RuntimeEngineTaskException("unable to build workspace publication map", e);
+        }
+        
         try {
             if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
                 LOGGER.log(Level.FINE, "starting new user transaction.");
@@ -98,14 +112,8 @@ public class PublishTask extends RuntimeEngineTask {
             LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
         }
         try {
-            LOGGER.log(Level.FINE, "starting publication...");
-            String caller = getMembershipService().getProfileKeyForConnectedIdentifier();
-            
-            LOGGER.log(Level.FINE, "building publication map...");
-            Map<String, Map<String, List<String>>> map = getCoreService().buildWorkspacePublicationMap(wskey, snapshot);
-            
             long tscommit = System.currentTimeMillis();
-            //TODO log event or status to set process progression
+            //TODO log event or status to set process progression 
             for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
             	try {
             		getPublicationService().publishKey(entry.getKey(), entry.getValue());

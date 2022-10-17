@@ -65,6 +65,7 @@ import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
@@ -105,6 +106,22 @@ public class GenerateHandlesTask extends RuntimeEngineTask {
         String wskey = (String) getWskey().getValue(execution);
         String snapshot = (String) getSnapshot().getValue(execution);
         StringBuilder report = new StringBuilder();
+
+        LOGGER.log(Level.FINE, "building handles list...");
+        Workspace workspace;
+        Set<OrtolangObjectPid> pids;
+        try {
+            workspace = getCoreService().systemReadWorkspace(wskey);
+            TagElement te = workspace.findTagBySnapshot(snapshot);
+            LOGGER.log(Level.INFO, "[GenerateHandlesTask] Generating PID list");
+            pids = buildWorkspacePidList(wskey, te.getName());
+            LOGGER.log(Level.FINE, "handles list built with: " + pids.size() + " entries");
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "handles list built with: " + pids.size() + " entries"));
+        } catch (Exception e) {
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to build pid list : " + e.getMessage()));
+            throw new RuntimeEngineTaskException("unable to build pid list", e);
+        }
+            
         try {
             if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
                 LOGGER.log(Level.FINE, "starting new user transaction.");
@@ -116,14 +133,6 @@ public class GenerateHandlesTask extends RuntimeEngineTask {
         }
         
         try {
-            LOGGER.log(Level.FINE, "building handles list...");
-            Workspace workspace = getCoreService().systemReadWorkspace(wskey);
-            TagElement te = workspace.findTagBySnapshot(snapshot);
-            LOGGER.log(Level.INFO, "[GenerateHandlesTask] Generating PID list");
-            Set<OrtolangObjectPid> pids = buildWorkspacePidList(wskey, te.getName());
-            LOGGER.log(Level.FINE, "handles list built with: " + pids.size() + " entries");
-            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "handles list built with: " + pids.size() + " entries"));
-
             LOGGER.log(Level.FINE, "starting handle creation...");
             LOGGER.log(Level.INFO, "[GenerateHandlesTask] Count of handle to generate : " + pids.size());
             long tscommit = System.currentTimeMillis();
