@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.archive;
 
 import java.util.logging.Logger;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.annotation.security.PermitAll;
@@ -30,8 +31,13 @@ public class ArchiveListenerBean implements MessageListener {
     public void onMessage(Message message) {
         try {
             String key = message.getStringProperty("key");
-            LOGGER.log(Level.FINEST, "Checking archivable file for object with key " + key);
-            worker.submit(key, null);
+            String action = message.getStringProperty("action");
+            String schema = message.getStringProperty("schema");
+            HashMap<String, String> args = new HashMap<>();
+            args.put("schema", schema);
+
+            LOGGER.log(Level.FINEST, "Submits Archivable job to the message queue for object with key {0}", key);
+            worker.submit(key, action, args);
         } catch (JMSException e) {
             LOGGER.log(Level.WARNING, "Unable to handle checking archivable message", e);
         }
