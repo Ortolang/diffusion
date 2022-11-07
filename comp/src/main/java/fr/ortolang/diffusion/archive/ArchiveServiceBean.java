@@ -518,7 +518,7 @@ public class ArchiveServiceBean implements ArchiveService {
        builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaServiceVersant, "ORTOLANG");
        XmlDumpAttributes attrsPlanClassement = new XmlDumpAttributes();
        attrsPlanClassement.put("language", "fra");
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaPlanClassement, attrsPlanClassement, "huma_num");
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaPlanClassement, attrsPlanClassement, "ortolang");
  	   
  	   writer.writeEndElement(); //// DocMeta
 
