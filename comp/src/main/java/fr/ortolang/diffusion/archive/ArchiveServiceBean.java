@@ -28,8 +28,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -135,6 +136,7 @@ public class ArchiveServiceBean implements ArchiveService {
     public static final String DEPOT_DIRECTORY = "DEPOT";
     public static final String DESC_DIRECTORY = "DESC";
     public static final String SIP_XML_FILE = "sip.xml";
+    public static final String SIP_XML_FILEPATH = "/sip.xml";
     
     @Resource(mappedName = "java:jboss/exported/jms/topic/archive")
     private Topic archiveQueue;
@@ -166,7 +168,7 @@ public class ArchiveServiceBean implements ArchiveService {
     @PostConstruct
     public void init() {
         this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_SIP_HOME);
-        LOGGER.log(Level.INFO, "Initializing archive service with base directory : {0}" , base.toString());
+        LOGGER.log(Level.INFO, "Initializing Archive Service with base directory : {0}" , base);
 		this.factory = new MD5FilterInputStreamFactory();
         try {
 			Files.createDirectories(base);
@@ -198,77 +200,132 @@ public class ArchiveServiceBean implements ArchiveService {
     }
 
 	/**
-	 * Creates a SIP archive ready to send to the PAC platform.
-	 * @param key a workspace key
-	 * @param schema a schema for TEI XML files
+	 * Sends a message to the archive queue.
+	 * @param key the key of the ortolang object
+	 * @param action see action availabled to ArchiveService
 	 */
-	@Override
-	public void createSIP(String key, String schema) throws ArchiveServiceException {
-		sendMessage(key, ArchiveService.CREATE_SIP_ACTION, schema);
-    }
-
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
     private void sendMessage(String key, String action) throws ArchiveServiceException {
-		sendMessage(key, action, null);
-	}
-
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    private void sendMessage(String key, String action, String schema) throws ArchiveServiceException {
-        try {
+		try {
             Message message = context.createMessage();
 			message.setStringProperty("action", action);
             message.setStringProperty("key", key);
-			if ( schema != null ) {
-				message.setStringProperty("schema", schema);
-			}
             context.createProducer().send(archiveQueue, message);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "unable to send archive message", e);
             throw new ArchiveServiceException("unable to send archive message", e);
         }
-    }
+	}
 
-	/**
-	 * Creates a SIP archive ready to send to the PAC platform.
-	 * @param key a workspace key
-	 * @param schema a schema for TEI XML files
-	 */
-	public void createSIPTar(String key, String schema) throws ArchiveServiceException {
-		LOGGER.log(Level.FINE, "Create SIP tar archive for object {0}", key);
-        Map<String, Validator> imported = new HashMap<>();
-		
-		try (TarArchiveOutputStream tarOutput = new TarArchiveOutputStream(Files.newOutputStream(base.resolve(key + ".tar")))) {
-			importPathToSIP(key, tarOutput, imported);
-			importSIPXml(key, tarOutput, imported, schema);
-			tarOutput.finish();
-		} catch (IOException | ArchiveServiceException | AccessDeniedException | CoreServiceException | KeyNotFoundException | BinaryStoreServiceException | DataNotFoundException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error during creating to SIP Tar", e);
-			throw new ArchiveServiceException("unable to create the Tar " + base.resolve(key + ".tar"), e);
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void validateDataobject(String key) throws ArchiveServiceException {
+		OrtolangObjectIdentifier identifier;
+		try {
+			identifier = registry.lookup(key);
+			
+		} catch (RegistryServiceException | KeyNotFoundException e) {
+			throw new ArchiveServiceException("unable to get object from registry with key " + key, e);
 		}
-    }
+		if (!identifier.getService().equals(core.getServiceName())
+			|| !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
+			throw new ArchiveServiceException("unable to validate other than a DataObject");
+		}
+		DataObject dataObject = em.find(DataObject.class, identifier.getId());
+		dataObject.setKey(key);
+		try {
+			Validator validator = validateFacile(dataObject);
+			if (validator != null) {
+				String json = writeJson(validator);
+				String metadataHash = binarystore
+						.put(new ByteArrayInputStream(json.getBytes()));
+				core.systemCreateMetadata(dataObject.getKey(), MetadataFormat.FACILE_VALIDATOR, metadataHash,
+						MetadataFormat.FACILE_VALIDATOR + ".json");
+			} else {
+				LOGGER.log(Level.WARNING, "Validator XML cant be parsed for data object {0}", dataObject.getKey());
+			}
+		} catch(BinaryStoreServiceException | DataNotFoundException | CheckArchivableException | DataCollisionException | JsonProcessingException | KeyNotFoundException | CoreServiceException | MetadataFormatException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | RegistryServiceException | AuthorisationServiceException | IndexingServiceException e) {
+			throw new ArchiveServiceException("unable to validate via Facile the dataobject " + key, e);
+		}
+		
+	}
 
 	/**
-	 * Imports the metadata file SIP.xml to the Tar.
-	 * @param wsKey workspace key
-	 * @param tarOutput the tar archive
-	 * @param imported a map containing all the imported files
-	 * @param schema the path to the XML schema
-	 * @throws KeyNotFoundException
-	 * @throws CoreServiceException
-	 * @throws ArchiveServiceException
-	 * @throws AccessDeniedException
-	 * @throws DataNotFoundException
-	 * @throws BinaryStoreServiceException
+	 * Creates a Tar archive.
+	 * 
+	 * After the creation of the archive, the method finishArchive needs to be call.
+	 * @param wskey the workspace key
 	 */
-	private void importSIPXml(String wsKey, TarArchiveOutputStream tarOutput, Map<String, Validator> imported, String schema) throws CoreServiceException, KeyNotFoundException, ArchiveServiceException, AccessDeniedException, BinaryStoreServiceException, DataNotFoundException {
-		Workspace workspace = core.systemReadWorkspace(wsKey);
-    	String root = workspace.getHead();
-		MetadataElement itemMetadata = core.systemReadCollection(root).findMetadataByName(MetadataFormat.ITEM);
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public ArchiveOutputStream createArchive(String wskey) throws ArchiveServiceException {
+		ArchiveOutputStream tarOutput = null;
+		try {
+			tarOutput = new TarArchiveOutputStream(Files.newOutputStream(base.resolve(wskey + ".tar")));
+		} catch (IOException e) {
+			throw new ArchiveServiceException("unable to create the Tar " + base.resolve(wskey + ".tar"), e);
+		}
+		return tarOutput;
+	}
+
+	/**
+	 * Finishes the arvhive.
+	 * @param tarOutput the TAR archive
+	 * @throws ArchiveServiceException
+	 */
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void finishArchive(ArchiveOutputStream tarOutput) throws ArchiveServiceException {
+		try {
+			tarOutput.finish();
+		} catch (IOException e) {
+			throw new ArchiveServiceException("unable to finish the Tar", e);
+		}
+	}
+
+	/**
+	 * Adds a file to the Sip Archive.
+	 * @param wsKey the workspace key
+	 * @param snapshot the snapshot to use
+	 * @param schema a schema used by some files added to the sip archive
+	 * @param archiveEntryList the list of entries to add
+	 * @param archive the archive output stream
+	 */
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public java.nio.file.Path addXmlSIPFileToArchive(String wskey, String snapshot, String schema, List<ArchiveEntry> archiveEntryList, ArchiveOutputStream archive) throws ArchiveServiceException {
+		Workspace workspace = null;
+		try {
+			workspace = core.systemReadWorkspace(wskey);
+		} catch (CoreServiceException | KeyNotFoundException e1) {
+			throw new ArchiveServiceException("Unable to read workspace of key " + wskey);
+		}
+		// Get the snapshot or the root collection
+		String root = null;
+		if ( snapshot == null ) {
+			root = workspace.getHead();
+		} else {
+			if (!workspace.containsSnapshotName(snapshot)) {
+				throw new ArchiveServiceException(
+						"the workspace with key: " + wskey + " does not contain a snapshot with name: " + snapshot);
+			}
+			root = workspace.findSnapshotByName(snapshot).getKey();
+		}
+		MetadataElement itemMetadata;
+		try {
+			itemMetadata = core.systemReadCollection(root).findMetadataByName(MetadataFormat.ITEM);
+		} catch (AccessDeniedException | CoreServiceException | KeyNotFoundException e) {
+			throw new ArchiveServiceException("Unable to find metadata by name " + MetadataFormat.ITEM + " of collection " + root, e);
+		}
     	if (itemMetadata == null) {
-    		throw new ArchiveServiceException("No meta type ITEM to the root collection " + root);
+    		throw new ArchiveServiceException("No meta type ITEM to the collection " + root);
     	}
 
-		MetadataObject md = core.systemReadMetadataObject(itemMetadata.getKey());
+		MetadataObject md = null;
+		try {
+			md = core.systemReadMetadataObject(itemMetadata.getKey());
+		} catch (AccessDeniedException | CoreServiceException | KeyNotFoundException e) {
+			throw new ArchiveServiceException("Unable to read metadata object " + itemMetadata.getKey(), e);
+		}
 
 		if (md == null) {
     		throw new ArchiveServiceException("Unable to read MetadataObject with key " + itemMetadata.getKey());
@@ -278,78 +335,56 @@ public class ArchiveServiceBean implements ArchiveService {
 		try {
 			xmlSipFile = Files.createTempFile("sip", ".xml");
 		} catch (IOException eCreateTempFile) {
-			LOGGER.log(Level.WARNING, "unexpected error during the creation of the xml sip file", eCreateTempFile);
+			throw new ArchiveServiceException("unexpected error during the creation of the xml sip file", eCreateTempFile);
 		}
 
-		if (xmlSipFile != null) {
-			try (OutputStream os = Files.newOutputStream(xmlSipFile)) {
-				XMLStreamWriter writer = new IndentingXMLStreamWriter(XMLOutputFactory.newInstance().createXMLStreamWriter(os));
-	
-				XMLMetadataBuilder builder = new XMLMetadataBuilder(writer);
-				   
-				XmlDumpNamespaces namespaces = new XmlDumpNamespaces();
-				namespaces.put(SIP_NAMESPACE_PREFIX, new XmlDumpNamespace(SIP_NAMESPACE_URI, SIP_NAMESPACE_SCHEMA_LOCATION));
-				namespaces.put(XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(XSI_NAMESPACE_URI));
-				builder.setNamespaces(namespaces);
-				builder.writeStartDocument(SIP_NAMESPACE_PREFIX, Sip.Pac, null);
-	
-				createDocDC(wsKey, binarystore.get(md.getStream()), writer, builder);
-				createDocMeta(workspace.getAlias(), writer, builder);
-				createFichMeta(imported, writer, builder, schema);
-	
-				writer.writeEndElement(); // end of Pac
-				writer.writeEndDocument();
-				writer.flush();
-				writer.close();
+		try (OutputStream os = Files.newOutputStream(xmlSipFile)) {
+			XMLStreamWriter writer = new IndentingXMLStreamWriter(XMLOutputFactory.newInstance().createXMLStreamWriter(os));
+
+			XMLMetadataBuilder builder = new XMLMetadataBuilder(writer);
 				
-				// Validate the sip.xml generated by this class
-				validateSipXml(xmlSipFile);
-			} catch (IOException | XMLStreamException | MetadataBuilderException e) {
-				throw new ArchiveServiceException("unable to create SIP XML", e);
-			}
-	
-			TarArchiveEntry tarEntry = new TarArchiveEntry(SIP_XML_FILE);
-			try {
-				tarEntry.setSize(Files.size(xmlSipFile));
-			} catch (IOException e) {
-				LOGGER.log(Level.WARNING, "unexpected error during importation of the xml sip file to the Tar", e);
-			}
-			try {
-				tarOutput.putArchiveEntry(tarEntry);
-				IOUtils.copy(Files.newInputStream(xmlSipFile), tarOutput);
-			} catch(IOException eTarEntry) {
-				LOGGER.log(Level.SEVERE, "unexpected error during importation of the xml sip file to the Tar", eTarEntry);
-				throw new ArchiveServiceException("unable to copy input stream of file : " + xmlSipFile, eTarEntry);
-			} finally {
-				try {
-					tarOutput.closeArchiveEntry();
-				} catch (IOException eCloseTarEntry) {
-					LOGGER.log(Level.SEVERE, "unexpected error during importation of the xml sip to the Tar", eCloseTarEntry);
-					throw new ArchiveServiceException("unable to close archive entry for path " + xmlSipFile, eCloseTarEntry);
-				}
-			}
-	
-			try {
-				Files.delete(xmlSipFile);
-			} catch (IOException e) {
-				LOGGER.log(Level.WARNING, "unexpected error during importation of the xml sip file to the Tar", e);
-			}
-		}
-	}
+			XmlDumpNamespaces namespaces = new XmlDumpNamespaces();
+			namespaces.put(SIP_NAMESPACE_PREFIX, new XmlDumpNamespace(SIP_NAMESPACE_URI, SIP_NAMESPACE_SCHEMA_LOCATION));
+			namespaces.put(XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(XSI_NAMESPACE_URI));
+			builder.setNamespaces(namespaces);
+			builder.writeStartDocument(SIP_NAMESPACE_PREFIX, Sip.Pac, null);
 
-	private void importPathToSIP(String key, TarArchiveOutputStream tarOutput, Map<String, Validator> imported) throws ArchiveServiceException {
-		try {
-			PathBuilder pbuilder = PathBuilder.fromPath("/");
-			importToSIP(key, pbuilder, tarOutput, imported);
-		} catch (InvalidPathException e) {
-			LOGGER.log(Level.WARNING, "invalid path '/' to object {O}", key);
+			createDocDC(wskey, binarystore.get(md.getStream()), writer, builder);
+			createDocMeta(workspace.getAlias(), writer, builder);
+			createFichMeta(archiveEntryList, writer, builder, schema);
+
+			writer.writeEndElement(); // end of Pac
+			writer.writeEndDocument();
+			writer.flush();
+			writer.close();
+			
+			// Validate the sip.xml generated by this class
+			validateSipXml(xmlSipFile);
+		} catch (IOException | XMLStreamException | MetadataBuilderException | BinaryStoreServiceException | DataNotFoundException e) {
+			throw new ArchiveServiceException("unable to create SIP XML", e);
 		}
+		// Adds the xml sip file to the archive
+		try (InputStream xmlInputstream = Files.newInputStream(xmlSipFile)) {
+			this.addInputstreamToArchive(xmlInputstream, ArchiveEntry.newArchiveEntry(SIP_XML_FILEPATH, 
+			SIP_XML_FILE, Files.size(xmlSipFile)), archive);
+		} catch(Exception e) {
+			throw new ArchiveServiceException("unable to get an inputstream of the SIP XML file", e);
+		}
+
+		// Deletes temp file
+		try {
+			Files.delete(xmlSipFile);
+		} catch (IOException e) {
+			LOGGER.log(Level.WARNING, "unexpected error during importation of the xml sip file to the Tar", e);
+		}
+		return xmlSipFile;
 	}
 
 	/**
 	 * Validates the XML SIP file.
 	 * @param path path to the XML SIP file
 	 */
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void validateSipXml(Path path) throws ArchiveServiceException {
 		try {
 			String result = FileUtils.readFileToString(path.toFile(), StandardCharsets.UTF_8);
@@ -365,6 +400,17 @@ public class ArchiveServiceBean implements ArchiveService {
 		}
     }
 
+    /**
+	 * Creates the DocDC section to the XML SIP file.
+     * @param key
+     * @param itemInputStream
+     * @param writer
+     * @param builder
+     * @throws ArchiveServiceException
+     * @throws XMLStreamException
+     * @throws MetadataBuilderException
+     */
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void createDocDC(String key, InputStream itemInputStream, XMLStreamWriter writer, XMLMetadataBuilder builder) throws ArchiveServiceException, XMLStreamException, MetadataBuilderException {
 
 		String jsonString = null;
@@ -492,6 +538,15 @@ public class ArchiveServiceBean implements ArchiveService {
         writer.writeEndElement(); //// DocDC
     }
 
+    /**
+	 * Creates the DocMeta of the XML SIP file.
+     * @param alias
+     * @param writer
+     * @param builder
+     * @throws XMLStreamException
+     * @throws MetadataBuilderException
+     */
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void createDocMeta(String alias, XMLStreamWriter writer, XMLMetadataBuilder builder) throws XMLStreamException, MetadataBuilderException {
 
  	   builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.DocMeta); //// DocMeta
@@ -524,24 +579,35 @@ public class ArchiveServiceBean implements ArchiveService {
 
     }
 
-    private void createFichMeta(Map<String, Validator> imported, XMLStreamWriter writer, XMLMetadataBuilder builder, String schema) throws XMLStreamException, MetadataBuilderException {
- 	   for(Map.Entry<String, Validator> entry : imported.entrySet()) {
+	
+    /**
+	 * Creates the section FichMeta to the XML SIP file.
+     * @param archiveList
+     * @param writer
+     * @param builder
+     * @param schema
+     * @throws XMLStreamException
+     * @throws MetadataBuilderException
+     */
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    private void createFichMeta(List<ArchiveEntry> archiveList, XMLStreamWriter writer, XMLMetadataBuilder builder, String schema) throws XMLStreamException, MetadataBuilderException {
+ 	   for(ArchiveEntry entry : archiveList) {
  		  builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.FichMeta); //// FichMeta
  		  
  		  // Removes the first '/' from the absolute path in the workspace ortolang
- 		  if (entry.getValue().getEncoding() != null && !entry.getValue().getEncoding().equals(Sip.NAValue)) {
- 			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaEncodage, entry.getValue().getEncoding().toUpperCase());
+ 		  if (entry.getEncoding() != null && !entry.getEncoding().equals(Sip.NAValue)) {
+ 			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaEncodage, entry.getEncoding().toUpperCase());
  		  }
- 		  if (entry.getValue().getFormat().equals(OrtolangXMLParser.XMLType.TEI.name()) && entry.getKey().startsWith("/DESC")) {
+ 		  if (entry.getFormat().equals(OrtolangXMLParser.XMLType.TEI.name()) && entry.getPath().startsWith("/DESC")) {
 			 builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaFormatFichier, "XML");
 		  } else {
-			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaFormatFichier, entry.getValue().getFormat());
+			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaFormatFichier, entry.getFormat());
 		  }
- 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaNomFichier, entry.getKey().substring(1));
+ 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaNomFichier, entry.getPath().substring(1));
  		  XmlDumpAttributes attrs = new XmlDumpAttributes();
 	      attrs.put("type", Sip.FichMetaMD5);
- 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaEmpreinteOri, attrs, entry.getValue().getMd5sum());
- 		  if (entry.getValue().getFormat().equals(OrtolangXMLParser.XMLType.TEI.name()) && !entry.getKey().startsWith("/DESC") && schema != null) {
+ 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaEmpreinteOri, attrs, entry.getMd5sum());
+ 		  if (entry.getFormat().equals(OrtolangXMLParser.XMLType.TEI.name()) && !entry.getPath().startsWith("/DESC") && schema != null) {
  			 builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaStructureFichier, schema);
  		  }
  		  
@@ -550,12 +616,13 @@ public class ArchiveServiceBean implements ArchiveService {
     }
     
     
-    
-	public static void writeElement(String elementName, JsonObject meta, MetadataBuilder builder) throws MetadataBuilderException {
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private static void writeElement(String elementName, JsonObject meta, MetadataBuilder builder) throws MetadataBuilderException {
 		writeElement(elementName, meta, elementName, builder);
 	}
 	
-	public static void writeElement(String elementName, JsonObject meta, String tagName, MetadataBuilder builder) throws MetadataBuilderException {
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private static void writeElement(String elementName, JsonObject meta, String tagName, MetadataBuilder builder) throws MetadataBuilderException {
 		if (meta.containsKey(elementName)) {
 			JsonArray elmArray = meta.getJsonArray(elementName);
 			for (JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
@@ -570,7 +637,8 @@ public class ArchiveServiceBean implements ArchiveService {
 		}
 	}
 
-	public static void writeMultilingualElement(String tag, JsonObject multilingualObject, MetadataBuilder builder) throws MetadataBuilderException {
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private static void writeMultilingualElement(String tag, JsonObject multilingualObject, MetadataBuilder builder) throws MetadataBuilderException {
 		XmlDumpAttributes attrs = new XmlDumpAttributes();
 		//TODO iso639_3
 		if (multilingualObject.getString("lang").matches(iso639_2pattern)) {
@@ -580,30 +648,57 @@ public class ArchiveServiceBean implements ArchiveService {
 		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString("value")));
 	}
 
-    /**
-     * Converts ortolang object to the File system.
-     * @param key a ortolang key
-     * @param path path into the workspace
-     * @param basepath path to the filesystem
-     * @throws ArchiveServiceException
-     */
-    private void importToSIP(String key, PathBuilder path, ArchiveOutputStream tarOutput, Map<String,Validator> imported ) throws ArchiveServiceException {
-    	OrtolangObjectIdentifier identifier;
+	
+	/** 
+	 * Builds a list of archive entry based on the content of a workspace.
+	 * @param wskey a workspace key
+	 * @param snapshot a snapshot workspace or null to get the head collection
+	 * @throws ArchiveServiceException
+	 */
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<ArchiveEntry> buildWorkspaceArchiveList(String wskey, String snapshot) throws ArchiveServiceException {
+		List<ArchiveEntry> imported = new ArrayList<>();
+		try {
+			PathBuilder pbuilder = PathBuilder.fromPath("/");
+			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			if (workspace == null) {
+                throw new ArchiveServiceException(
+                        "unable to load workspace with id [" + identifier.getId() + "] from storage");
+            }
+			String root = null;
+			if ( snapshot == null ) {
+				root = workspace.getHead();
+			} else {
+				if (!workspace.containsSnapshotName(snapshot)) {
+					throw new ArchiveServiceException(
+							"the workspace with key: " + wskey + " does not contain a snapshot with name: " + snapshot);
+				}
+				root = workspace.findSnapshotByName(snapshot).getKey();
+			}
+
+			buildArchiveList(root, pbuilder, imported);
+			
+		} catch (InvalidPathException e) {
+			throw new ArchiveServiceException("invalid path '/' to workspace " + wskey, e);
+		} catch (RegistryServiceException | KeyNotFoundException e) {
+			throw new ArchiveServiceException("unable to get object from registry with key " + wskey, e);
+		}
+		return imported;
+	}
+
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private void buildArchiveList(String key, PathBuilder path, List<ArchiveEntry> imported) throws ArchiveServiceException {
+		OrtolangObjectIdentifier identifier;
     	OrtolangObject object;
 		try {
 			identifier = registry.lookup(key);
 		} catch (RegistryServiceException | KeyNotFoundException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error during importation to SIP", e);
 			throw new ArchiveServiceException("unable to get object from registry with key " + key, e);
 		}
         String type = identifier.getType();
         switch (type) {
-            case Workspace.OBJECT_TYPE:
-			object = em.find(Workspace.class, identifier.getId());
-            String head = ((Workspace) object).getHead();
-            LOGGER.log(Level.FINE, "Workspace head is {0}", head);
-            importToSIP(head, path, tarOutput, imported);
-            break;
 
             case Collection.OBJECT_TYPE:
             LOGGER.log(Level.FINE, "Collection path is {0}", path);
@@ -614,7 +709,7 @@ public class ArchiveServiceBean implements ArchiveService {
 				try {
                     pelement = path.clone().path(element.getName());
                     LOGGER.log(Level.FINE, "Go through collection {0}", pelement);
-                    importToSIP(element.getKey(), pelement, tarOutput, imported);
+                    buildArchiveList(element.getKey(), pelement, imported);
 				} catch (InvalidPathException e) {
 					throw new ArchiveServiceException("invalid path to object " + path.build(), e);
 				}
@@ -625,40 +720,61 @@ public class ArchiveServiceBean implements ArchiveService {
             	object = em.find(DataObject.class, identifier.getId());
             	Validator validator = getArchivableMetadata((DataObject) object);
 				if ( validator == null) {
-					LOGGER.log(Level.WARNING, "unable to get archivable metadata from data object {0}", object);
+					throw new ArchiveServiceException("unable to get archivable metadata from data object " + object);
 				} else if (Boolean.TRUE.equals(validator.getArchivable())) {
-            		try (InputStream input = binarystore.get(((DataObject) object).getStream())) {
-						LOGGER.log(Level.FINE, "Copying file to tar at path {0}}", path.build());
-						// Removes the first '/' (issue ortolang/ortolang-diffusion#13)
-						TarArchiveEntry tarEntry = new TarArchiveEntry(path.build().substring(1));
-						tarEntry.setSize(((DataObject) object).getSize());
-						try {
-							tarOutput.putArchiveEntry(tarEntry);
-							IOUtils.copy(input, tarOutput);
-						} catch(IOException eTarEntry) {
-							LOGGER.log(Level.SEVERE, "unexpected error during importation to the Tar", eTarEntry);
-            				throw new ArchiveServiceException("unable to copy input stream of path: " + path.build(), eTarEntry);
-						} finally {
-							try {
-								tarOutput.closeArchiveEntry();
-							} catch (IOException eCloseTarEntry) {
-								LOGGER.log(Level.SEVERE, "unexpected error during importation to the Tar", eCloseTarEntry);
-            					throw new ArchiveServiceException("unable to close archive entry for path " + path.build(), eCloseTarEntry);
-							}
-						}
-            			imported.put(path.build(), validator);
-            		} catch (IOException | DataNotFoundException | BinaryStoreServiceException e) {
-            			LOGGER.log(Level.SEVERE, "unexpected error during importation to SIP", e);
-            			throw new ArchiveServiceException("unable to copy input stream to path: " + path.build(), e);
-            		}
+					imported.add( ArchiveEntry.newArchiveEntry(key, ((DataObject) object).getStream(), path.build(), 
+						((DataObject) object).getSize(), validator ));
             	}
             break;
             default:
                 LOGGER.log(Level.WARNING, "unexpected type during importation to SIP : objet type not implemented : {0}", key);
             break;
-        }
-    }
 
+		}
+	}
+
+	/**
+	 * Adds an entry to the archive.
+	 * @param entry an archive entry
+	 * @param archiveOutput the archive output stream
+	 * @throws ArchiveServiceException
+	 */
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void addEntryToArchive(ArchiveEntry entry, ArchiveOutputStream archiveOutput) throws ArchiveServiceException {
+		try (InputStream input = binarystore.get((entry.getStream()))) {
+			addInputstreamToArchive(input, entry, archiveOutput);
+		} catch (IOException | DataNotFoundException | BinaryStoreServiceException | ArchiveServiceException e) {
+			throw new ArchiveServiceException("unable to copy input stream of dataobject " + entry.getKey(), e);
+		}
+	}
+
+	/**
+	 * Adds the content of a file to an archive.
+	 * @param input the inputstream to the content
+	 * @param entry informations about the file and its content
+	 * @param archiveOutput the archive targeted
+	 * @throws ArchiveServiceException
+	 * @throws IOException this exception is thrown only if the archive entry cannot be closed
+	 */
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private void addInputstreamToArchive(InputStream input, ArchiveEntry entry, ArchiveOutputStream archiveOutput) throws ArchiveServiceException, IOException {
+		try {
+			PathBuilder pbuilder = PathBuilder.fromPath(entry.getPath());
+			LOGGER.log(Level.FINE, "Copying file to tar at path {0}}", pbuilder.build());
+			// Removes the first '/' (issue ortolang/ortolang-diffusion#13)
+			TarArchiveEntry tarEntry = new TarArchiveEntry(pbuilder.build().substring(1));
+			tarEntry.setSize(entry.getSize());
+			archiveOutput.putArchiveEntry(tarEntry);
+			IOUtils.copy(input, archiveOutput);
+		} catch (IOException | InvalidPathException e) {
+			throw new ArchiveServiceException("unable to copy input stream of dataobject " + entry.getKey(), e);
+		} finally {
+			archiveOutput.closeArchiveEntry();
+		}
+	} 
+
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private Validator getArchivableMetadata(DataObject object) {
     	Validator validator = null;
         MetadataElement mde = object.findMetadataByName(MetadataFormat.FACILE_VALIDATOR);
@@ -674,41 +790,7 @@ public class ArchiveServiceBean implements ArchiveService {
     	return validator;
     }
 
-	@Override
-	public void validateDataobject(String key) throws ArchiveServiceException {
-		OrtolangObjectIdentifier identifier;
-		try {
-			identifier = registry.lookup(key);
-			
-		} catch (RegistryServiceException | KeyNotFoundException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error during validation of dataobject " + key, e);
-			throw new ArchiveServiceException("unable to get object from registry with key " + key, e);
-		}
-		if (!identifier.getService().equals(core.getServiceName())
-			|| !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
-			throw new ArchiveServiceException("unable to validate other than a DataObject");
-		}
-		DataObject dataObject = (DataObject) em.find(DataObject.class, identifier.getId());
-		dataObject.setKey(key);
-		Validator validator = null;
-		try {
-			validator = validateFacile(dataObject);
-			if (validator != null) {
-				String json = writeJson(validator);
-				String metadataHash = binarystore
-						.put(new ByteArrayInputStream(json.getBytes()));
-				core.systemCreateMetadata(dataObject.getKey(), MetadataFormat.FACILE_VALIDATOR, metadataHash,
-						MetadataFormat.FACILE_VALIDATOR + ".json");
-			} else {
-				LOGGER.log(Level.WARNING, "Validator XML cant be parsed for data object {0}", dataObject.getKey());
-			}
-		} catch(BinaryStoreServiceException | DataNotFoundException | CheckArchivableException | DataCollisionException | JsonProcessingException | KeyNotFoundException | CoreServiceException | MetadataFormatException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | RegistryServiceException | AuthorisationServiceException | IndexingServiceException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error during validation of dataobject " + key, e);
-			throw new ArchiveServiceException("unable to validate via Facile the dataobject " + key, e);
-		}
-		
-	}
-
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private Validator validateFacile(DataObject dataObject) throws BinaryStoreServiceException, DataNotFoundException, CheckArchivableException {
 		// Validation via FACILE
 		String hash = dataObject.getStream();
@@ -745,11 +827,13 @@ public class ArchiveServiceBean implements ArchiveService {
 		return validator;
 	}
 	
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private String writeJson(Validator validator) throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(validator);
 	}
 	
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private XMLMetadata getXMLMetadata(DataObject dataObject) {
 		try {
 			MetadataElement xmlMd = dataObject.findMetadataByName(MetadataFormat.XML);
@@ -760,11 +844,12 @@ public class ArchiveServiceBean implements ArchiveService {
 				return extractXMLMetadata(metadataObject);
 			}
 		} catch (RegistryServiceException | KeyNotFoundException e) {
-			LOGGER.log(Level.WARNING, "Enable to check the format of the data object {0}", new Object[] {dataObject.getKey(), e});
+			LOGGER.log(Level.WARNING, "Enable to check the format of the data object {0}", dataObject.getKey());
 		}
 		return null;
 	}
 	
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private XMLMetadata extractXMLMetadata(MetadataObject metadataObject) {
 		XMLMetadata md = new XMLMetadata();
 		ObjectMapper mapper = new ObjectMapper();
@@ -810,4 +895,6 @@ public class ArchiveServiceBean implements ArchiveService {
 		private String version;
 		
 	}
+
+	
 }

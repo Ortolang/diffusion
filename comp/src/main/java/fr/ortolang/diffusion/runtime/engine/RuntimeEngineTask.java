@@ -49,6 +49,7 @@ import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.JavaDelegate;
 
 import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.archive.ArchiveService;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.indexing.IndexingService;
@@ -138,6 +139,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     private ExtractionServiceWorker extractionServiceWorker;
     protected OaiService oaiService;
     protected ReferentialService referential;
+    protected ArchiveService archive;
 
     public Session getMailSession() throws RuntimeEngineTaskException {
         try {
@@ -299,6 +301,17 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
                 referential = (ReferentialService) OrtolangServiceLocator.findService(ReferentialService.SERVICE_NAME);
             }
             return referential;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
+
+    protected ArchiveService getArchiveService() throws RuntimeEngineTaskException {
+        try {
+            if (archive == null) {
+                archive = (ArchiveService) OrtolangServiceLocator.findService(ArchiveService.SERVICE_NAME);
+            }
+            return archive;
         } catch (Exception e) {
             throw new RuntimeEngineTaskException(e);
         }

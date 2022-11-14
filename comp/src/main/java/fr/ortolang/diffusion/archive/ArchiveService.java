@@ -1,5 +1,9 @@
 package fr.ortolang.diffusion.archive;
 
+import java.util.List;
+
+import org.apache.commons.compress.archivers.ArchiveOutputStream;
+
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.archive.exception.ArchiveServiceException;
 
@@ -11,7 +15,12 @@ public interface ArchiveService extends OrtolangService {
 
 
     void checkArchivable(String key) throws ArchiveServiceException;
-    void createSIP(String key, String schema) throws ArchiveServiceException;
-    void createSIPTar(String key, String schema) throws ArchiveServiceException;
     void validateDataobject(String key) throws ArchiveServiceException;
+
+    ArchiveOutputStream createArchive(String wskey) throws ArchiveServiceException;
+    void finishArchive(ArchiveOutputStream tarOutput) throws ArchiveServiceException;
+
+    List<ArchiveEntry> buildWorkspaceArchiveList(String wskey, String snapshot) throws ArchiveServiceException;
+    void addEntryToArchive(ArchiveEntry entry, ArchiveOutputStream archiveOutput) throws ArchiveServiceException;
+    java.nio.file.Path addXmlSIPFileToArchive(String wskey, String snapshot, String schema, List<ArchiveEntry> archiveList, ArchiveOutputStream archive) throws ArchiveServiceException;
 }
