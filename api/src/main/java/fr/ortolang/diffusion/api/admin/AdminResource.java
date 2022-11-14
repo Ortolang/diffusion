@@ -784,13 +784,6 @@ public class AdminResource {
     }
 
     @POST
-    @Path("/archive/sip/{wskey}")
-    public Response createSIP(@PathParam("wskey") String wskey, @QueryParam("schema") String schema) throws ArchiveServiceException {
-        archive.createSIP(wskey, schema);
-        return Response.ok().build();
-    }
-
-    @POST
     @Path("/content/resource/{wskey}")
     public Response createContentResource(@PathParam("wskey") String wskey) throws ContentSearchServiceException {
         ContentSearchResource res = content.createResource(wskey.trim());

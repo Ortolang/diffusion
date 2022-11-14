@@ -185,11 +185,6 @@ public class ArchiveServiceWorkerBean implements ArchiveServiceWorker {
                                 archive.validateDataobject(key);
                                 break;
                             }
-                            case ArchiveService.CREATE_SIP_ACTION: {
-                                String schema = job.getParameter("schema");
-                                archive.createSIPTar(key, schema);
-                                break;
-                            }
                             default:
                                 LOGGER.log(Level.WARNING, "unknown job action {0}",job.getAction());
                         }

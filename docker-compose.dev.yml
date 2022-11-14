@@ -52,6 +52,7 @@ services:
       - ORTOLANG_ADDRESS_SETTING_MESSAGE_COUNTER_HISTORY=10
     volumes:
       - ./ortolang-data/binary-store:/opt/jboss/.ortolang/binary-store
+      - ./ortolang-data/sip:/opt/jboss/.ortolang/sip
       - /Users/cpestel/Projets/ortolang/referentiels/00_init:/referentials
     ports:
       - 8080:8080
