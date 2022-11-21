@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -133,7 +134,7 @@ public class ArchiveServiceBean implements ArchiveService {
     private static final Logger LOGGER = Logger.getLogger(ArchiveServiceBean.class.getName());
 
     public static final String DEFAULT_SIP_HOME = "sip";
-    public static final String DEPOT_DIRECTORY = "DEPOT";
+    public static final String DEPOT_DIRECTORY = "/DEPOT";
     public static final String DESC_DIRECTORY = "DESC";
     public static final String SIP_XML_FILE = "sip.xml";
     public static final String SIP_XML_FILEPATH = "/sip.xml";
@@ -260,7 +261,7 @@ public class ArchiveServiceBean implements ArchiveService {
 	public ArchiveOutputStream createArchive(String wskey) throws ArchiveServiceException {
 		ArchiveOutputStream tarOutput = null;
 		try {
-			tarOutput = new TarArchiveOutputStream(Files.newOutputStream(base.resolve(wskey + ".tar")));
+			tarOutput = new TarArchiveOutputStream(Files.newOutputStream(base.resolve(wskey + ".tar"), StandardOpenOption.CREATE));
 		} catch (IOException e) {
 			throw new ArchiveServiceException("unable to create the Tar " + base.resolve(wskey + ".tar"), e);
 		}
@@ -277,6 +278,7 @@ public class ArchiveServiceBean implements ArchiveService {
 	public void finishArchive(ArchiveOutputStream tarOutput) throws ArchiveServiceException {
 		try {
 			tarOutput.finish();
+			tarOutput.close();
 		} catch (IOException e) {
 			throw new ArchiveServiceException("unable to finish the Tar", e);
 		}
@@ -366,7 +368,7 @@ public class ArchiveServiceBean implements ArchiveService {
 		// Adds the xml sip file to the archive
 		try (InputStream xmlInputstream = Files.newInputStream(xmlSipFile)) {
 			this.addInputstreamToArchive(xmlInputstream, ArchiveEntry.newArchiveEntry(SIP_XML_FILEPATH, 
-			SIP_XML_FILE, Files.size(xmlSipFile)), archive);
+			SIP_XML_FILE, Files.size(xmlSipFile)), archive, "/");
 		} catch(Exception e) {
 			throw new ArchiveServiceException("unable to get an inputstream of the SIP XML file", e);
 		}
@@ -743,7 +745,8 @@ public class ArchiveServiceBean implements ArchiveService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void addEntryToArchive(ArchiveEntry entry, ArchiveOutputStream archiveOutput) throws ArchiveServiceException {
 		try (InputStream input = binarystore.get((entry.getStream()))) {
-			addInputstreamToArchive(input, entry, archiveOutput);
+			// Forces adding files into DEPOT directory
+			addInputstreamToArchive(input, entry, archiveOutput, DEPOT_DIRECTORY);
 		} catch (IOException | DataNotFoundException | BinaryStoreServiceException | ArchiveServiceException e) {
 			throw new ArchiveServiceException("unable to copy input stream of dataobject " + entry.getKey(), e);
 		}
@@ -758,9 +761,9 @@ public class ArchiveServiceBean implements ArchiveService {
 	 * @throws IOException this exception is thrown only if the archive entry cannot be closed
 	 */
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	private void addInputstreamToArchive(InputStream input, ArchiveEntry entry, ArchiveOutputStream archiveOutput) throws ArchiveServiceException, IOException {
+	private void addInputstreamToArchive(InputStream input, ArchiveEntry entry, ArchiveOutputStream archiveOutput, String rootDirectory) throws ArchiveServiceException, IOException {
 		try {
-			PathBuilder pbuilder = PathBuilder.fromPath(entry.getPath());
+			PathBuilder pbuilder = PathBuilder.fromPath(rootDirectory).clone().path(entry.getPath());
 			LOGGER.log(Level.FINE, "Copying file to tar at path {0}}", pbuilder.build());
 			// Removes the first '/' (issue ortolang/ortolang-diffusion#13)
 			TarArchiveEntry tarEntry = new TarArchiveEntry(pbuilder.build().substring(1));
