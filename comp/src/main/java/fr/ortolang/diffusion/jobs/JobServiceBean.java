@@ -137,7 +137,11 @@ public class JobServiceBean implements JobService {
         job.setParameter(Job.FAILED_EXPLANATION_MSG_KEY, e.getMessage());
         if (e.getCause() != null) {
             job.setParameter(Job.FAILED_CAUSED_BY_KEY, e.getCause().getClass().getName());
-            job.setParameter(Job.FAILED_CAUSED_BY_MSG_KEY, e.getCause().getMessage());
+            if (e.getCause().getMessage() != null) {
+                // Quick fix before hibernate crashing on varchar length exceeded (#85)
+                int messageLength = e.getCause().getMessage().length() > 254 ? 254 : e.getCause().getMessage().length();
+                job.setParameter(Job.FAILED_CAUSED_BY_MSG_KEY, e.getCause().getMessage().substring(0, messageLength));
+            }
         }
         update(job);
     }
