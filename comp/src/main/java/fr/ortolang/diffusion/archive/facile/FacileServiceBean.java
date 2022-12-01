@@ -3,7 +3,6 @@ package fr.ortolang.diffusion.archive.facile;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
@@ -23,9 +22,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -106,7 +103,6 @@ public class FacileServiceBean implements FacileService {
                 throw new CheckArchivableException("unexpected response code: " + response.getStatus());
             }
             xml = response.readEntity(String.class);
-            LOGGER.log(Level.FINE, xml);
         } catch (IOException e) {
             throw new CheckArchivableException("Unable to load file to Facile service", e);
         } finally {
@@ -116,18 +112,11 @@ public class FacileServiceBean implements FacileService {
         }
         if (xml != null) {
         	try {
-        		validator = parseXML(xml);
+        		validator = Validator.fromXML(xml);
         	} catch (JAXBException e) {
         		throw new CheckArchivableException("Unable to load parse the xml file from Facile service", e);
         	}
         }
         return validator;
     }
-
-    private Validator parseXML(String xml) throws JAXBException {
-        JAXBContext ctx = JAXBContext.newInstance(Validator.class);
-        Unmarshaller um = ctx.createUnmarshaller();
-        return (Validator) um.unmarshal(new StringReader(xml));
-    }
-
 }
