@@ -1,9 +1,14 @@
 package fr.ortolang.diffusion.archive.facile.entity;
 
+import java.io.StringReader;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "validator", namespace = "http://facile.cines.fr")
+@XmlRootElement(name = "validator")
 public class Validator {
     
     private String fileName;
@@ -115,5 +120,28 @@ public class Validator {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("{valid: ").append(valid)
+            .append(",fileName: ").append(fileName)
+            .append(",wellFormed: ").append(wellFormed)
+            .append(",archivable: ").append(archivable)
+            .append(",md5sum: ").append(md5sum)
+            .append(",sha256sum: ").append(sha256sum)
+            .append(",size: ").append(size)
+            .append(",format: ").append(format)
+            .append(",version: ").append(version)
+            .append(",encoding: ").append(encoding)
+            .append(",message: ").append(message)
+            .append("}");
+        return builder.toString();
+    }
+
+    public static Validator fromXML(String xml) throws JAXBException {
+        JAXBContext ctx = JAXBContext.newInstance(Validator.class);
+        Unmarshaller um = ctx.createUnmarshaller();
+        return (Validator) um.unmarshal(new StringReader(xml));
     }
 }

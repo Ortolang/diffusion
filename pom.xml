@@ -76,6 +76,7 @@
         <version.hibernate5.plugin>1.0.0</version.hibernate5.plugin>
         <version.flyway.plugin>3.1</version.flyway.plugin>
         <version.activation>1.1.1</version.activation>
+        <version.jaxb>2.3.0</version.jaxb>
         <version.freemarker>2.3.25-incubating</version.freemarker>
         <version.sigar>1.6.4</version.sigar>
         <version.saxon>9.7.0-7</version.saxon>
