@@ -82,12 +82,12 @@ public class SubscriptionServiceBean implements SubscriptionService {
     private Map<String, Subscription> registry = new HashMap<>();
 
     public SubscriptionServiceBean() {
-        LOGGER.log(Level.INFO, "Instantiating Subscription service");
+        LOGGER.log(Level.FINE, "Instantiating Subscription service");
     }
 
     @Override
     public void registerBroadcaster(String username, AtmosphereResource atmosphereResource) throws SubscriptionServiceException {
-        LOGGER.log(Level.INFO, "Registering a broadcaster for user " + username);
+        LOGGER.log(Level.FINE, "Registering a broadcaster for user {0}", username);
         if (!registry.containsKey(username)) {
             registry.put(username, new Subscription(username, atmosphereResource.getBroadcaster()));
         }

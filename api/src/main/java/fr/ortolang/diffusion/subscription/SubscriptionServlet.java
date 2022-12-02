@@ -77,7 +77,7 @@ public final class SubscriptionServlet {
         } else {
             try {
                 getSubscription().registerBroadcaster(username, atmosphereResource);
-                LOGGER.log(Level.INFO, "User " + username + " connected (browser UUID: " +  atmosphereResource.uuid() + ")");
+                LOGGER.log(Level.FINE, "User " + username + " connected (browser UUID: " +  atmosphereResource.uuid() + ")");
             } catch (SubscriptionServiceException e) {
                 LOGGER.log(Level.SEVERE, "An unexpected exception occurred while registering the broadcaster. Closing Atmosphere Resource", e);
                 close = true;
@@ -100,9 +100,9 @@ public final class SubscriptionServlet {
     @Disconnect
     public final void onDisconnect(final AtmosphereResourceEvent event) {
         if(event.isCancelled()) {
-            LOGGER.log(Level.INFO, "User " + username + " unexpectedly disconnected (browser UUID: " + event.getResource().uuid() + ")");
+            LOGGER.log(Level.FINE, "User " + username + " unexpectedly disconnected (browser UUID: " + event.getResource().uuid() + ")");
         } else if(event.isClosedByClient()) {
-            LOGGER.log(Level.INFO, "User " + username + " closed the connection (browser UUID: " + event.getResource().uuid() + ")");
+            LOGGER.log(Level.FINE, "User " + username + " closed the connection (browser UUID: " + event.getResource().uuid() + ")");
         }
     }
 
