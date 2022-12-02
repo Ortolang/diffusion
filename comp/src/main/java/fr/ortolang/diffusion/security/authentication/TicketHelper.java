@@ -116,7 +116,7 @@ public class TicketHelper {
             ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(serializedMap));
             return (Ticket) ois.readObject();
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | IOException | ClassNotFoundException | DigestException e) {
-            LOGGER.log(Level.SEVERE, "Error when decoding ticket: " + e.getMessage());
+            LOGGER.log(Level.FINE, "Error when decoding ticket: " + e.getMessage());
         }
         return null;
     }

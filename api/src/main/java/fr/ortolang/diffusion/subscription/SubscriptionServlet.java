@@ -72,7 +72,7 @@ public final class SubscriptionServlet {
         }
         boolean close = false;
         if (ticket == null || !ticket.getUsername().equals(username)) {
-            LOGGER.log(Level.SEVERE, "Wrong ticket. Closing Atmosphere Resource");
+            LOGGER.log(Level.FINE, "Wrong ticket. Closing Atmosphere Resource");
             close = true;
         } else {
             try {
