@@ -262,6 +262,7 @@ public class ArchiveServiceBean implements ArchiveService {
 		ArchiveOutputStream tarOutput = null;
 		try {
 			tarOutput = new TarArchiveOutputStream(Files.newOutputStream(base.resolve(wskey + ".tar"), StandardOpenOption.CREATE));
+			((TarArchiveOutputStream) tarOutput).setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
 		} catch (IOException e) {
 			throw new ArchiveServiceException("unable to create the Tar " + base.resolve(wskey + ".tar"), e);
 		}
