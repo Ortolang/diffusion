@@ -773,7 +773,11 @@ public class ArchiveServiceBean implements ArchiveService {
 		} catch (IOException | InvalidPathException e) {
 			throw new ArchiveServiceException("unable to copy input stream of dataobject " + entry.getKey(), e);
 		} finally {
-			archiveOutput.closeArchiveEntry();
+			try {
+				archiveOutput.closeArchiveEntry();
+			} catch(IOException e) {
+				LOGGER.log(Level.WARNING, "unable to close archive entry [{0}]: {1}", new Object[] {entry.getPath(), e.getMessage()});
+			}
 		}
 	} 
 
