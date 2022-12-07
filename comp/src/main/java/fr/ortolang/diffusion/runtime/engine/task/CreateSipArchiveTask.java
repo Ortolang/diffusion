@@ -67,7 +67,7 @@ public class CreateSipArchiveTask extends RuntimeEngineTask {
         String snapshot = null;
         String schema = null;
         if (execution.hasVariable("snapshot")) {
-            snapshot = (String) getSchema().getValue(execution);
+            snapshot = (String) getSnapshot().getValue(execution);
         }
         if (execution.hasVariable("schema")) {
             schema = (String) getSchema().getValue(execution);
