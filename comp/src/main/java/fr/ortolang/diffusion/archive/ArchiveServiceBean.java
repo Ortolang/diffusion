@@ -261,12 +261,22 @@ public class ArchiveServiceBean implements ArchiveService {
 	public ArchiveOutputStream createArchive(String wskey) throws ArchiveServiceException {
 		ArchiveOutputStream tarOutput = null;
 		try {
-			tarOutput = new TarArchiveOutputStream(Files.newOutputStream(base.resolve(wskey + ".tar"), StandardOpenOption.CREATE));
+			tarOutput = new TarArchiveOutputStream(Files.newOutputStream(getArchivePath(wskey), StandardOpenOption.CREATE));
 			((TarArchiveOutputStream) tarOutput).setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
 		} catch (IOException e) {
-			throw new ArchiveServiceException("unable to create the Tar " + base.resolve(wskey + ".tar"), e);
+			throw new ArchiveServiceException("unable to create the Tar " + getArchivePath(wskey), e);
 		}
 		return tarOutput;
+	}
+
+	/**
+	 * Gets the SIP Archive file path.
+	 * @param wskey the workspace key
+	 * @return the path to the archive
+	 */
+	@Override
+	public Path getArchivePath(String wskey) {
+		return base.resolve(wskey + ".tar");
 	}
 
 	/**

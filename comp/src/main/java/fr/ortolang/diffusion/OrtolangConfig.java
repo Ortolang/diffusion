@@ -172,7 +172,14 @@ public class OrtolangConfig {
         ELASTIC_SEARCH_PORT("elastic.search.port"),
         
         FACILE_HOST("facile.host"),
-        FACILE_PATH("facile.path");
+        FACILE_PATH("facile.path"),
+
+        ARCHIVE_FTP_HOSTKEY("archive.ftp.hostkey"),
+        ARCHIVE_FTP_USERNAME("archive.ftp.username"),
+        ARCHIVE_FTP_PASSWORD("archive.ftp.password"),
+        ARCHIVE_FTP_REMOTE("archive.ftp.remote"),
+        ARCHIVE_FTP_SERVER("archive.ftp.server");
+
 
         private final String key;
 

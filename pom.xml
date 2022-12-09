@@ -83,6 +83,7 @@
         <version.piwik>1.2</version.piwik>
         <version.javers>2.1.1</version.javers>
         <version.fcs>1.4.0</version.fcs>
+        <version.sshj>0.34.0</version.sshj>
         <additionalparam>-Xdoclint:none</additionalparam>
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     </properties>
