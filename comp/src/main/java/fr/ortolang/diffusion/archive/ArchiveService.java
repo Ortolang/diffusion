@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.archive;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
@@ -18,6 +19,7 @@ public interface ArchiveService extends OrtolangService {
     void validateDataobject(String key) throws ArchiveServiceException;
 
     ArchiveOutputStream createArchive(String wskey) throws ArchiveServiceException;
+    Path getArchivePath(String wskey);
     void finishArchive(ArchiveOutputStream tarOutput) throws ArchiveServiceException;
 
     List<ArchiveEntry> buildWorkspaceArchiveList(String wskey, String snapshot) throws ArchiveServiceException;

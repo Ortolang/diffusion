@@ -1,8 +1,8 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,6 +12,7 @@ import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
 
+import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.archive.ArchiveEntry;
@@ -20,6 +21,9 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
+import net.schmizz.sshj.SSHClient;
+import net.schmizz.sshj.sftp.SFTPClient;
+import net.schmizz.sshj.transport.verification.FingerprintVerifier;
 
 public class CreateSipArchiveTask extends RuntimeEngineTask {
     
@@ -137,6 +141,11 @@ public class CreateSipArchiveTask extends RuntimeEngineTask {
             // Closes the sip archive
             getArchiveService().finishArchive(archiveOutputStream);
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Archive generation done"));
+            // Sending file to FTP
+            Path archivePath = getArchiveService().getArchivePath(wskey);
+            reports.append("Sending file ").append(archivePath).append(" to FTP...\r\n");
+            sendSipToFtp(archivePath);
+            reports.append("Transfer done.\r\n");
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("wskey", wskey);
             if (snapshot != null) {
@@ -163,4 +172,34 @@ public class CreateSipArchiveTask extends RuntimeEngineTask {
         return 5000;
     }
 
+    /**
+     * Sends the SIP archive to the CINES via FTP protocol.
+     * @throws IOException
+     */
+    private void sendSipToFtp(Path archivePath) throws RuntimeEngineTaskException, IOException {
+        String hostKey = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.ARCHIVE_FTP_HOSTKEY);
+        String server = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.ARCHIVE_FTP_SERVER);
+        String username = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.ARCHIVE_FTP_USERNAME);
+        String password = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.ARCHIVE_FTP_PASSWORD);
+        String remote = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.ARCHIVE_FTP_REMOTE);
+
+        try (final SSHClient ssh = new SSHClient()) {
+            ssh.addHostKeyVerifier(FingerprintVerifier.getInstance(hostKey));
+            ssh.connect(server);
+            ssh.authPassword(username, password);
+
+            uploadFile(archivePath, remote, ssh);
+            ssh.disconnect();
+        } catch( Exception e) {
+            throw new RuntimeEngineTaskException("Unable to send SIP archive through FTP", e);
+        }
+    }
+
+    private void uploadFile(Path archivePath, String remote, final SSHClient ssh) throws RuntimeEngineTaskException {
+        try (SFTPClient sftp = ssh.newSFTPClient()) {
+            sftp.put(archivePath.toString(), remote);
+        } catch(Exception e) {
+            throw new RuntimeEngineTaskException("Unable to upload file to remote FTP server", e);
+        }
+    }
 }
