@@ -41,6 +41,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import fr.ortolang.diffusion.api.OrtolangObjectidentifierTest;
+import fr.ortolang.diffusion.archive.ArchiveServiceTest;
 import fr.ortolang.diffusion.core.CollectionUnitTest;
 import fr.ortolang.diffusion.core.CoreServiceTest;
 import fr.ortolang.diffusion.core.PathBuilderTest;
@@ -60,6 +61,7 @@ import fr.ortolang.diffusion.store.handle.HandleStoreServiceTest;
 	RegistryServiceTest.class,
 	BinaryStoreServiceTest.class,
 	HandleStoreServiceTest.class,
+	ArchiveServiceTest.class
 })
 public class DiffusionTestSuite {
 

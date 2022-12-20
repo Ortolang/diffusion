@@ -41,6 +41,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
@@ -53,24 +54,34 @@ import javax.jms.Message;
 import javax.jms.Topic;
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.json.JsonString;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+
 import org.apache.tika.metadata.Metadata;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.archive.aip.entity.Aip;
+import fr.ortolang.diffusion.archive.aip.entity.DocDC;
+import fr.ortolang.diffusion.archive.aip.entity.DocMeta;
 import fr.ortolang.diffusion.archive.exception.ArchiveServiceException;
 import fr.ortolang.diffusion.archive.exception.CheckArchivableException;
 import fr.ortolang.diffusion.archive.facile.FacileService;
 import fr.ortolang.diffusion.archive.facile.entity.Validator;
-import fr.ortolang.diffusion.archive.format.Sip;
+import fr.ortolang.diffusion.archive.format.FichMetaConstants;
+import fr.ortolang.diffusion.archive.format.SipConstants;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -78,6 +89,7 @@ import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStream;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStreamFactory;
 import fr.ortolang.diffusion.store.binary.hash.MD5FilterInputStreamFactory;
 import fr.ortolang.diffusion.util.DateUtils;
+import fr.ortolang.diffusion.util.LangConstants;
 import fr.ortolang.diffusion.util.XmlUtils;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpNamespace;
@@ -85,6 +97,7 @@ import fr.ortolang.diffusion.xml.XmlDumpNamespaces;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.core.PathNotFoundException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
@@ -104,8 +117,10 @@ import fr.ortolang.diffusion.oai.format.XMLDocument;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
 import fr.ortolang.diffusion.oai.format.builder.XMLMetadataBuilder;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.PropertyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -124,6 +139,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import org.codehaus.stax2.XMLInputFactory2;
+
 @Startup
 @Local(ArchiveService.class)
 @Singleton(name = ArchiveService.SERVICE_NAME)
@@ -136,6 +153,7 @@ public class ArchiveServiceBean implements ArchiveService {
     public static final String DEFAULT_SIP_HOME = "sip";
     public static final String DEPOT_DIRECTORY = "/DEPOT";
     public static final String DESC_DIRECTORY = "DESC";
+    public static final String XML_FORMAT = "XML";
     public static final String SIP_XML_FILE = "sip.xml";
     public static final String SIP_XML_FILEPATH = "/sip.xml";
     
@@ -360,10 +378,10 @@ public class ArchiveServiceBean implements ArchiveService {
 			namespaces.put(SIP_NAMESPACE_PREFIX, new XmlDumpNamespace(SIP_NAMESPACE_URI, SIP_NAMESPACE_SCHEMA_LOCATION));
 			namespaces.put(XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(XSI_NAMESPACE_URI));
 			builder.setNamespaces(namespaces);
-			builder.writeStartDocument(SIP_NAMESPACE_PREFIX, Sip.Pac, null);
+			builder.writeStartDocument(SIP_NAMESPACE_PREFIX, SipConstants.PAC, null);
 
 			createDocDC(wskey, binarystore.get(md.getStream()), writer, builder);
-			createDocMeta(workspace.getAlias(), writer, builder);
+			createDocMeta(root, writer, builder);
 			createFichMeta(archiveEntryList, writer, builder, schema);
 
 			writer.writeEndElement(); // end of Pac
@@ -440,9 +458,9 @@ public class ArchiveServiceBean implements ArchiveService {
 			throw new ArchiveServiceException("unable to read Item Json metadata of object " + key);
 		}
 
- 	   	builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.DocDc); //// DocDC
+ 	   	builder.writeStartElement(SIP_NAMESPACE_PREFIX, SipConstants.DOCDC); //// DocDC
 
-        writeElement(Sip.DocDcTitle, json, builder);
+        writeElement(SipConstants.DocDcTitle, json, builder);
 
 		JsonArray contributors = json.getJsonArray("contributors");
 		String creator = null;
@@ -459,46 +477,46 @@ public class ArchiveServiceBean implements ArchiveService {
 		}
 		
 		if (creator != null) {
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcCreator, creator);
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcCreator, creator);
 		}
 		else {
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcCreator, Sip.NRValue);
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcCreator, SipConstants.NRValue);
 		}
 		if (json.containsKey("keywords")) {
-			writeElement("keywords", json, Sip.DocDcSubject, builder);
+			writeElement("keywords", json, SipConstants.DocDcSubject, builder);
 		} else {
 			XmlDumpAttributes attrs = new XmlDumpAttributes();
 	        attrs.put("language", "fra");
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcSubject, attrs, Sip.NRValue);
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcSubject, attrs, SipConstants.NRValue);
 		}
-        writeElement(Sip.DocDcDescription, json, builder);
+        writeElement(SipConstants.DocDcDescription, json, builder);
 
 		JsonArray producers = json.getJsonArray("producers");
 		if (producers != null) {
 			for (JsonObject producer : producers.getValuesAs(JsonObject.class)) {
 				if (producer.containsKey("fullname")) {
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcPublisher, producer.getString("fullname"));
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcPublisher, producer.getString("fullname"));
 				}
 			}
 		} else {
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcPublisher, Sip.NRValue);
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcPublisher, SipConstants.NRValue);
 		}
 		if (contributors != null) {
 			for (JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
 				JsonArray roles = contributor.getJsonArray("roles");
 				for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
 					String roleId = role.getString("id");
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcContributor, person(contributor) + " (" + roleId + ")");
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcContributor, person(contributor) + " (" + roleId + ")");
 				}
 			}
 		}
 		JsonString creationDate = json.getJsonString("originDate");
 		if (creationDate != null) {
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcDate, creationDate.getString());
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcDate, creationDate.getString());
 		} else {
 			JsonString publicationDate = json.getJsonString("publicationDate");
 			if (publicationDate != null) {
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcDate, publicationDate.getString());
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcDate, publicationDate.getString());
 			}
 		}
 
@@ -510,42 +528,42 @@ public class ArchiveServiceBean implements ArchiveService {
 		if (resourceType != null) {
 			switch(resourceType.getString()) {
 				case ORTOLANG_RESOURCE_TYPE_CORPORA:
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcType, attrEng, CMDI_RESOURCE_CLASS_CORPUS); break;
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcType, attrEng, CMDI_RESOURCE_CLASS_CORPUS); break;
 				case ORTOLANG_RESOURCE_TYPE_LEXICON:
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcType, attrEng, OLAC_LINGUISTIC_TYPES.get(1)); break;
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcType, attrEng, OLAC_LINGUISTIC_TYPES.get(1)); break;
 				case ORTOLANG_RESOURCE_TYPE_TERMINOLOGY:
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcType, attrEng, CMDI_RESOURCE_CLASS_TERMINOLOGY); break;
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcType, attrEng, CMDI_RESOURCE_CLASS_TERMINOLOGY); break;
 				case ORTOLANG_RESOURCE_TYPE_TOOL:
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcType, attrEng, CMDI_RESOURCE_CLASS_TOOL_SERVICE); break;
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcType, attrEng, CMDI_RESOURCE_CLASS_TOOL_SERVICE); break;
 				case CMDI_RESOURCE_CLASS_WEBSITE:
-					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcType, attrEng, CMDI_RESOURCE_CLASS_WEBSITE); break;
+					builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcType, attrEng, CMDI_RESOURCE_CLASS_WEBSITE); break;
 			}
 		}
-		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcFormat, attrFra, Sip.NRValue);
+		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcFormat, attrFra, SipConstants.NRValue);
 		// TODO find the iso639_3 for the language
-		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcLanguage, "fra");
+		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcLanguage, "fra");
 
 		JsonObject statusOfUse = json.getJsonObject("statusOfUse");
 		if (statusOfUse != null) {
 			String idStatusOfUse = statusOfUse.getString("id");
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcRights, attrEng, idStatusOfUse);
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcRights, attrEng, idStatusOfUse);
 
 			JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
 			for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-				writeMultilingualElement(Sip.DocDcRights, label, builder);
+				writeMultilingualElement(SipConstants.DocDcRights, label, builder);
 			}
 		}
 		JsonArray conditionsOfUse = json.getJsonArray("conditionsOfUse");
 		if (conditionsOfUse != null) {
 			for (JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
-				writeMultilingualElement(Sip.DocDcRights, label, builder);
+				writeMultilingualElement(SipConstants.DocDcRights, label, builder);
 			}
 		}
 		JsonObject license = json.getJsonObject("license");
 		if (license != null && license.containsKey("label")) {
 			XmlDumpAttributes attrs = new XmlDumpAttributes();
 	        attrs.put("language", "fra");
-			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocDcRights, attrs, XMLDocument.removeHTMLTag(license.getString("label")));
+			builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocDcRights, attrs, XMLDocument.removeHTMLTag(license.getString("label")));
 		}
 		
         writer.writeEndElement(); //// DocDC
@@ -553,40 +571,40 @@ public class ArchiveServiceBean implements ArchiveService {
 
     /**
 	 * Creates the DocMeta of the XML SIP file.
-     * @param alias
+     * @param root a root collection
      * @param writer
      * @param builder
      * @throws XMLStreamException
      * @throws MetadataBuilderException
      */
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    private void createDocMeta(String alias, XMLStreamWriter writer, XMLMetadataBuilder builder) throws XMLStreamException, MetadataBuilderException {
+    private void createDocMeta(String root, XMLStreamWriter writer, XMLMetadataBuilder builder) throws XMLStreamException, MetadataBuilderException {
 
- 	   builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.DocMeta); //// DocMeta
+ 	   builder.writeStartElement(SIP_NAMESPACE_PREFIX, SipConstants.DOCMETA); //// DocMeta
 
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaIdentifiantDocProducteur, alias);
-       builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaEvaluation);
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaDUA, "P15Y");
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocMetaIdentifiantDocProducteur, root);
+       builder.writeStartElement(SIP_NAMESPACE_PREFIX, SipConstants.DocMetaEvaluation);
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocMetaDUA, SipConstants.P15Y_VALUE);
        
        XmlDumpAttributes attrs = new XmlDumpAttributes();
-       attrs.put("language", "fra");
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaTraitement, attrs, "conservation définitive");
+       attrs.put(SipConstants.LANGUAGE_ATTRIBUTE, LangConstants.FRA_STRING);
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocMetaTraitement, attrs, SipConstants.CONSERVATION_DEFINITIVE_VALUE);
        String currentDate = DateUtils.getCurrentDate();
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaDateDebut, currentDate);
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocMetaDateDebut, currentDate);
        builder.writeEndElement(); // evaluation
        
-       builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaCommunicabilite);
+       builder.writeStartElement(SIP_NAMESPACE_PREFIX, SipConstants.DocMetaCommunicabilite);
        
        XmlDumpAttributes attrsCode = new XmlDumpAttributes();
-       attrsCode.put("type", "SEDA");
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaCode, attrsCode, "AR038");
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaDateDebut, currentDate);
+       attrsCode.put(FichMetaConstants.TYPEATTRIBUTE, SipConstants.SEDA_VALUE);
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocMetaCode, attrsCode, SipConstants.AR038_VALUE);
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocMetaDateDebut, currentDate);
        builder.writeEndElement(); // communicabilite
        
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaServiceVersant, "ORTOLANG");
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocMetaServiceVersant, SipConstants.ORTOLANG_METASERVICEVERSANT_VALUE);
        XmlDumpAttributes attrsPlanClassement = new XmlDumpAttributes();
-       attrsPlanClassement.put("language", "fra");
-       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.DocMetaPlanClassement, attrsPlanClassement, "ortolang");
+       attrsPlanClassement.put(SipConstants.LANGUAGE_ATTRIBUTE, LangConstants.FRA_STRING);
+       builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.DocMetaPlanClassement, attrsPlanClassement, SipConstants.ORTOLANG_METAPLANCLASSEMENT_VALUE);
  	   
  	   writer.writeEndElement(); //// DocMeta
 
@@ -605,23 +623,23 @@ public class ArchiveServiceBean implements ArchiveService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void createFichMeta(List<ArchiveEntry> archiveList, XMLStreamWriter writer, XMLMetadataBuilder builder, String schema) throws XMLStreamException, MetadataBuilderException {
  	   for(ArchiveEntry entry : archiveList) {
- 		  builder.writeStartElement(SIP_NAMESPACE_PREFIX, Sip.FichMeta); //// FichMeta
+ 		  builder.writeStartElement(SIP_NAMESPACE_PREFIX, SipConstants.FICHMETA); //// FichMeta
  		  
  		  // Removes the first '/' from the absolute path in the workspace ortolang
- 		  if (entry.getEncoding() != null && !entry.getEncoding().equals(Sip.NAValue)) {
- 			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaEncodage, entry.getEncoding().toUpperCase());
+ 		  if (entry.getEncoding() != null && !entry.getEncoding().equals(SipConstants.NAValue)) {
+ 			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.FichMetaEncodage, entry.getEncoding().toUpperCase());
  		  }
- 		  if (entry.getFormat().equals(OrtolangXMLParser.XMLType.TEI.name()) && entry.getPath().startsWith("/DESC")) {
-			 builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaFormatFichier, "XML");
+ 		  if (entry.getFormat().equals(OrtolangXMLParser.XMLType.TEI.name()) && entry.getPath().startsWith("/" + DESC_DIRECTORY)) {
+			 builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.FichMetaFormatFichier, XML_FORMAT);
 		  } else {
-			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaFormatFichier, entry.getFormat());
+			  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.FichMetaFormatFichier, entry.getFormat());
 		  }
- 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaNomFichier, entry.getPath().substring(1));
+ 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.FichMetaNomFichier, entry.getPath().substring(1));
  		  XmlDumpAttributes attrs = new XmlDumpAttributes();
-	      attrs.put("type", Sip.FichMetaMD5);
- 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaEmpreinteOri, attrs, entry.getMd5sum());
- 		  if (entry.getFormat().equals(OrtolangXMLParser.XMLType.TEI.name()) && !entry.getPath().startsWith("/DESC") && schema != null) {
- 			 builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, Sip.FichMetaStructureFichier, schema);
+	      attrs.put(FichMetaConstants.TYPEATTRIBUTE, SipConstants.FichMetaMD5);
+ 		  builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.FichMetaEmpreinteOri, attrs, entry.getMd5sum());
+ 		  if (entry.getFormat().equals(OrtolangXMLParser.XMLType.TEI.name()) && !entry.getPath().startsWith("/" + DESC_DIRECTORY) && schema != null) {
+ 			 builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, SipConstants.FichMetaStructureFichier, schema);
  		  }
  		  
  		  writer.writeEndElement(); //// FichMeta
@@ -639,11 +657,11 @@ public class ArchiveServiceBean implements ArchiveService {
 		if (meta.containsKey(elementName)) {
 			JsonArray elmArray = meta.getJsonArray(elementName);
 			for (JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
-				if (elm.containsKey("lang") && elm.containsKey("value")) {
+				if (elm.containsKey(SipConstants.LANG_ATTRIBUTE) && elm.containsKey(SipConstants.VALUE_ATTRIBUTE)) {
 					writeMultilingualElement(tagName, elm, builder);
 				} else {
-					if (elm.containsKey("value")) {
-						builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, tagName, XMLDocument.removeHTMLTag(elm.getString("value")));
+					if (elm.containsKey(SipConstants.VALUE_ATTRIBUTE)) {
+						builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, tagName, XMLDocument.removeHTMLTag(elm.getString(SipConstants.VALUE_ATTRIBUTE)));
 					}
 				}
 			}
@@ -654,11 +672,10 @@ public class ArchiveServiceBean implements ArchiveService {
 	private static void writeMultilingualElement(String tag, JsonObject multilingualObject, MetadataBuilder builder) throws MetadataBuilderException {
 		XmlDumpAttributes attrs = new XmlDumpAttributes();
 		//TODO iso639_3
-		if (multilingualObject.getString("lang").matches(iso639_2pattern)) {
-//			attrs.put("language", multilingualObject.getString("lang"));
-			attrs.put("language", "fra");
+		if (multilingualObject.getString(SipConstants.LANG_ATTRIBUTE).matches(iso639_2pattern)) {
+			attrs.put(SipConstants.LANGUAGE_ATTRIBUTE, LangConstants.FRA_STRING);
 		}
-		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString("value")));
+		builder.writeStartEndElement(SIP_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString(SipConstants.VALUE_ATTRIBUTE)));
 	}
 
 	
@@ -674,22 +691,7 @@ public class ArchiveServiceBean implements ArchiveService {
 		List<ArchiveEntry> imported = new ArrayList<>();
 		try {
 			PathBuilder pbuilder = PathBuilder.fromPath("/");
-			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
-			Workspace workspace = em.find(Workspace.class, identifier.getId());
-			if (workspace == null) {
-                throw new ArchiveServiceException(
-                        "unable to load workspace with id [" + identifier.getId() + "] from storage");
-            }
-			String root = null;
-			if ( snapshot == null ) {
-				root = workspace.getHead();
-			} else {
-				if (!workspace.containsSnapshotName(snapshot)) {
-					throw new ArchiveServiceException(
-							"the workspace with key: " + wskey + " does not contain a snapshot with name: " + snapshot);
-				}
-				root = workspace.findSnapshotByName(snapshot).getKey();
-			}
+			String root = getWorkspaceRootCollection(wskey, snapshot);
 
 			buildArchiveList(root, pbuilder, imported);
 			
@@ -699,6 +701,36 @@ public class ArchiveServiceBean implements ArchiveService {
 			throw new ArchiveServiceException("unable to get object from registry with key " + wskey, e);
 		}
 		return imported;
+	}
+
+	/**
+	 * Gets the root collection of a workspace.
+	 * @param wskey
+	 * @param snapshot
+	 * @return
+	 * @throws RegistryServiceException
+	 * @throws KeyNotFoundException
+	 * @throws ArchiveServiceException
+	 */
+	private String getWorkspaceRootCollection(String wskey, String snapshot)
+			throws RegistryServiceException, KeyNotFoundException, ArchiveServiceException {
+		OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+		Workspace workspace = em.find(Workspace.class, identifier.getId());
+		if (workspace == null) {
+		    throw new ArchiveServiceException(
+		            "unable to load workspace with id [" + identifier.getId() + "] from storage");
+		}
+		String root = null;
+		if ( snapshot == null ) {
+			root = workspace.getHead();
+		} else {
+			if (!workspace.containsSnapshotName(snapshot)) {
+				throw new ArchiveServiceException(
+						"the workspace with key: " + wskey + " does not contain a snapshot with name: " + snapshot);
+			}
+			root = workspace.findSnapshotByName(snapshot).getKey();
+		}
+		return root;
 	}
 
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -914,5 +946,248 @@ public class ArchiveServiceBean implements ArchiveService {
 		
 	}
 
+	/**
+	 * Stores all informations from the aip.xml to metadata data.
+	 * Extracts the ARK identifier from the DocDC and all informations from the 
+	 * DocMeta to a MetadataObject (system-aip-schema) associated to the root collection.
+	 * Then every informations of FichMeta is written to a MetadataObject (system-fichmeta-schema)
+	 * associated to a DataObject.
+	 * @param aipXml the XML string representation of the aip.xml
+	 * @throws ArchiveServiceException
+	 */
+	@RolesAllowed({ "admin", "system" })
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void storeAip(String aipXml) throws ArchiveServiceException {
+		Aip aip = new Aip();
+		String root = null;
+		DocDC docDc = null;
+		String snapshotName = null;
+		XMLStreamReader reader = null;
+        XMLInputFactory xmlInputFactory = XMLInputFactory2.newInstance();
+
+		try {
+			reader = xmlInputFactory.createXMLStreamReader(new StringReader(aipXml));
 	
+			while (reader.hasNext() && (!reader.isStartElement() || !reader.getLocalName().equals(SipConstants.DOCDC))) {
+				reader.next();
+			}
+	
+			if (reader.getEventType() == XMLStreamConstants.START_ELEMENT && reader.getLocalName().equals(SipConstants.DOCDC)) {
+				docDc = DocDC.fromXMLStreamReader(reader);
+				aip.setDocDc(docDc);
+				reader.next();
+			}
+	
+			if (reader.getEventType() == XMLStreamConstants.START_ELEMENT && reader.getLocalName().equals(SipConstants.DOCMETA)) {
+				DocMeta docMeta = DocMeta.fromXMLStreamReader(reader);
+				aip.setDocMeta(docMeta);
+
+				root = extractIdentifiantDocProducteur(docMeta);
+
+				if (docDc ==null || (docDc != null && docDc.getIdentifier() == null)) {
+					throw new ArchiveServiceException("unable to find identifier (ARK) from DocDC aip.xml");
+				}
+
+				// Retrives snapshot name
+				snapshotName = extractedSnapshotName(root);
+
+				docMeta.setIdentifier(docDc.getIdentifier());
+
+				ObjectMapper mapper = new ObjectMapper();
+				String docMetaJson = mapper.writeValueAsString(docMeta);
+				String metadataHash = binarystore
+						.put(new ByteArrayInputStream(docMetaJson.getBytes()));
+				core.systemCreateMetadata(root, MetadataFormat.AIP, metadataHash,
+						MetadataFormat.AIP + ".json");
+
+				reader.next();
+			}
+	
+			if (reader.getEventType() == XMLStreamConstants.START_ELEMENT && reader.getLocalName().equals(SipConstants.FICHMETA)) {
+				extractedFichMeta(root, snapshotName, reader);
+			}
+		} catch (Exception e) {
+			throw new ArchiveServiceException("unable to store aip.xml", e);
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (XMLStreamException e) {
+					LOGGER.log(Level.WARNING, "unable to close xml reader");
+				}
+			}
+		}
+		
+	}
+
+	@RolesAllowed({ "admin", "system" })
+	private String extractedSnapshotName(String root)
+			throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException, CoreServiceException {
+		String snapshotName;
+		String wsKey = registry.getProperty(root, CoreService.WORKSPACE_REGISTRY_PROPERTY_KEY);
+		Workspace ws = core.systemReadWorkspace(wsKey);
+		snapshotName = ws.findSnapshotByKey(root).getName();
+		return snapshotName;
+	}
+
+	/**
+	 * Extracts informations of FichMeta then store it into a MetadataObject (system-fichmeta-schema).
+	 * @param root
+	 * @param snapshotName
+	 * @param reader
+	 * @throws XMLStreamException
+	 * @throws CoreServiceException
+	 * @throws InvalidPathException
+	 * @throws PathNotFoundException
+	 * @throws RegistryServiceException
+	 * @throws KeyNotFoundException
+	 * @throws PropertyNotFoundException
+	 * @throws BinaryStoreServiceException
+	 * @throws DataCollisionException
+	 * @throws AccessDeniedException
+	 * @throws MetadataFormatException
+	 * @throws DataNotFoundException
+	 * @throws KeyAlreadyExistsException
+	 * @throws IdentifierAlreadyRegisteredException
+	 * @throws AuthorisationServiceException
+	 * @throws IndexingServiceException
+	 * @throws IdentifierNotRegisteredException
+	 */
+	@RolesAllowed({ "admin", "system" })
+	private void extractedFichMeta(String root, String snapshotName, XMLStreamReader reader)
+			throws XMLStreamException, CoreServiceException, InvalidPathException, PathNotFoundException,
+			RegistryServiceException, KeyNotFoundException, PropertyNotFoundException, BinaryStoreServiceException,
+			DataCollisionException, AccessDeniedException, MetadataFormatException, DataNotFoundException,
+			KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, AuthorisationServiceException,
+			IndexingServiceException, IdentifierNotRegisteredException {
+		JsonObjectBuilder jsonObject = Json.createObjectBuilder();
+		JsonArrayBuilder structreFichierArrayBuilder = Json.createArrayBuilder();
+		while(reader.hasNext() && !(reader.isEndElement() && reader.getLocalName().equals(SipConstants.PAC))) {
+			reader.next();
+			if (reader.getEventType() ==  XMLStreamConstants.START_ELEMENT) {
+				switch( reader.getLocalName() ) {
+					case FichMetaConstants.IDFICHIER:
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							jsonObject.add(FichMetaConstants.IDFICHIER, reader.getText());
+						}
+						break;
+					case FichMetaConstants.NOMFICHIER:
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							jsonObject.add(FichMetaConstants.NOMFICHIER, reader.getText());
+						}
+						break;
+					case FichMetaConstants.COMPRESSION:
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							jsonObject.add(FichMetaConstants.COMPRESSION, reader.getText());
+						}
+						break;
+					case FichMetaConstants.ENCODAGE:
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							jsonObject.add(FichMetaConstants.ENCODAGE, reader.getText());
+						}
+						break;
+					case FichMetaConstants.FORMATFICHIER:
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							jsonObject.add(FichMetaConstants.FORMATFICHIER, reader.getText());
+						}
+						break;
+					case FichMetaConstants.NOTEFICHIER:
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							jsonObject.add(FichMetaConstants.NOTEFICHIER, reader.getText());
+						}
+						break;
+					case FichMetaConstants.STRUCTUREFICHIER:
+						String structureFichierType = reader.getAttributeValue(null, FichMetaConstants.TYPEATTRIBUTE);
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							JsonObject structureFichier = Json.createObjectBuilder().add(FichMetaConstants.TYPEATTRIBUTE, structureFichierType).add(FichMetaConstants.VALUEATTRIBUTE, reader.getText()).build();
+							structreFichierArrayBuilder.add(structureFichier);
+						}
+						break;
+					case FichMetaConstants.VERSIONFORMATFICHIER:
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							jsonObject.add(FichMetaConstants.VERSIONFORMATFICHIER, reader.getText());
+						}
+						break;
+					case FichMetaConstants.EMPREINTE:
+						String empreinteType = reader.getAttributeValue(null, FichMetaConstants.TYPEATTRIBUTE);
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							JsonObject empreinte = Json.createObjectBuilder().add(FichMetaConstants.TYPEATTRIBUTE, empreinteType).add(FichMetaConstants.VALUEATTRIBUTE, reader.getText()).build();
+							jsonObject.add(FichMetaConstants.EMPREINTE, empreinte);
+						}
+						break;
+					case FichMetaConstants.EMPREINTEORI:
+						String empreinteOriType = reader.getAttributeValue(null, FichMetaConstants.TYPEATTRIBUTE);
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							JsonObject empreinteOri = Json.createObjectBuilder().add(FichMetaConstants.TYPEATTRIBUTE, empreinteOriType).add(FichMetaConstants.VALUEATTRIBUTE, reader.getText()).build();
+							jsonObject.add(FichMetaConstants.EMPREINTEORI, empreinteOri);
+						}
+						break;
+					case FichMetaConstants.IDDOCUMENT:
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							jsonObject.add(FichMetaConstants.IDDOCUMENT, reader.getText());
+						}
+						break;
+					case FichMetaConstants.MIGRATION:
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							jsonObject.add(FichMetaConstants.MIGRATION, reader.getText());
+						}
+						break;
+					case FichMetaConstants.TAILLEENOCTETS:
+						reader.next();
+						if (reader.getEventType() == XMLStreamConstants.CHARACTERS) {
+							jsonObject.add(FichMetaConstants.TAILLEENOCTETS, reader.getText());
+						}
+						break;
+					default:
+						reader.next();
+				}
+			}
+
+			if (reader.isEndElement() && reader.getLocalName().equals(FichMetaConstants.FICHMETA)) {
+				jsonObject.add(FichMetaConstants.STRUCTUREFICHIER, structreFichierArrayBuilder.build());
+				JsonObject structureFichierJson = jsonObject.build();
+				String objectKey = core.resolveWorkspacePath(
+					registry.getProperty(root, CoreService.WORKSPACE_REGISTRY_PROPERTY_KEY), 
+					snapshotName, 
+					structureFichierJson.getString(FichMetaConstants.NOMFICHIER)
+					);
+				String metadataHash = binarystore.put(new ByteArrayInputStream(structureFichierJson.toString().getBytes()));
+				List<String> mds = core.systemFindMetadataObjectsForTargetAndName(root, MetadataFormat.FICHMETA);
+
+				if (mds.isEmpty()) {
+					core.systemCreateMetadata(objectKey, MetadataFormat.FICHMETA, metadataHash, MetadataFormat.FICHMETA + ".json");
+				} else {
+					OrtolangObjectIdentifier fichMetaMetadataIdentifier = registry.lookup(mds.get(0));
+					String mdKey = registry.lookup(fichMetaMetadataIdentifier);
+					core.systemUpdateMetadata(mdKey, metadataHash);
+				}
+			}
+		}
+	}
+
+	private String extractIdentifiantDocProducteur(DocMeta docMeta) throws ArchiveServiceException, RegistryServiceException, KeyNotFoundException {
+		String root = docMeta.getIdentifiantDocProducteur();
+		if (root == null) {
+			throw new ArchiveServiceException("unable to find root collection from aip.xml");
+		}
+		// Checks the root key is a collection
+		OrtolangObjectIdentifier identifier = registry.lookup(root);
+		if (!identifier.getService().equals(core.getServiceName())
+			|| !identifier.getType().equals(Collection.OBJECT_TYPE)) {
+			throw new ArchiveServiceException(root + " must be a collection");
+		}
+		return root;
+	}
 }

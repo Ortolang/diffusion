@@ -101,6 +101,8 @@ import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 import fr.ortolang.diffusion.worker.WorkerService;
 import fr.ortolang.diffusion.xml.ImportExportService;
 import fr.ortolang.diffusion.xml.ImportExportServiceException;
+
+import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
@@ -120,6 +122,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -782,6 +785,29 @@ public class AdminResource {
         core.checkArchivable(wskey, path);
         return Response.ok().build();
     }
+
+    @POST
+    @Path("/archive/aip")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response storeAip(@MultipartForm AipFormRepresentation form) throws ArchiveServiceException {
+       ResponseBuilder builder;
+       if (form.getAip() == null) {
+           builder = Response.status(Status.BAD_REQUEST);
+           builder.entity("missing aip file");
+           return builder.build();
+       }
+
+       try {
+           // Converting InputStream to String
+            String aipXml = IOUtils.toString(form.getAip(), StandardCharsets.UTF_8);
+            // Stores aip.xml to JSON metadata
+            archive.storeAip(aipXml);
+        } catch (IOException e) {
+            throw new ArchiveServiceException("unable to convert aip inputstream form to String");
+        }
+       return Response.ok().build();
+    }
+
 
     @POST
     @Path("/content/resource/{wskey}")

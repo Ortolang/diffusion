@@ -383,6 +383,8 @@ public class BootstrapServiceBean implements BootstrapService {
             core.createMetadataFormat(MetadataFormat.OFFICE, "Schema for ORTOLANG Office metadata", schemaOfficeHash, "", false, false);
 
             loadMetadataFormat(MetadataFormat.FACILE_VALIDATOR, "Schema for Facile validator in JSON format", "", false, false);
+            loadMetadataFormat(MetadataFormat.AIP, "Schema for AIP in JSON format", "", false, false);
+            loadMetadataFormat(MetadataFormat.FICHMETA, "Schema for FichMeta from aip.xml in JSON format", "", false, false);
             
             loadMetadataFormat(MetadataFormat.OAI_DC, "Schema for Dublin Core elements in JSON format", "", true, true);
             loadMetadataFormat(MetadataFormat.OLAC, "Schema for OLAC elements in JSON format", "", true, true);

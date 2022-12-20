@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+Titre: schéma XML pour les métadonnées de la Plateforme d'Archivage 
+	du Cines Fonction: descriptif du schéma d'archivage aip.xsd Date: 2013/15/17 
+	Auteur: Olivier Rouchon, Alexandre Granier, équipe PAC 
+	Dernière modification: 
+	- création à partir de sip.xsd et aip.xsd version 2.4 
+-->
+<xsd:schema xmlns="http://www.cines.fr/pac/aip" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:ISO-639-3="urn:un:unece:uncefact:codelist:draft:DAF:languageCode:2011-10-07" xmlns:RA="urn:un:unece:uncefact:codelist:draft:DAF:accessRestrictionCode:2009-08-18" targetNamespace="http://www.cines.fr/pac/aip" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.0">
+
+
+	<xsd:include schemaLocation="ip.xsd"/>
+	
+	<xsd:element name="pac" type="pacType"/>
+	
+	<xsd:complexType name="pacType">
+		<xsd:sequence>
+			<xsd:element ref="DocDC" minOccurs="1" maxOccurs="1"/>
+			<xsd:element ref="DocMeta" minOccurs="1" maxOccurs="1"/>
+			<xsd:element ref="FichMeta" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:element name="DocDC" type="DocDCType"/>
+	
+<!-- 
+	============================================ 
+	Métadonnées Dublin Core	de niveau Document 
+	============================================ 
+-->
+		<xsd:complexType name="DocDCType">
+			<xsd:sequence>
+				<xsd:element ref="title" minOccurs="1" maxOccurs="unbounded"/>
+				<xsd:element ref="creator" minOccurs="1" maxOccurs="unbounded"/>
+				<xsd:element ref="subject" minOccurs="1" maxOccurs="unbounded"/>
+				<xsd:element ref="description" minOccurs="1" maxOccurs="unbounded"/>
+				<xsd:element ref="publisher" minOccurs="1" maxOccurs="unbounded"/>
+				<xsd:element ref="contributor" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="date" minOccurs="1" maxOccurs="1"/>
+				<xsd:element ref="type" minOccurs="1" maxOccurs="unbounded"/>
+				<xsd:element ref="format" minOccurs="1" maxOccurs="unbounded"/>
+				<xsd:element ref="identifier" minOccurs="1" maxOccurs="1"/>
+				<xsd:element ref="source" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="language" minOccurs="1" maxOccurs="unbounded"/>
+				<xsd:element ref="relation" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="coverage" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="rights" minOccurs="1" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+
+	<xsd:element name="identifier" type="stringNotNULL">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>référence non ambiguë à la ressource dans un contexte
+					donné – identifie la ressource par une chaîne de caractères ou un
+					nombre conforme à un système formel d’identification</description>
+				<exemple>ARK:/87895/2.3-5148</exemple>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<!-- 
+	============================================ 
+	Métadonnées CINES de niveau	Document 
+	============================================ 
+	-->
+
+	<xsd:element name="DocMeta" type="DocMetaType"/>
+	
+		<xsd:complexType name="DocMetaType">
+			<xsd:annotation>
+				<xsd:documentation xml:lang="fr">Métadonnées de gestion
+					du document</xsd:documentation>
+			</xsd:annotation>
+			<xsd:sequence>
+				<!-- la métadonnée authenticite est dépréciée -->
+				<xsd:element ref="authenticite" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="dateArchivage" minOccurs="1" maxOccurs="1"/>
+				<!-- la métadonnée dureeConservation est dépréciée -->
+				<xsd:element ref="dureeConservation" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="identifiantDocPac" minOccurs="1" maxOccurs="1"/>
+				<xsd:element ref="identifiantDocProducteur" minOccurs="1" maxOccurs="1"/>
+				<xsd:element ref="docRelation" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="evaluation" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="communicabilite" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="noteDocument" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="serviceVersant" minOccurs="1" maxOccurs="1"/>
+				<xsd:element ref="planClassement" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="identifiantVersement" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="projet" minOccurs="1" maxOccurs="1"/>
+				<xsd:element ref="sortFinal" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="structureDocument" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="version" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="versionPrecedente" minOccurs="0" maxOccurs="1"/>
+			</xsd:sequence>
+		</xsd:complexType>
+
+
+
+	<xsd:element name="authenticite" type="stringNotNULL">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>dépréciée : attestation de l’authenticité du document
+				</description>
+				<exemple>oui si authentique ; sinon non</exemple>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="dateArchivage" type="stringNotNULL">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>date et heure (au format ISO-8601) de l’archivage du
+					document</description>
+				<exemple>2008-10-30 00 :00 :00 (année-mois-jour heures :minutes
+					:secondes)</exemple>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="dureeConservation" type="xsd:duration">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description> dépréciée : durée prévue de conservation du document
+					selon la norme ISO 8601</description>
+				<exemple>P10000Y (= conservation définitive)</exemple>
+				<exemple>P30Y (= conservation pour 30 ans)</exemple>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="identifiantDocPac" type="stringNotNULL">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>identifiant unique et pérenne du document dans le
+					système d’archivage PAC du CINES </description>
+				<exemple>n° automatique attribué par le système d’archivage lors de
+					l’archivage du document dans PAC</exemple>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+
+	<!-- 
+	==================== 
+	Métadonnées pour les relations héritées de ip.xsd 
+	==================== 
+	-->
+
+	<!-- 
+	==================== 
+	Métadonnées pour l'évaluation héritées de ip.xsd 
+	==================== 
+	-->
+
+	<!-- 
+	==================== 
+	Métadonnées pour la communicabilité 
+	==================== 
+	-->
+
+	<xsd:element name="identifiantVersement" type="stringNotNULL">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>identifiant unique du versement (= nom du répertoire du
+					paquet d'archives) attribué par le service versant au cours duquel
+					le document a été transféré dans le système d’archivage PAC du
+					CINES</description>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="projet" type="stringNotNULL">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>identification du projet d’archives au CINES pour
+					lequel le document a été versé</description>
+				<exemple>n° automatique attribué au lancement du projet d’archives
+				</exemple>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="sortFinal" type="stringNotNULLtext">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>indique le sort réservé au document (sauf archives
+					publiques intermédiaires pour lesquelles l'information est donnée
+					dans "evaluation")</description>
+				<exemple>conservation définitive</exemple>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<!-- 
+	============================================ 
+	Métadonnées CINES de niveau	Fichier 
+	============================================ 
+	-->
+	
+	<xsd:element name="FichMeta" type="FichMetaType"/>
+		
+	<xsd:complexType name="FichMetaType">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">Métadonnées des
+				fichiers composant le document</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ref="idFichier" minOccurs="0" maxOccurs="1"/>
+			<xsd:element ref="nomFichier" minOccurs="1" maxOccurs="1"/>
+			<xsd:element ref="compression" minOccurs="0" maxOccurs="1"/>
+			<xsd:element ref="encodage" minOccurs="0" maxOccurs="1"/>
+			<xsd:element ref="formatFichier" minOccurs="1" maxOccurs="1"/>
+			<xsd:element ref="noteFichier" minOccurs="0" maxOccurs="1"/>
+			<xsd:element ref="structureFichier" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element ref="versionFormatFichier" minOccurs="0" maxOccurs="1"/>
+			<xsd:element ref="empreinte" minOccurs="1" maxOccurs="1"/>
+			<xsd:element ref="empreinteOri" minOccurs="0" maxOccurs="1"/>
+			<xsd:element ref="idDocument" minOccurs="0" maxOccurs="1"/>
+			<!-- la métadonnée idDocument est dépréciée -->
+			<xsd:element ref="migration" minOccurs="0" maxOccurs="1"/>
+			<!-- la métadonnée migration est dépréciée -->
+			<xsd:element ref="tailleEnOctets" minOccurs="1" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="idFichier" type="stringNotNULL">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>identifiant unique du fichier dans le système
+					d'archivage</description>
+				<exemple>n° automatique attribué au fichier par le SAE lors de
+					l’archivage, préfixé de l'ark du paquet </exemple>
+				<exemple>ark:/87895/1.16-368661/4521478</exemple>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+
+	<xsd:element name="versionFormatFichier" type="stringNotNULL">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>version du format de fichier, déterminée par le serveur
+					de versement au moment du contrôle de validité</description>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="empreinte" type="empreinteType">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">empreinte numérique
+				(fonction de hachage) du fichier calculée avec les algorithmes MD5,
+				SHA-1 ou SHA-256 par le service de stockage</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="idDocument" type="xsd:nonNegativeInteger">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>dépréciée : identifiant unique et pérenne dans le
+					système d’archivage PAC du CINES, du document auquel est rattaché
+					le fichier</description>
+				<exemple>n° automatique attribué par le système d’archivage lors de
+					l’archivage du document dans PAC</exemple>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="migration" type="stringNotNULL">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description> dépréciée : ancienne métadonnée qui a été déplacée
+					dans le schéma PacTypeMigration, et que l’on rend non obligatoire
+					dans l’aip.xsd pour des raisons de rétrocompatibilité.
+				</description>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="tailleEnOctets" type="xsd:nonNegativeInteger">
+		<xsd:annotation>
+			<xsd:documentation xml:lang="fr">
+				<description>taille du fichier en octets dans son format courant
+				</description>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:complexType name="empreinteType">
+		<xsd:simpleContent>
+			<xsd:extension base="stringNotNULL">
+				<xsd:attribute name="type" use="required">
+					<xsd:simpleType>
+						<xsd:restriction base="xsd:string">
+							<xsd:enumeration value="MD5"/>
+							<xsd:enumeration value="SHA-1"/>
+							<xsd:enumeration value="SHA-256"/>
+						</xsd:restriction>
+					</xsd:simpleType>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+
+</xsd:schema>

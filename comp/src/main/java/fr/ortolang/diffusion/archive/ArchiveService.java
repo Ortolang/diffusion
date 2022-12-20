@@ -18,6 +18,8 @@ public interface ArchiveService extends OrtolangService {
     void checkArchivable(String key) throws ArchiveServiceException;
     void validateDataobject(String key) throws ArchiveServiceException;
 
+    void storeAip(String aip) throws ArchiveServiceException;
+
     ArchiveOutputStream createArchive(String wskey) throws ArchiveServiceException;
     Path getArchivePath(String wskey);
     void finishArchive(ArchiveOutputStream tarOutput) throws ArchiveServiceException;

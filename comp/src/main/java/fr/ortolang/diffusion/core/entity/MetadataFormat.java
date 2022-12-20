@@ -76,6 +76,8 @@ public class MetadataFormat {
     public static final String OFFICE = "system-x-office-json";
     // Facile validator metadata
     public static final String FACILE_VALIDATOR = "system-facile-validator";
+    public static final String AIP = "system-aip-schema";
+    public static final String FICHMETA = "system-fichmeta-schema";
 
 
 
