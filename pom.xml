@@ -47,6 +47,7 @@
         <version.arquillian>1.7.0.Alpha10</version.arquillian>
         <version.wildfly.arquillian>4.0.0.Alpha2</version.wildfly.arquillian>
         <version.fasterxml.jackson>2.8.3</version.fasterxml.jackson>
+        <version.woodstox.stax2-api>4.2.1</version.woodstox.stax2-api>
         <version.commons-io>2.5</version.commons-io>
         <version.springframework.spring-context>4.3.2.RELEASE</version.springframework.spring-context>
         <version.lyncode.xoai>4.1.0</version.lyncode.xoai>

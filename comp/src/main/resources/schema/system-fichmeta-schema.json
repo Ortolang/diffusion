@@ -1,0 +1,75 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://www.ortolang.fr/schemas/1/aip#",
+    "description": "Schema for metadata fichMeta extracted from aip.xml sending by the CINES",
+    "type": "object",
+    "additionalProperties": true,
+    "properties": {
+        "idFichier": {
+            "type": "string"
+        },
+        "nomFichier": {
+            "type": "string"
+        },
+        "compression": {
+            "type": "string"
+        },
+        "encodage": {
+            "type": "string"
+        },
+        "formatFichier": {
+            "type": "string"
+        },
+        "noteFichier": {
+            "type": "string"
+        },
+        "structureFichier": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "versionFormatFichier": {
+            "type": "string"
+        },
+        "empreinte": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "empreinteOri": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "idDocument": {
+            "type": "string"
+        },
+        "migration": {
+            "type": "string"
+        },
+        "tailleEnOctets": {
+            "type": "string"
+        }
+    }
+}

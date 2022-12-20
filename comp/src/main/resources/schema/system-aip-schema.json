@@ -1,0 +1,93 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://www.ortolang.fr/schemas/1/aip#",
+    "description": "Schema for metadata extracted from aip.xml sending by the CINES",
+    "type": "object",
+    "additionalProperties": true,
+    "properties": {
+        "identifier": {
+            "type": "string"
+        },
+        "dateArchivage": {
+            "type": "string"
+        },
+        "identifiantDocPac": {
+            "type": "string"
+        },
+        "identifiantDocProducteur": {
+            "type": "string"
+        },
+        "docRelation": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "typeRelation": {
+                        "type": "string"
+                    },
+                    "sourceRelation": {
+                        "type": "string"
+                    },
+                    "identifiantSourceRelation": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "evaluation": {
+            "type": "object",
+            "properties": {
+                "DUA": {
+                    "type": "string"
+                },
+                "traitement": {
+                    "type": "string"
+                },
+                "dateDebut": {
+                    "type": "string"
+                }
+            }
+        },
+        "communicabilite": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "dateDebut": {
+                    "type": "string"
+                }
+            }
+        },
+        "noteDocument": {
+            "type": "string"
+        },
+        "serviceVersant": {
+            "type": "string"
+        },
+        "planClassement": {
+            "type": "string"
+        },
+        "identifiantVersement": {
+            "type": "string"
+        },
+        "projet": {
+            "type": "string"
+        },
+        "sortFinal": {
+            "type": "string"
+        },
+        "structureDocument": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "version": {
+            "type": "string"
+        },
+        "versionPrecedente": {
+            "type": "string"
+        }
+    }
+}

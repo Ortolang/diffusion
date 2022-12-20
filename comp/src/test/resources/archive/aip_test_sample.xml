@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pac xmlns="http://www.cines.fr/pac/aip" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.cines.fr/pac/aip http://www.cines.fr/pac/3.0/aip.xsd">
+    <DocDC>
+        <title language="fra">CIDRE</title>
+        <creator>Gambette, Philippe</creator>
+        <subject language="fra">idiolecte</subject>
+        <subject language="fra">littérature</subject>
+        <subject language="fra">19ème siècle</subject>
+        <subject language="fra">stylométrie</subject>
+        <subject language="fra">diachronie</subject>
+        <subject language="fra">ebooks</subject>
+        <subject language="fra">Zévaco</subject>
+        <subject language="fra">Zola</subject>
+        <subject language="fra">Sand</subject>
+        <subject language="fra">Balzac</subject>
+        <subject language="fra">Aimard</subject>
+        <subject language="fra">Comtesse de Ségur</subject>
+        <subject language="fra">Daniel-Lesueur</subject>
+        <subject language="fra">Gréville</subject>
+        <subject language="fra">Verne</subject>
+        <subject language="fra">Ponson du Terrail</subject>
+        <subject language="fra">Féval</subject>
+        <description language="fra">The Corpus for Idiolectal Research (CIDRE)Dans ce corpus, il y a plus de 400 œuvres de fiction de 11 auteurs prolifiques du 19e et du début du 20e siècle. Nous avons daté ces œuvres par leur date d’écriture. Cela permet d’étudier l’évolution de l’idiolecte des différents auteurs.</description>
+        <publisher>Langues, textes, traitements informatiques, cognition - UMR 8094 (Lattice, Paris FR)</publisher>
+        <contributor>Seminck, Olga, Lattice (developer)</contributor>
+        <contributor>Seminck, Olga, Lattice (depositor)</contributor>
+        <contributor>Seminck, Olga, Lattice (designer)</contributor>
+        <contributor>Seminck, Olga, Lattice (author)</contributor>
+        <contributor>Gambette, Philippe (designer)</contributor>
+        <contributor>Gambette, Philippe (author)</contributor>
+        <contributor>Gambette, Philippe (developer)</contributor>
+        <contributor>Legallois, Dominique, Lattice (designer)</contributor>
+        <contributor>Poibeau, Thierry, Lattice (designer)</contributor>
+        <date>2022-01-11</date>
+        <type language="eng">corpus</type>
+        <format language="fra">NR</format>
+        <identifier>ark:/87895/1.19-1519937</identifier>
+        <language>fra</language>
+        <rights language="eng">free_use</rights>
+        <rights language="fra">Libre</rights>
+        <rights language="fra">Free</rights>
+        <rights language="fra">Licence Creative Commons - Attribution - Partage dans les Mêmes Conditions 4.0 International</rights>
+    </DocDC>
+    <DocMeta>
+        <dateArchivage>2022-12-06T09:49:13+01:00</dateArchivage>
+        <identifiantDocPac>1519937</identifiantDocPac>
+        <identifiantDocProducteur>#root#</identifiantDocProducteur>
+        <evaluation>
+            <DUA>P15Y</DUA>
+            <traitement language="fra">conservation définitive</traitement>
+            <dateDebut>2022-12-10</dateDebut>
+        </evaluation>
+        <communicabilite>
+            <code type="SEDA">AR038</code>
+            <dateDebut>2022-12-05</dateDebut>
+        </communicabilite>
+        <serviceVersant>ORTOLANG</serviceVersant>
+        <planClassement language="fra">ortolang</planClassement>
+        <identifiantVersement>4166ff34-8bca-442c-bff0-7c8131581dc1</identifiantVersement>
+        <projet>19</projet>
+    </DocMeta>
+    <FichMeta>
+        <idFichier>ark:/87895/1.19-1519937/164</idFichier>
+        <nomFichier>fileone.txt</nomFichier>
+        <encodage>UTF-8</encodage>
+        <formatFichier>TXT</formatFichier>
+        <versionFormatFichier>NA</versionFormatFichier>
+        <empreinte type="SHA-256">a35a5196e5d36d9d86a06ef7c06739b41bb0c5ecc5a34b75225a9291d17215f1</empreinte>
+        <empreinteOri type="MD5">f1e399980450b7b7e40a4460c370fdfe</empreinteOri>
+        <idDocument>1471759</idDocument>
+        <migration>NO</migration>
+        <tailleEnOctets>1558834</tailleEnOctets>
+    </FichMeta>
+</pac>
