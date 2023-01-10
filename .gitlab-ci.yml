@@ -6,10 +6,20 @@ services:
 variables:
   GIT_SSL_NO_VERIFY: "true"
   ORTOLANG_DIFFUSION_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+  TRIGGER_DEPLOY_DEV_PROJECT_ID: "79"
 
 stages:
   - test
   - build
+  - deploy
+
+include:
+  - project: "gitlab1/gitlab-ci"
+    ref: 2.1.1
+    file: "/base.yml"
+  - project: 'gitlab1/gitlab-ci'
+    ref: 2.2.0
+    file: '/trigger/deploy_dev.yml'
 
 test:
   image: maven:3.6.1-jdk-8-alpine
