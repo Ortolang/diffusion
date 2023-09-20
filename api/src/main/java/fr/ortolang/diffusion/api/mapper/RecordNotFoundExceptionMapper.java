@@ -1,10 +1,10 @@
-package fr.ortolang.diffusion;
+package fr.ortolang.diffusion.api.mapper;
 
 /*
  * #%L
  * ORTOLANG
  * A online network structure for hosting language resources and tools.
- * *
+ * 
  * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
  * Etienne Petitjean / ATILF UMR 7118 - CNRS
  * Jérôme Blanchard / ATILF UMR 7118 - CNRS
@@ -14,11 +14,11 @@ package fr.ortolang.diffusion;
  * Ulrike Fleury / ATILF UMR 7118 - CNRS
  * Frédéric Pierre / ATILF UMR 7118 - CNRS
  * Céline Moro / ATILF UMR 7118 - CNRS
- * *
+ *  
  * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
  * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
  * %%
- * Copyright (C) 2013 - 2015 Ortolang Team
+ * Copyright (C) 2013 - 2016 Ortolang Team
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -36,21 +36,25 @@ package fr.ortolang.diffusion;
  * #L%
  */
 
-public final class OrtolangErrorCodes {
+import java.util.HashMap;
+import java.util.Map;
 
-    public static final String PATH_NOT_FOUND_EXCEPTION = "1";
-    public static final String PATH_ALREADY_EXISTS_EXCEPTION = "2";
-    public static final String ALIAS_ALREADY_EXISTS_EXCEPTION = "3";
-    public static final String INVALID_PATH_EXCEPTION = "4";
-    public static final String ROOT_NOT_FOUND_EXCEPTION = "5";
-    public static final String ALIAS_NOT_FOUND_EXCEPTION = "6";
-    public static final String COLLECTION_NOT_EMPTY_EXCEPTION = "7";
-    public static final String ACCESS_DENIED_EXCEPTION = "8";
-    public static final String METADATA_FORMAT_EXCEPTION = "9";
-    public static final String CORE_SERVICE_EXCEPTION = "10";
-    public static final String CONTENT_SEARCH_SERVICE_EXCEPTION = "11";
-    public static final String RECORD_NOT_FOUND_EXCEPTION = "12";
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
-    private OrtolangErrorCodes() {
+import fr.ortolang.diffusion.OrtolangErrorCodes;
+import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
+
+@Provider
+public class RecordNotFoundExceptionMapper implements ExceptionMapper<RecordNotFoundException> {
+
+    @Override
+    public Response toResponse(RecordNotFoundException ex) {
+        Map<String, String> map = new HashMap<>();
+        map.put("code", OrtolangErrorCodes.RECORD_NOT_FOUND_EXCEPTION);
+        map.put("message", ex.getMessage());
+        return Response.status(Status.NOT_FOUND).entity(map).build();
     }
 }

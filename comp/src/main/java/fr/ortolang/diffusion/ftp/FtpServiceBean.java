@@ -76,7 +76,7 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 
 @Startup
-@Singleton(name = FtpServiceBean.SERVICE_NAME)
+@Singleton(name = FtpService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
 @RunAs("admin")

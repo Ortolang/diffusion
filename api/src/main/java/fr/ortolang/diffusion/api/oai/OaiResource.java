@@ -15,9 +15,9 @@ import org.jboss.resteasy.annotations.GZIP;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.oai.OaiService;
 import fr.ortolang.diffusion.oai.entity.Record;
+import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
 
 @Path("/oai")
-@Produces({ MediaType.APPLICATION_JSON })
 public class OaiResource {
 
     @EJB
@@ -28,6 +28,7 @@ public class OaiResource {
     
     @GET
     @Path("/records")
+    @Produces({ MediaType.APPLICATION_JSON })
     @GZIP
     public Response listRecords() {
     	List<Record> records = oai.listRecords();
@@ -41,10 +42,12 @@ public class OaiResource {
     }
     
     @GET
-    @Path("/records/{id}")
+    @Path("/records/{id}/{metadataPrefix}")
+    @Produces({ MediaType.APPLICATION_XML })
     @GZIP
-    public Response getRecord(@PathParam(value = "id") String id) {
-    	return Response.ok().build();
+    public Response findRecord(@PathParam(value = "id") String id, @PathParam(value = "metadataPrefix") String metadataPrefix) throws RecordNotFoundException {
+        Record myRecord = oai.findRecord(id, metadataPrefix);
+    	return Response.ok(myRecord.getXml()).build();
     }
     
     @GET
