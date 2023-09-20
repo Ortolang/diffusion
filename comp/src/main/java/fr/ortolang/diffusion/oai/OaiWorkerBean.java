@@ -318,13 +318,13 @@ public class OaiWorkerBean implements OaiWorker {
     			throws CoreServiceException, KeyNotFoundException, RegistryServiceException, OaiServiceException,
     			MetadataPrefixUnknownException, OrtolangException {
     		oai.createRecord(wskey, MetadataFormat.OAI_DC, registry.getLastModificationDate(root),
-    				buildXMLFromItem(root, MetadataFormat.OAI_DC), setsWorkspace);
+    				buildXMLFromItem(root, MetadataFormat.OAI_DC, wskey), setsWorkspace);
     		oai.createRecord(wskey, MetadataFormat.OLAC, registry.getLastModificationDate(root),
-    				buildXMLFromItem(root, MetadataFormat.OLAC), setsWorkspace);
+    				buildXMLFromItem(root, MetadataFormat.OLAC, wskey), setsWorkspace);
     		oai.createRecord(wskey, MetadataFormat.CMDI, registry.getLastModificationDate(root),
-    				buildXMLFromItem(root, MetadataFormat.CMDI), setsWorkspace);
+    				buildXMLFromItem(root, MetadataFormat.CMDI, wskey), setsWorkspace);
     		oai.createRecord(wskey, MetadataFormat.OAI_DATACITE, registry.getLastModificationDate(root),
-    				buildXMLFromItem(root, MetadataFormat.OAI_DATACITE), setsWorkspace);
+    				buildXMLFromItem(root, MetadataFormat.OAI_DATACITE, wskey), setsWorkspace);
 
     		java.util.Set<CollectionElement> elements = core.systemReadCollection(root).getElements();
     		for (CollectionElement element : elements) {
@@ -384,7 +384,7 @@ public class OaiWorkerBean implements OaiWorker {
     	 * @throws OaiServiceException
     	 * @throws MetadataPrefixUnknownException
     	 */
-    	private String buildXMLFromItem(String root, String metadataPrefix)
+    	private String buildXMLFromItem(String root, String metadataPrefix, String wskey)
     			throws OaiServiceException, MetadataPrefixUnknownException {
     		LOGGER.log(Level.FINE,
     				"building XML from ITEM metadata of root collection " + root + " and metadataPrefix " + metadataPrefix);
@@ -432,7 +432,7 @@ public class OaiWorkerBean implements OaiWorker {
     			} else if (metadataPrefix.equals(MetadataFormat.CMDI)) {
     				// Writes CMDI metadata 
     				CmdiHandler handler = new CmdiHandler();
-    				handler.setId(root);
+    				handler.setId(getHandlesForOaiRecord(wskey, MetadataFormat.CMDI));
     				handler.setListHandlesRoot(listHandlesForKey(root));
     				handler.writeItem(item, builder);
     			} else if (metadataPrefix.equals(MetadataFormat.OAI_DATACITE)) {
@@ -490,6 +490,24 @@ public class OaiWorkerBean implements OaiWorker {
     			LOGGER.log(Level.WARNING, "No handle for key " + key, e);
     		}
     		return urls;
+    	}
+
+		/**
+		 * Returns the handle of the OAI records for the CMDI format.
+		 * @param key the workspace key
+		 * @return the Handle URL
+		 */
+    	private String getHandlesForOaiRecord(String key, String metadataPrefix) {
+    		List<String> urls = new ArrayList<>();
+    		try {
+    			List<String> handles = handleStore.listHandlesForKey(key + '/' + metadataPrefix);
+    			for (String handle : handles) {
+    				urls.add(HandleStoreService.HDL_PROXY_URL + handle);
+    			}
+    		} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
+    			LOGGER.log(Level.WARNING, "No handle for key " + key, e);
+    		}
+    		return urls.isEmpty() ? null : urls.get(0);
     	}
 
     	/**

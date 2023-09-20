@@ -38,9 +38,9 @@ public interface OaiService extends OrtolangService {
 
     Record readRecord(String id) throws RecordNotFoundException;
 
-    Record createRecord(String identifier, String metadataPrefix, long lastModificationDate, String xml);
+    Record createRecord(String identifier, String metadataPrefix, long lastModificationDate, String xml) throws OaiServiceException;
 
-    Record createRecord(String identifier, String metadataPrefix, long lastModificationDate, String xml, java.util.Set<String> sets);
+    Record createRecord(String identifier, String metadataPrefix, long lastModificationDate, String xml, java.util.Set<String> sets) throws OaiServiceException;
 
     Record updateRecord(String id, long lastModificationDate, String xml) throws RecordNotFoundException;
 

@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import fr.ortolang.diffusion.oai.entity.Record;
+import fr.ortolang.diffusion.oai.exception.OaiServiceException;
 import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
 
 @RunWith(Arquillian.class)
@@ -76,11 +77,11 @@ public class OaiServiceTest {
 		String metadataPrefix = "oai_dc";
 		long lastModificationDate = System.currentTimeMillis();
 		String xml = "<oai_dc></oai_dc>";
-		Record record1 = oai.createRecord(key, metadataPrefix, lastModificationDate, xml);
 		try {
+			Record record1 = oai.createRecord(key, metadataPrefix, lastModificationDate, xml);
 			Record recordRead1 = oai.readRecord(record1.getId());
 			assertTrue(record1.getIdentifier().equals(recordRead1.getIdentifier()));
-		} catch (RecordNotFoundException e) {
+		} catch (RecordNotFoundException | OaiServiceException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -91,16 +92,16 @@ public class OaiServiceTest {
 		String metadataPrefix = "oai_dc";
 		long lastModificationDate = System.currentTimeMillis();
 		String xml = "<oai_dc></oai_dc>";
-		Record record1 = oai.createRecord(identifier1, metadataPrefix, lastModificationDate, xml);
 		
 		String identifier2 = "2";
 		String olacMetadataPrefix = "olac";
 		lastModificationDate = System.currentTimeMillis();
-		oai.createRecord(identifier2, olacMetadataPrefix, lastModificationDate, xml);
 		try {
+			Record record1 = oai.createRecord(identifier1, metadataPrefix, lastModificationDate, xml);
+			oai.createRecord(identifier2, olacMetadataPrefix, lastModificationDate, xml);
 			Record recordFound = oai.findRecord(identifier1, metadataPrefix);
 			assertTrue(record1.getIdentifier().equals(recordFound.getIdentifier()));
-		} catch (RecordNotFoundException e) {
+		} catch (RecordNotFoundException | OaiServiceException e) {
 			fail(e.getMessage());
 		}
 	}

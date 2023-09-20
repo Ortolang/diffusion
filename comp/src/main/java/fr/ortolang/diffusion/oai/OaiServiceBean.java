@@ -28,6 +28,7 @@ import javax.persistence.criteria.Root;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.DataObject;
@@ -43,6 +44,7 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
+import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 
 @Local(OaiService.class)
 @Stateless(name = OaiService.SERVICE_NAME)
@@ -166,18 +168,35 @@ public class OaiServiceBean implements OaiService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public Record createRecord(String identifier, String metadataPrefix, long lastModificationDate, String xml) {
-		return createRecord(identifier, metadataPrefix, lastModificationDate, xml, new HashSet<String>());
+	public Record createRecord(String identifier, String metadataPrefix, long lastModificationDate, String xml) throws OaiServiceException {
+		return createRecord(identifier, metadataPrefix, lastModificationDate, xml, new HashSet<>());
 	}
 
+	/**
+	 * Creates a OAI records and a Handle link to the content of the record.
+	 */
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public Record createRecord(String identifier, String metadataPrefix, long lastModificationDate, String xml,
-			java.util.Set<String> sets) {
+			java.util.Set<String> sets) throws OaiServiceException {
 		String id = UUID.randomUUID().toString();
-		Record record = new Record(id, identifier, metadataPrefix, lastModificationDate, xml, sets);
-		em.persist(record);
-		return record;
+		Record myRecord = new Record(id, identifier, metadataPrefix, lastModificationDate, xml, sets);
+		
+		// Adds handle 
+		String oaiUrlBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)
+			+ OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_OAI);
+		String target =  oaiUrlBase + "/records/" + identifier + "/" + metadataPrefix;
+		String dynHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/"
+			+ identifier + '/' + metadataPrefix;
+		try {
+			handleStore.recordHandle(dynHandle, identifier + '/' + metadataPrefix, target);
+		} catch (HandleStoreServiceException e) {
+			throw new OaiServiceException("Enables to generate handle for OAI Record " + identifier, e);
+		}
+
+		em.persist(myRecord);
+
+		return myRecord;
 	}
 
 	@Override
