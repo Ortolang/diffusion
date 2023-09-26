@@ -1,0 +1,12 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<olac:olac xmlns:olac="http://www.language-archives.org/OLAC/1.1/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.language-archives.org/OLAC/1.1/ http://www.language-archives.org/OLAC/1.1/olac.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd http://purl.org/dc/terms/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dcterms.xsd ">
+    <dc:title xmlns:xml="http://www.w3.org/XML/1998/namespace" xml:lang="fr">test content</dc:title>
+    <dc:description xml:lang="fr">Desccriptions du corpus test-content ...</dc:description>
+    <dc:rights>free_use</dc:rights>
+    <dc:rights xml:lang="fr">Libre</dc:rights>
+    <dc:rights xml:lang="en">Free</dc:rights>
+    <dc:type>corpus</dc:type>
+    <dc:date xsi:type="dcterms:W3CDTF">2023-09-25</dc:date>
+    <dc:identifier>https://hdl.handle.net/114F03/TEST-CONTENT</dc:identifier>
+    <dc:identifier>https://hdl.handle.net/114F03/TEST-CONTENT/V1</dc:identifier>
+</olac:olac>

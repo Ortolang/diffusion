@@ -1,0 +1,12 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd ">
+    <dc:title xmlns:xml="http://www.w3.org/XML/1998/namespace" xml:lang="fr">test content</dc:title>
+    <dc:description xml:lang="fr">Desccriptions du corpus test-content ...</dc:description>
+    <dc:rights>free_use</dc:rights>
+    <dc:rights xml:lang="fr">Libre</dc:rights>
+    <dc:rights xml:lang="en">Free</dc:rights>
+    <dc:type>corpus</dc:type>
+    <dc:date>2023-09-25</dc:date>
+    <dc:identifier>https://hdl.handle.net/114F03/TEST-CONTENT</dc:identifier>
+    <dc:identifier>https://hdl.handle.net/114F03/TEST-CONTENT/V1</dc:identifier>
+</oai_dc:dc>

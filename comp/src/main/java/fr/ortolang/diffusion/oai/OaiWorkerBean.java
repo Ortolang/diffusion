@@ -626,7 +626,7 @@ public class OaiWorkerBean implements OaiWorker {
     						// Output : CMDI OLAC XML
     						// Input : OLAC | OAI_DC JSON
     						CmdiOutputConverter converter = new CmdiOutputConverter();
-    						converter.setId(key);
+    						converter.setId(getHandlesForOaiRecord(key, MetadataFormat.CMDI));
     						converter.setListHandles(listHandlesForKey(key));
     						converter.convert(StreamUtils.getContent(binaryStore.get(md.getStream())), metadataPrefix, builder);
     					}

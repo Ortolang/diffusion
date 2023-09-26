@@ -40,6 +40,7 @@
         <version.apache.velocity-tools>2.0</version.apache.velocity-tools>
         <version.apache.httpcore>4.4.4</version.apache.httpcore>
         <version.javax.javaee>7.0</version.javax.javaee>
+        <version.org.dom4j>2.1.3</version.org.dom4j>
         <version.jboss.resteasy>3.0.24.Final</version.jboss.resteasy>
         <version.keycloak>11.0.3</version.keycloak>
         <version.shrinkwrap>1.2.6</version.shrinkwrap>
