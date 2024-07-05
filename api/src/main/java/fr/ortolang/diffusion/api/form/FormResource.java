@@ -94,11 +94,10 @@ public class FormResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createForm(FormRepresentation form) throws AccessDeniedException, KeyAlreadyExistsException, KeyNotFoundException, FormServiceException {
         LOGGER.log(Level.INFO, "POST JSON /forms");
-        String key = UUID.randomUUID().toString();
-        service.createForm(key, form.getName(), form.getDefinition());
-        Form nform = service.readForm(key);
+        service.createForm(form.getKey(), form.getName(), form.getDefinition());
+        Form nform = service.readForm(form.getKey());
         FormRepresentation representation = FormRepresentation.fromForm(nform);
-        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
+        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(form.getKey()).build();
         return Response.created(location).entity(representation).build();
     }
 
