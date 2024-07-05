@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.api.form;
 
+import java.net.URI;
+
 /*
  * #%L
  * ORTOLANG
@@ -37,6 +39,7 @@ package fr.ortolang.diffusion.api.form;
  */
 
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,9 +51,14 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
+import fr.ortolang.diffusion.api.group.GroupRepresentation;
+import fr.ortolang.diffusion.api.profile.ProfileCardRepresentation;
 import fr.ortolang.diffusion.form.FormService;
 import fr.ortolang.diffusion.form.FormServiceException;
 import fr.ortolang.diffusion.form.entity.Form;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.entity.Group;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -80,6 +88,18 @@ public class FormResource {
         representation.setSize(forms.size());
         representation.setLimit(forms.size());
         return Response.ok(representation).build();
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createForm(FormRepresentation form) throws AccessDeniedException, KeyAlreadyExistsException, KeyNotFoundException, FormServiceException {
+        LOGGER.log(Level.INFO, "POST JSON /forms");
+        String key = UUID.randomUUID().toString();
+        service.createForm(key, form.getName(), form.getDefinition());
+        Form nform = service.readForm(key);
+        FormRepresentation representation = FormRepresentation.fromForm(nform);
+        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
+        return Response.created(location).entity(representation).build();
     }
 
     @GET
