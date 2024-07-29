@@ -11,7 +11,10 @@ USER root
 # Install envsubst
 # Sets a custom UID and GID for jboss user
 # Sets language to fr
-RUN yum install -y gettext && \
+RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && \
+    sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
+    sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo && \
+    yum install -y gettext && \
     sed -i -E "s/^jboss:x:[[:digit:]]+:[[:digit:]]+:(.*)$/jboss:x:${CUSTOM_UID}:${CUSTOM_GID}:\1/" /etc/passwd && \
     sed -i -E "s/^jboss:x:[[:digit:]]+:(.*)$/jboss:x:${CUSTOM_GID}:\1/" /etc/group && \
     chown -R ${CUSTOM_UID}:${CUSTOM_GID} /opt/jboss && \
